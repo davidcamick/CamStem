@@ -225,7 +225,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", "Invalid MP3 file.")
             return
         selected_method = None
-        for button, method in zip(self.buttons, ["htdemucs", "htdemucs_extra", "htdemucs_6s", "hdemucs_mmi"]):
+        for button, method in zip(self.buttons, ["htdemucs", "htdemucs_ft", "htdemucs_6s", "hdemucs_mmi"]):
             if button.isChecked():
                 selected_method = method
                 break
