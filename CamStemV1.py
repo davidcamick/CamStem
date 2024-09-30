@@ -3,6 +3,7 @@ import sys
 import subprocess
 import tempfile
 import torch
+import shutil
 from PySide6.QtWidgets import (QApplication, QMainWindow, QLabel, QLineEdit, QPushButton,
                                QVBoxLayout, QWidget, QHBoxLayout, QMessageBox, QFileDialog, QGridLayout)
 from PySide6.QtCore import Qt, QThread, Signal
@@ -16,17 +17,58 @@ def check_ffmpeg():
 
 def convert_mp3_to_wav(mp3_path, wav_path):
     try:
+        print(f"Converting MP3 to WAV: {mp3_path} -> {wav_path}")
         subprocess.run(['ffmpeg', '-i', mp3_path, wav_path, '-hide_banner', '-loglevel', 'error'], check=True)
     except subprocess.CalledProcessError as e:
         print(f"Conversion Error: {e}")
         sys.exit(1)
 
-def run_demucs(wav_path, output_dir, model_name):
+def run_demucs(wav_path, model_name):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    
+    # Relative path for the tempStems directory (within the app directory)
+    output_dir = os.path.join(os.getcwd(), "tempStems")
+
+    # Ensure the output directory exists
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     try:
+        # Run Demucs and log the paths
+        print(f"Running Demucs on WAV file: {wav_path}")
+        print(f"Output Directory: {output_dir}")
         subprocess.run(['py', '-m', 'demucs', wav_path, '-o', output_dir, '--device', device, '-n', model_name], check=True)
+
+        # Log a message confirming that Demucs ran successfully
+        print(f"Stems successfully saved to {output_dir}")
+
     except subprocess.CalledProcessError as e:
         print(f"Demucs Error: {e}")
+        sys.exit(1)
+
+def move_stems_to_named_folder(output_dir, mp3_dir, mp3_filename):
+    """
+    Moves all the stems from the tempStems directory to a new folder named after the original MP3 file.
+    """
+    try:
+        # Create a new folder named after the original MP3 file in the MP3's directory
+        destination_folder = os.path.join(mp3_dir, mp3_filename)
+        if not os.path.exists(destination_folder):
+            os.makedirs(destination_folder)
+
+        # Move all files from the tempStems directory to the new folder
+        for root, _, files in os.walk(output_dir):
+            for file in files:
+                full_file_path = os.path.join(root, file)
+                shutil.move(full_file_path, os.path.join(destination_folder, file))
+        
+        # Cleanup: remove the tempStems directory if it's empty
+        if not os.listdir(output_dir):
+            os.rmdir(output_dir)
+
+        print(f"Stems successfully moved to {destination_folder}")
+    except Exception as e:
+        print(f"Error moving stems: {e}")
         sys.exit(1)
 
 class AudioProcessThread(QThread):
@@ -41,7 +83,7 @@ class AudioProcessThread(QThread):
     def run(self):
         mp3_dir = os.path.dirname(self.mp3_path)
         mp3_filename = os.path.splitext(os.path.basename(self.mp3_path))[0]
-        output_folder = os.path.join(mp3_dir, mp3_filename + "_stems")
+        output_folder = os.path.join(os.getcwd(), "tempStems")
 
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
@@ -49,10 +91,17 @@ class AudioProcessThread(QThread):
         with tempfile.TemporaryDirectory() as temp_dir:
             audio_file_wav = os.path.join(temp_dir, mp3_filename + ".wav")
             convert_mp3_to_wav(self.mp3_path, audio_file_wav)
-            run_demucs(audio_file_wav, output_folder, self.model_name)
+
+            # Log that we are starting the Demucs process
+            print(f"Starting Demucs splitting process for {audio_file_wav}...")
+
+            run_demucs(audio_file_wav, self.model_name)
+
+            # After processing, move the stems to a folder named after the original file
+            move_stems_to_named_folder(output_folder, mp3_dir, mp3_filename)
 
         if self.open_output_dir:
-            os.startfile(output_folder)
+            os.startfile(os.path.join(mp3_dir, mp3_filename))
 
         self.process_complete.emit()
 
