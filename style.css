@@ -1,0 +1,70 @@
+@font-face {
+    font-family: 'Consola Mono';
+    src: url('assets/ConsolaMono-Book.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Consola Mono';
+    src: url('assets/ConsolaMono-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+QWidget#mainWindow {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                stop:0 #000000, stop:1 #000033);
+}
+
+body, button, input, label {
+    font-family: 'Consola Mono', monospace;
+    font-size: 16px;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+QLabel {
+    font-family: 'Consola Mono', monospace;
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+}
+
+QLabel#normal {
+    font-size: 16px;
+    font-weight: normal;
+    color: #ffffff;
+}
+
+QPushButton {
+    font-family: 'Consola Mono', monospace;
+    font-size: 16px;
+    background-color: rgb(12, 12, 12);
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    color: rgb(255, 255, 255);
+}
+
+QPushButton:checked {
+    background-color: #007ACC;
+    color: rgb(51, 51, 51);
+}
+
+QLineEdit {
+    font-family: 'Consola Mono', monospace;
+    font-size: 16px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+QLabel#progress_label {
+    font-family: 'Consola Mono', monospace;
+    font-size: 14px;
+    color: #007ACC;
+}
