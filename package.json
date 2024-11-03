@@ -2,10 +2,10 @@
   "name": "camstem",
   "version": "1.0.0",
   "description": "CamStem App",
-  "main": "src/main.js",
+  "main": "src/root_process/main.js",
   "scripts": {
     "start": "electron .",
-    "build:css": "npx tailwindcss -i ./src/tailwind.css -o ./src/styles.css --watch"
+    "build:css": "npx tailwindcss -c ./src/configurations/tailwind.config.js -i ./src/cosmetic_process/input.css -o ./src/cosmetic_process/tailwind.css --watch"
     
   },
   "devDependencies": {

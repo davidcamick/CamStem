@@ -1,12 +1,12 @@
 const { contextBridge } = require("electron");
 const path = require("path");
 
-// Update authPath to point to auth.js in the login_process folder
-const authPath = path.join(__dirname, "../login_process/auth");
-
 try {
+  // Dynamically require auth.js from login_process
+  const authPath = path.join(__dirname, "../login_process/auth.js");
   const { verifyLogin } = require(authPath);
 
+  // Expose the verifyLogin function to the renderer process securely
   contextBridge.exposeInMainWorld("authAPI", {
     verifyLogin: (username, password) => verifyLogin(username, password),
   });

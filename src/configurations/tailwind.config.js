@@ -1,9 +1,6 @@
 module.exports = {
   content: [
-    "./src/login_process/*.html",      // Login page HTML
-    "./src/main_process/*.html",       // Dashboard page HTML
-    "./src/root_process/*.js",         // All root process JavaScript files
-    "./src/login_process/*.js",        // Authentication logic in login process
+    "./src/**/*.{html,js}", // This pattern covers all HTML and JS files in src
   ],
   theme: {
     extend: {
