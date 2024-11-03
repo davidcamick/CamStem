@@ -1,4 +1,5 @@
-const { app, BrowserWindow, Menu, shell } = require("electron");
+const { app, BrowserWindow, Menu, shell, ipcMain, dialog } = require("electron");
+const { exec } = require("child_process");
 const path = require("path");
 
 function createWindow() {
@@ -18,6 +19,37 @@ function createWindow() {
   // Load the login page from the login_process folder
   win.loadFile(path.join(__dirname, "../login_process/login.html"));
 }
+
+// Handle directory selection request from renderer
+ipcMain.handle("dialog:openDirectory", async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ["openDirectory"],
+  });
+  return result.canceled ? null : result.filePaths[0];
+});
+
+// Handle command execution request from renderer and send completion status
+ipcMain.on("run-command", (event, command) => {
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Command error: ${error.message}`);
+      event.reply("command-status", "error"); // Send error status back to renderer
+      return;
+    }
+    if (stderr) {
+      console.error(`Command stderr: ${stderr}`);
+      event.reply("command-status", "error"); // Send error status back to renderer
+      return;
+    }
+    console.log(`Command stdout: ${stdout}`);
+    event.reply("command-status", "completed"); // Send completed status back to renderer
+  });
+});
+
+// Handle folder opening request from renderer
+ipcMain.on("open-folder", (event, folderPath) => {
+  shell.openPath(folderPath);
+});
 
 // Set up the application menu with default options and custom Help links
 const template = [

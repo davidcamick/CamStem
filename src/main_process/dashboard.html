@@ -8,26 +8,61 @@
   <link href="../cosmetic_process/tailwind.css" rel="stylesheet">
 </head>
 <body class="flex items-center justify-center h-screen bg-gradient-to-br from-blue-100 to-indigo-200 relative">
-  <!-- Logout Button -->
-  <button onclick="logout()" class="absolute top-6 right-6 py-2 px-4 bg-red-500 text-white font-semibold rounded-full shadow-md hover:bg-red-600 transition-all duration-200">
-    Logout
+  
+  <!-- Account Button with Icon and Hover Effect -->
+  <button onclick="goToAccount()" class="absolute top-6 left-6 py-2 px-4 bg-blue-500 text-white font-semibold rounded-full shadow-md hover:bg-blue-600 transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
+    <img src="../assets/account.svg" alt="Account" class="w-6 h-6" />
+  </button>
+  
+  <!-- Logout Button with Icon and Hover Effect -->
+  <button onclick="window.logout()" class="absolute top-6 right-6 py-2 px-4 bg-red-500 text-white font-semibold rounded-full shadow-md hover:bg-red-600 transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
+    <img src="../assets/logout.svg" alt="Logout" class="w-6 h-6" />
   </button>
 
   <!-- Dashboard Content -->
   <div class="w-96 p-8 bg-white rounded-3xl shadow-lg text-center">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">CamStem Dashboard</h1>
-    <button class="w-full py-3 mb-4 bg-blue-500 text-white font-semibold rounded-full shadow-md hover:bg-blue-600 transition-all duration-200 transform hover:scale-105">
-      Download Audio Only
-    </button>
-    <button class="w-full py-3 mb-4 bg-green-500 text-white font-semibold rounded-full shadow-md hover:bg-green-600 transition-all duration-200 transform hover:scale-105">
+    <h1 class="text-3xl font-bold mb-1 text-gray-800">CamStem</h1>
+    <h2 class="text-xl font-semibold text-gray-600 mb-6">Dashboard</h2>
+    
+    <!-- Updated Button Labels with Placeholder Actions -->
+    <button onclick="splitStems()" class="w-full py-3 mb-4 bg-green-500 text-white font-semibold rounded-full shadow-md hover:bg-green-600 transition-all duration-200 transform hover:scale-105">
       Split Stems
     </button>
-    <button class="w-full py-3 bg-gray-500 text-white font-semibold rounded-full shadow-md hover:bg-gray-600 transition-all duration-200 transform hover:scale-105">
+    <button onclick="window.location.href = '../main_process/download.html'" class="w-full py-3 mb-4 bg-blue-500 text-white font-semibold rounded-full shadow-md hover:bg-blue-600 transition-all duration-200 transform hover:scale-105">
+      Download Audio Only
+    </button>
+    <button onclick="convertAudio()" class="w-full py-3 mb-4 bg-purple-500 text-white font-semibold rounded-full shadow-md hover:bg-purple-600 transition-all duration-200 transform hover:scale-105">
+      Convert Audio Files
+    </button>
+    <button onclick="showAbout()" class="w-full py-3 bg-gray-500 text-white font-semibold rounded-full shadow-md hover:bg-gray-600 transition-all duration-200 transform hover:scale-105">
       About CamStem
     </button>
   </div>
 
   <!-- Link to renderer.js in the root_process folder -->
   <script src="../root_process/renderer.js"></script>
+
+  <!-- Placeholder Functions for Button Actions -->
+  <script>
+    function goToAccount() {
+      console.log("Navigating to Account...");
+    }
+    
+    function splitStems() {
+      console.log("Splitting stems...");
+    }
+    
+    function downloadAudio() {
+      console.log("Downloading audio only...");
+    }
+    
+    function convertAudio() {
+      console.log("Converting audio files...");
+    }
+    
+    function showAbout() {
+      console.log("Showing about information...");
+    }
+  </script>
 </body>
 </html>

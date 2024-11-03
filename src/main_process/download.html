@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Audio Downloading</title>
+  <link href="../cosmetic_process/tailwind.css" rel="stylesheet">
+</head>
+<body class="flex items-center justify-center h-screen bg-gradient-to-br from-blue-100 to-indigo-200 relative">
+  
+  <!-- Home Button -->
+  <button onclick="goToDashboard()" class="absolute top-6 left-6 py-2 px-4 bg-blue-500 text-white font-semibold rounded-full shadow-md hover:bg-blue-600 transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
+    <img src="../assets/home.svg" alt="Home" class="w-6 h-6" />
+  </button>
+  
+  <!-- Audio Downloading Content -->
+  <div class="w-96 p-8 bg-white rounded-3xl shadow-lg text-center relative">
+    <!-- Refresh Icon -->
+    <button onclick="refreshPage()" class="absolute top-4 right-4 p-2 text-black hover:text-gray-800 transition-all duration-200 transform hover:scale-110">
+      <img src="../assets/refresh.svg" alt="Refresh" class="w-5 h-5" />
+    </button>
+    
+    <h1 class="text-3xl font-bold mb-1 text-gray-800">CamStem</h1>
+    <h2 class="text-xl font-semibold text-gray-600 mb-6">Audio Downloading</h2>
+
+    <!-- Input for Audio Link and Download Button -->
+    <input id="audioLinkInput" type="text" placeholder="Paste audio link here" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="detectLinkType()"/>
+
+    <!-- Checkbox for Opening File Location -->
+    <div class="flex items-center justify-start mb-4">
+      <input type="checkbox" id="openLocationCheckbox" class="mr-2" />
+      <label for="openLocationCheckbox" class="text-gray-700 text-sm">Open file location when finished</label>
+    </div>
+
+    <button id="downloadButton" onclick="downloadSong()" class="w-full py-3 bg-blue-500 text-white font-semibold rounded-full shadow-md transition-all duration-200 transform hover:scale-105">
+      Download Song
+    </button>
+  </div>
+
+  <script>
+    let linkType = null;
+
+    function goToDashboard() {
+      window.location.href = "./dashboard.html";
+    }
+
+    function refreshPage() {
+      location.reload();
+    }
+
+    function detectLinkType() {
+      const link = document.getElementById("audioLinkInput").value;
+      const downloadButton = document.getElementById("downloadButton");
+
+      downloadButton.classList.remove("bg-blue-500", "bg-green-500", "bg-orange-500", "bg-red-500");
+      if (/spotify\.com/.test(link)) {
+        linkType = 'spotify';
+        downloadButton.classList.add("bg-green-500");
+      } else if (/youtube\.com|youtu\.be/.test(link)) {
+        linkType = 'youtube';
+        downloadButton.classList.add("bg-red-500");
+      } else if (/soundcloud\.com/.test(link)) {
+        linkType = 'soundcloud';
+        downloadButton.classList.add("bg-orange-500");
+      } else {
+        linkType = null;
+        downloadButton.classList.add("bg-blue-500");
+      }
+    }
+
+    async function downloadSong() {
+      const downloadButton = document.getElementById("downloadButton");
+
+      if (!linkType) {
+        alert("Please enter a valid link from Spotify, YouTube, or SoundCloud.");
+        return;
+      }
+
+      const downloadPath = await window.electronAPI.selectDownloadPath();
+      if (!downloadPath) return;
+
+      const link = document.getElementById("audioLinkInput").value;
+      const pythonPath = window.electronAPI.platform === 'win32' 
+        ? "src/python-win/python.exe" 
+        : "src/python-mac/bin/python3";
+
+      let command;
+      if (linkType === 'spotify') {
+        command = `"${pythonPath}" -m spotdl download ${link} --output "${downloadPath}"`;
+      } else if (linkType === 'youtube' || linkType === 'soundcloud') {
+        command = `"${pythonPath}" -m yt_dlp -x --audio-format mp3 -o "${downloadPath}/%(title)s.%(ext)s" ${link}`;
+      }
+
+      downloadButton.textContent = "Download Started";
+      downloadButton.disabled = true;
+
+      window.electronAPI.runCommand(command);
+
+      const openLocation = document.getElementById("openLocationCheckbox").checked;
+      if (openLocation) {
+        setTimeout(() => {
+          window.electronAPI.openFolder(downloadPath);
+        }, 3000);
+      }
+    }
+  </script>
+</body>
+</html>
