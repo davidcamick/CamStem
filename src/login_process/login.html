@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CamStem Login</title>
+  <!-- Link to the compiled Tailwind CSS file in the cosmetic_process folder -->
+  <link href="../cosmetic_process/tailwind.css" rel="stylesheet">
+</head>
+<body class="flex items-center justify-center h-screen bg-gradient-to-br from-blue-100 to-indigo-200">
+  <div class="w-80 p-8 bg-white rounded-3xl shadow-lg text-center">
+    <!-- CamStem Title at the Top -->
+    <h1 class="text-4xl font-bold text-gray-800 mb-6">CamStem</h1>
+
+    <!-- Login Form Heading -->
+    <h2 class="text-3xl font-semibold mb-6 text-gray-800">Login</h2>
+    
+    <!-- Username and Password Input Fields -->
+    <input type="text" id="username" placeholder="Username" class="w-full px-4 py-3 mb-4 border rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all duration-200">
+    <input type="password" id="password" placeholder="Password" class="w-full px-4 py-3 mb-6 border rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all duration-200">
+    
+    <!-- Login Button with Bubbly, Modern Styling -->
+    <button onclick="login()" class="w-full py-3 bg-indigo-500 text-white font-semibold rounded-full shadow-md hover:bg-indigo-600 transition-all duration-200 transform hover:scale-105" id="loginButton">
+      Login
+    </button>
+    
+    <!-- Always Visible Forgot Password Button (20% Smaller Width, Centered) -->
+    <button id="forgotPasswordButton" onclick="forgotPassword()" class="w-4/5 py-2 mt-4 bg-gray-500 text-white font-semibold rounded-full shadow-md hover:bg-gray-600 transition-all duration-200 text-sm mx-auto block">
+      Forgot Password?
+    </button>
+    
+    <!-- Styled Error Message Below Forgot Password Button -->
+    <p id="errorMessage" class="text-error-red text-sm mt-2 hidden"></p>
+  </div>
+
+  <!-- Link to renderer.js in the root_process folder -->
+  <script src="../root_process/renderer.js"></script>
+</body>
+</html>

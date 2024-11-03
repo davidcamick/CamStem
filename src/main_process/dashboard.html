@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CamStem Dashboard</title>
+  <!-- Link to the compiled Tailwind CSS file in the cosmetic_process folder -->
+  <link href="../cosmetic_process/tailwind.css" rel="stylesheet">
+</head>
+<body class="flex items-center justify-center h-screen bg-gradient-to-br from-blue-100 to-indigo-200 relative">
+  <!-- Logout Button -->
+  <button onclick="logout()" class="absolute top-6 right-6 py-2 px-4 bg-red-500 text-white font-semibold rounded-full shadow-md hover:bg-red-600 transition-all duration-200">
+    Logout
+  </button>
+
+  <!-- Dashboard Content -->
+  <div class="w-96 p-8 bg-white rounded-3xl shadow-lg text-center">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">CamStem Dashboard</h1>
+    <button class="w-full py-3 mb-4 bg-blue-500 text-white font-semibold rounded-full shadow-md hover:bg-blue-600 transition-all duration-200 transform hover:scale-105">
+      Download Audio Only
+    </button>
+    <button class="w-full py-3 mb-4 bg-green-500 text-white font-semibold rounded-full shadow-md hover:bg-green-600 transition-all duration-200 transform hover:scale-105">
+      Split Stems
+    </button>
+    <button class="w-full py-3 bg-gray-500 text-white font-semibold rounded-full shadow-md hover:bg-gray-600 transition-all duration-200 transform hover:scale-105">
+      About CamStem
+    </button>
+  </div>
+
+  <!-- Link to renderer.js in the root_process folder -->
+  <script src="../root_process/renderer.js"></script>
+</body>
+</html>
