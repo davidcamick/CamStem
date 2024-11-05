@@ -17,7 +17,6 @@ try {
 // Expose functions to the renderer process
 contextBridge.exposeInMainWorld("electronAPI", {
   selectDownloadPath: () => ipcRenderer.invoke("dialog:openDirectory"),
-  runCommand: (command) => ipcRenderer.send("run-command", command),
   openFolder: (path) => ipcRenderer.send("open-folder", path),
   platform: process.platform
 });

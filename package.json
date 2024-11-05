@@ -24,18 +24,6 @@
       "!**/test/",
       "!**/tests/"
     ],
-    "extraResources": [
-      {
-        "from": "src/python-win/",
-        "to": "python-win/",
-        "filter": ["**/*"]
-      },
-      {
-        "from": "src/python-mac/",
-        "to": "python-mac/",
-        "filter": ["**/*"]
-      }
-    ],
     "mac": {
       "target": "dmg",
       "category": "public.app-category.utilities"

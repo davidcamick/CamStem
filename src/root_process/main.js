@@ -1,5 +1,4 @@
 const { app, BrowserWindow, Menu, shell, ipcMain, dialog } = require("electron");
-const { exec } = require("child_process");
 const path = require("path");
 
 function createWindow() {
@@ -26,24 +25,6 @@ ipcMain.handle("dialog:openDirectory", async () => {
     properties: ["openDirectory"],
   });
   return result.canceled ? null : result.filePaths[0];
-});
-
-// Handle command execution request from renderer and send completion status
-ipcMain.on("run-command", (event, command) => {
-  exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Command error: ${error.message}`);
-      event.reply("command-status", "error"); // Send error status back to renderer
-      return;
-    }
-    if (stderr) {
-      console.error(`Command stderr: ${stderr}`);
-      event.reply("command-status", "error"); // Send error status back to renderer
-      return;
-    }
-    console.log(`Command stdout: ${stdout}`);
-    event.reply("command-status", "completed"); // Send completed status back to renderer
-  });
 });
 
 // Handle folder opening request from renderer

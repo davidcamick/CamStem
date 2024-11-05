@@ -23,7 +23,7 @@
     <h1 class="text-3xl font-bold mb-1 text-gray-800">CamStem</h1>
     <h2 class="text-xl font-semibold text-gray-600 mb-6">Audio Downloading</h2>
 
-    <!-- Input for Audio Link and Download Button -->
+    <!-- Input for Audio Link -->
     <input id="audioLinkInput" type="text" placeholder="Paste audio link here" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="detectLinkType()"/>
 
     <!-- Checkbox for Opening File Location -->
@@ -32,7 +32,7 @@
       <label for="openLocationCheckbox" class="text-gray-700 text-sm">Open file location when finished</label>
     </div>
 
-    <button id="downloadButton" onclick="downloadSong()" class="w-full py-3 bg-blue-500 text-white font-semibold rounded-full shadow-md transition-all duration-200 transform hover:scale-105">
+    <button id="downloadButton" class="w-full py-3 bg-blue-500 text-white font-semibold rounded-full shadow-md transition-all duration-200 transform hover:scale-105" onclick="handleDownload()" disabled>
       Download Song
     </button>
   </div>
@@ -56,51 +56,40 @@
       if (/spotify\.com/.test(link)) {
         linkType = 'spotify';
         downloadButton.classList.add("bg-green-500");
+        downloadButton.disabled = false; // Enable button if valid link
       } else if (/youtube\.com|youtu\.be/.test(link)) {
         linkType = 'youtube';
         downloadButton.classList.add("bg-red-500");
+        downloadButton.disabled = false; // Enable button if valid link
       } else if (/soundcloud\.com/.test(link)) {
         linkType = 'soundcloud';
         downloadButton.classList.add("bg-orange-500");
+        downloadButton.disabled = false; // Enable button if valid link
       } else {
         linkType = null;
         downloadButton.classList.add("bg-blue-500");
+        downloadButton.disabled = true; // Keep button disabled if invalid link
       }
     }
 
-    async function downloadSong() {
-      const downloadButton = document.getElementById("downloadButton");
-
+    function handleDownload() {
       if (!linkType) {
         alert("Please enter a valid link from Spotify, YouTube, or SoundCloud.");
         return;
       }
 
-      const downloadPath = await window.electronAPI.selectDownloadPath();
-      if (!downloadPath) return;
-
-      const link = document.getElementById("audioLinkInput").value;
-      const pythonPath = window.electronAPI.platform === 'win32' 
-        ? "src/python-win/python.exe" 
-        : "src/python-mac/bin/python3";
-
-      let command;
-      if (linkType === 'spotify') {
-        command = `"${pythonPath}" -m spotdl download ${link} --output "${downloadPath}"`;
-      } else if (linkType === 'youtube' || linkType === 'soundcloud') {
-        command = `"${pythonPath}" -m yt_dlp -x --audio-format mp3 -o "${downloadPath}/%(title)s.%(ext)s" ${link}`;
-      }
-
-      downloadButton.textContent = "Download Started";
-      downloadButton.disabled = true;
-
-      window.electronAPI.runCommand(command);
-
-      const openLocation = document.getElementById("openLocationCheckbox").checked;
-      if (openLocation) {
-        setTimeout(() => {
-          window.electronAPI.openFolder(downloadPath);
-        }, 3000);
+      switch (linkType) {
+        case 'spotify':
+          console.log("Spotify Download Link Button Pressed");
+          break;
+        case 'youtube':
+          console.log("YouTube Download Link Button Pressed");
+          break;
+        case 'soundcloud':
+          console.log("SoundCloud Download Link Button Pressed");
+          break;
+        default:
+          console.log("Unknown link type");
       }
     }
   </script>

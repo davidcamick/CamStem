@@ -1,11 +1,13 @@
 
+---
+
 # **CamStem: Comprehensive Project Documentation**
 
 ### **Project Name**
 **CamStem**
 
 ### **Project Purpose**
-CamStem is a desktop application for audio processing, built with Electron, Tailwind CSS, and JavaScript. It allows users to paste an audio link from Spotify, YouTube, or SoundCloud, which is then downloaded and processed into MP3 format using integrated Python modules (`spotdl`, `yt-dlp`). The original audio and separated stems (if applicable) are saved in a user-specified folder. CamStem is ideal for users who want to isolate different components of a song for remixing, analysis, or production.
+CamStem is a desktop application for audio processing, built with Electron, Tailwind CSS, and JavaScript. It allows users to paste an audio link from platforms like Spotify, YouTube, or SoundCloud, which can be processed into a format suitable for further manipulation and use. CamStem is ideal for users who want to isolate different components of a song for remixing, analysis, or production.
 
 ---
 
@@ -15,43 +17,41 @@ CamStem is a desktop application for audio processing, built with Electron, Tail
 CamStem/
 ├── src/
 │   ├── assets/
-│   │   ├── logo.ico              # App icon for Electron window and taskbar
-│   │   ├── home.svg              # Home icon for navigation back to the dashboard
-│   │   └── refresh.svg           # Refresh icon for reloading pages
+│   │   ├── account.svg              # Account icon for user settings
+│   │   ├── home.svg                 # Home icon for navigation back to the dashboard
+│   │   ├── logo.ico                 # App icon for Electron window and taskbar
+│   │   ├── logout.svg               # Logout icon for user logout functionality
+│   │   └── refresh.svg              # Refresh icon for reloading pages
 │   │
 │   ├── configurations/
-│   │   └── tailwind.config.js     # Tailwind CSS configuration file with custom styles and scan paths
+│   │   └── tailwind.config.js       # Tailwind CSS configuration file with custom styles and scan paths
 │   │
 │   ├── cosmetic_process/
-│   │   ├── input.css              # Tailwind source file with base, components, and utilities
-│   │   └── tailwind.css           # Compiled CSS from Tailwind CLI
+│   │   ├── input.css                # Tailwind source file with base, components, and utilities
+│   │   └── tailwind.css             # Compiled CSS from Tailwind CLI
 │   │
 │   ├── login_process/
-│   │   ├── auth.js                # Authentication logic with placeholder user data
-│   │   └── login.html             # Login page HTML with styling for authentication
+│   │   ├── auth.js                  # Authentication logic for user login
+│   │   └── login.html               # Login page HTML with styling for authentication
 │   │
 │   ├── main_process/
-│   │   ├── dashboard.html         # Main dashboard HTML, including buttons for download options
-│   │   ├── download.html          # Audio downloading interface with input fields and action buttons
-│   │   └── account.html           # Account management page for viewing/editing user information
+│   │   ├── dashboard.html           # Main dashboard HTML, including buttons for audio options
+│   │   ├── download.html            # Audio downloading interface with input fields and action buttons
+│   │   └── account.html             # Account management page for viewing/editing user information
 │   │
 │   ├── root_process/
-│   │   ├── main.js                # Electron main process setup, window configuration, and app menu
-│   │   ├── preload.js             # Exposes backend functions via contextBridge for secure communication
-│   │   └── renderer.js            # Manages UI interactions, login/logout logic, and error handling
+│   │   ├── main.js                  # Electron main process setup, window configuration, and app menu
+│   │   ├── preload.js               # Exposes backend functions via contextBridge for secure communication
+│   │   └── renderer.js              # Manages UI interactions and login/logout logic
 │   │
-│   ├── python-win/
-│   │   ├── python.exe             # Windows standalone Python interpreter for running audio download modules
-│   │   └── Scripts/               # Scripts directory for Python packages (yt-dlp, spotdl)
-│   │
-│   └── python-mac/
-│       ├── bin/python3            # macOS Python interpreter for running audio download modules
-│       └── lib/                   # Libraries for Python packages (yt-dlp, spotdl)
+│   └── cosmetic_process/
+│       ├── input.css                # Tailwind source file with base, components, and utilities
+│       └── tailwind.css             # Compiled CSS from Tailwind CLI
 │
-├── .gitignore                      # Excludes node_modules and unnecessary files from version control
-├── package.json                    # Project configuration, dependencies, and build scripts
-├── package-lock.json               # Dependency lock file with exact versions
-└── README.md                       # Project documentation, usage instructions, and build steps
+├── .gitignore                        # Excludes node_modules and unnecessary files from version control
+├── package.json                      # Project configuration, dependencies, and build scripts
+├── package-lock.json                 # Dependency lock file with exact versions
+└── README.md                         # Project documentation, usage instructions, and build steps
 ```
 
 ---
@@ -59,9 +59,11 @@ CamStem/
 ## **Detailed File Summaries**
 
 ### **`src/assets/`**
+- **`account.svg`**: Icon used for user account management.
+- **`home.svg`**: Icon displayed on pages for returning to the dashboard.
 - **`logo.ico`**: The app icon used in the Electron window and taskbar.
-- **`home.svg`**: The home icon displayed on pages for returning to the dashboard.
-- **`refresh.svg`**: The refresh icon used on pages to reload content with a single click.
+- **`logout.svg`**: Icon for the logout action on the user interface.
+- **`refresh.svg`**: Icon used on pages to reload content with a single click.
 
 ### **`src/configurations/`**
 - **`tailwind.config.js`**: Tailwind configuration file where custom colors, font sizes, and shadow effects are defined:
@@ -83,37 +85,22 @@ CamStem/
 
 ### **`src/login_process/`**
 - **`auth.js`**: Manages user authentication. Contains functions for username and password validation, with specific error messages:
-  - **`USER_NOT_FOUND`**: When no account matches the username.
-  - **`INCORRECT_PASSWORD`**: When an incorrect password is entered.
+  - **`USER_NOT_FOUND`**: Error when no account matches the username.
+  - **`INCORRECT_PASSWORD`**: Error when an incorrect password is entered.
   - **`verifyLogin`**: Checks username and password, returning relevant error messages on failure.
-- **`login.html`**: Displays login fields, “Forgot Password” button, and uses `tailwind.css` for consistent styling. Connected to `renderer.js` for login functionality.
+- **`login.html`**: Displays login fields and error messages, using `tailwind.css` for consistent styling. Connected to `renderer.js` for login functionality.
 
 ### **`src/main_process/`**
-- **`dashboard.html`**: Main user interface following login. It features:
-  - **Buttons**: Options for “Split Stems,” “Download Audio Only,” “Convert Audio Files,” and “About CamStem.”
-  - **Logout Button**: Triggers `logout()` in `renderer.js`, returning the user to `login.html`.
-- **`download.html`**: Interface for downloading audio, with input fields for links and an optional “Open file location” checkbox. Key features:
-  - **Link Detection**: Detects Spotify, YouTube, and SoundCloud URLs, updating the download button color accordingly.
-  - **Download Status**: Updates button text to “Download Started” and optionally opens the download folder upon completion.
+- **`dashboard.html`**: Main user interface following login, featuring buttons for various audio processing options.
+- **`download.html`**: Interface for downloading audio with input fields for links and a button to initiate the process.
 - **`account.html`**: A page for managing user account information (future functionality).
 
 ### **`src/root_process/`**
 - **`main.js`**: Entry point for the Electron app, managing:
-  - **BrowserWindow Configuration**: Window title and icon, web preferences, and a preloaded script for communication between backend and frontend.
+  - **BrowserWindow Configuration**: Configures the main application window, including title and icon.
   - **App Menu**: Standard menus with `File`, `Edit`, `View`, `Window`, and a custom `Help` section.
-  - **File Selection**: `ipcMain.handle` events for selecting directories, running commands, and opening folders.
-- **`preload.js`**: Manages secure communication between frontend and backend using Electron’s `contextBridge`:
-  - **Exposes Functions**: Includes functions for verifying login, selecting download paths, and running shell commands.
-  - **Error Logging**: Logs errors if any issues occur during backend function exposure.
-- **`renderer.js`**: Handles front-end interactions, primarily:
-  - **Login Verification**: Uses `window.authAPI.verifyLogin()` to check credentials. If correct, the user is redirected to `dashboard.html`; otherwise, an error is displayed.
-  - **Logout Handling**: Logs out and redirects the user back to `login.html`.
-
-### **`src/python-win/`**
-- **`python.exe`**: Windows version of Python with standalone installation of required packages (`spotdl`, `yt-dlp`), eliminating the need for a system-level Python installation.
-
-### **`src/python-mac/`**
-- **`bin/python3`**: macOS version of Python for handling Spotify, YouTube, and SoundCloud downloads.
+- **`preload.js`**: Manages secure communication between frontend and backend using Electron’s `contextBridge`. It exposes functions for verifying login and selecting download paths.
+- **`renderer.js`**: Handles front-end interactions, primarily the login verification and UI updates.
 
 ---
 
@@ -124,54 +111,41 @@ CamStem/
    - The `preload.js` script securely exposes backend functionality.
 
 2. **Login Flow**:
-   - Credentials are entered on `login.html` and verified via `authAPI.verifyLogin()`. 
-   - Successful login redirects to `dashboard.html`, while errors show feedback near the “Forgot Password” button.
+   - Credentials are entered on `login.html` and verified via `authAPI.verifyLogin()`.
+   - Successful login redirects to `dashboard.html`, while errors show feedback near the username and password fields.
 
 3. **Dashboard Functionality**:
-   - Buttons on `dashboard.html` allow users to download audio, split stems, convert files, and view more about CamStem.
-   - The **Download Audio** button leads to `download.html`.
+   - Buttons on `dashboard.html` allow users to access different features for processing audio, such as downloading audio, managing accounts, and viewing information about CamStem.
 
 4. **Download Page**:
-   - Users enter audio links (Spotify, YouTube, or SoundCloud), and the app detects the service based on the link format.
-   - After selecting the download path, the `downloadSong` function initiates the download using:
-     - **Spotify**: `spotdl`
-     - **YouTube and SoundCloud**: `yt-dlp`
-   - Optionally, users can open the download folder upon completion.
+   - Users can enter audio links (from Spotify, YouTube, or SoundCloud) on `download.html`.
+   - A button initiates the download process (without any Python dependencies).
 
-5. **Command Execution**:
-   - Commands are run via `window.electronAPI.runCommand()`, with progress updates shown on the page.
+5. **Help Menu**:
+   - A custom Help menu provides links to documentation and support resources.
 
-6. **Help Menu**:
-   - A custom Help menu provides links to GitHub documentation and Instagram support.
-
-7. **Error Handling**:
+6. **Error Handling**:
    - Authentication errors are managed in `auth.js`.
-   - Download command errors are logged for troubleshooting.
 
 ---
 
 ## **Common Preferences and Requests**
 
 ### **File Structure and Organization**
-- **Modular Structure**: Separate folders for configurations, assets, authentication, main interface, and Python executables.
-- **Python Environment**: Self-contained Python setup within `src/python-win
-
-` and `src/python-mac` for ease of distribution and cross-platform compatibility.
+- **Modular Structure**: Separate folders for configurations, assets, authentication, and main interface for better organization.
+- **Electron Preferences**: Provides a straightforward application structure for ease of distribution and usage.
 
 ### **Styling Preferences**
-- **Modern, "Bubbly" Aesthetic**: Rounded buttons, soft gradients, and clean layout.
-- **Tailwind Customization**: Custom color scheme and font sizes, ensuring a cohesive look across pages.
-
-### **Electron Preferences**
-- **Platform-Specific Python**: Bundles Windows and macOS versions of Python.
-- **Cache Management**: Cache clearing available for Electron, if necessary, to resolve styling inconsistencies.
+- **Modern, "Bubbly" Aesthetic**: Rounded buttons, soft gradients, and a clean layout created using Tailwind CSS.
+- **Tailwind Customization**: Custom color scheme and font sizes ensure a cohesive look across pages.
 
 ### **Git Workflow**
-- **Concise Commit Messages**: Format used in code updates:
+- **Concise Commit Messages**: Example format used in code updates:
   ```bash
   git add .
-  git commit -m "Updated download functionality for YouTube, Spotify, and SoundCloud"
+  git commit -m "Updated dashboard functionality and styles"
   git push
   ```
 
 ---
+
