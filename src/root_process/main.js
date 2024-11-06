@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Menu, shell, ipcMain, dialog } = require("electron");
 const path = require("path");
+const { spawn } = require('child_process'); // Import child_process for spawning Python script
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -30,6 +31,14 @@ ipcMain.handle("dialog:openDirectory", async () => {
 // Handle folder opening request from renderer
 ipcMain.on("open-folder", (event, folderPath) => {
   shell.openPath(folderPath);
+});
+
+// Handle directory selection for output path
+ipcMain.handle('dialog:selectOutputDirectory', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ["openDirectory"],
+  });
+  return result.canceled ? null : result.filePaths[0];
 });
 
 // Set up the application menu with default options and custom Help links
@@ -101,6 +110,29 @@ app.whenReady().then(() => {
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 });
+
+// Handle Spotify download requests
+ipcMain.on('download-spotify', (event, { link, outputPath }) => {
+  const scriptPath = path.join(__dirname, '../python_scripts/download_song_spotify.py'); // Adjusted path
+
+  const pythonProcess = spawn('python3.10', [scriptPath, link, outputPath]);
+
+  pythonProcess.stdout.on('data', (data) => {
+    console.log(`stdout: ${data}`);
+    event.reply('download-progress', data.toString());
+  });
+
+  pythonProcess.stderr.on('data', (data) => {
+    console.error(`stderr: ${data}`);
+    event.reply('download-error', data.toString());
+  });
+
+  pythonProcess.on('close', (code) => {
+    console.log(`Python process exited with code ${code}`);
+    event.reply('download-complete', "Download Complete!"); // Updated message
+  });
+});
+
 
 // Quit the app when all windows are closed, except on macOS
 app.on("window-all-closed", () => {

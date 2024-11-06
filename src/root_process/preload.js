@@ -15,8 +15,10 @@ try {
 }
 
 // Expose functions to the renderer process
-contextBridge.exposeInMainWorld("electronAPI", {
-  selectDownloadPath: () => ipcRenderer.invoke("dialog:openDirectory"),
-  openFolder: (path) => ipcRenderer.send("open-folder", path),
-  platform: process.platform
+contextBridge.exposeInMainWorld("electron", {
+  ipcRenderer: {
+    send: (channel, data) => ipcRenderer.send(channel, data),
+    on: (channel, func) => ipcRenderer.on(channel, (event, ...args) => func(...args)),
+    invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+  }
 });

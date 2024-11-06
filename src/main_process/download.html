@@ -72,15 +72,28 @@
       }
     }
 
-    function handleDownload() {
+    async function handleDownload() {
       if (!linkType) {
         alert("Please enter a valid link from Spotify, YouTube, or SoundCloud.");
         return;
       }
 
+      const audioLink = document.getElementById("audioLinkInput").value; // Get the link from input
+
+      // Prompt user for output directory
+      const outputPath = await window.electron.ipcRenderer.invoke('dialog:selectOutputDirectory');
+      if (!outputPath) {
+        alert("No output directory selected. Download cancelled.");
+        return;
+      }
+
+      // Set the desired file name directly in the output path
+      const fullOutputPath = `${outputPath}/downloaded_song.mp3`; // Fixed file name
+
       switch (linkType) {
         case 'spotify':
           console.log("Spotify Download Link Button Pressed");
+          window.electron.ipcRenderer.send('download-spotify', { link: audioLink, outputPath: fullOutputPath }); // Send link and output path to main process
           break;
         case 'youtube':
           console.log("YouTube Download Link Button Pressed");
@@ -92,6 +105,20 @@
           console.log("Unknown link type");
       }
     }
+
+    // Listen for messages from the main process (optional)
+    window.electron.ipcRenderer.on('download-progress', (data) => {
+      console.log(`Download Progress: ${data}`);
+      // Optionally, you can update the UI with progress messages
+    });
+
+    window.electron.ipcRenderer.on('download-complete', (message) => {
+      alert(message); // Notify user of download completion
+    });
+
+    window.electron.ipcRenderer.on('download-error', (error) => {
+      alert(`Error: ${error}`); // Notify user of an error
+    });
   </script>
 </body>
 </html>

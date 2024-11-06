@@ -1,6 +1,4 @@
 node_modules/
 *.env
 dist/
-src/python-win
-src/python-mac
 .vscode
