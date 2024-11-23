@@ -1,5 +1,3 @@
-// File path: /Users/david/Desktop/Project-CamStem/CamStemSoftware/src/electron-ui/preload.js
-
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {

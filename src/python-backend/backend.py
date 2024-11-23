@@ -1,17 +1,7 @@
-# File path: /Users/david/Desktop/Project-CamStem/CamStemSoftware/src/python-backend/backend.py
-
 import os
 import shutil
 import subprocess
-import sys
-import torchaudio
-import json
-
-# Set torchaudio backend to ffmpeg (if available)
-try:
-    torchaudio.set_audio_backend("ffmpeg")
-except UserWarning:
-    print("FFmpeg backend is already set or unavailable.")
+import argparse
 
 # Function to run Demucs
 def separate_stems(model_name, input_file_path, output_dir):
@@ -74,38 +64,22 @@ def separate_stems(model_name, input_file_path, output_dir):
 
 # Main execution logic
 if __name__ == "__main__":
-    # Read arguments from the command line
-    if len(sys.argv) < 2:
-        print("Error: Missing input JSON file.")
-        sys.exit(1)
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Run Demucs for audio stem separation.")
+    parser.add_argument("--model", type=str, required=True, help="The Demucs model to use.")
+    parser.add_argument("--input", type=str, required=True, help="Path to the input audio file.")
+    parser.add_argument("--output", type=str, required=True, help="Path to the output directory.")
 
-    # Get the JSON file path
-    json_file_path = sys.argv[1]
+    args = parser.parse_args()
 
-    try:
-        # Load paths from the JSON file
-        with open(json_file_path, "r") as f:
-            paths = json.load(f)
-        
-        model_name = paths.get("model_name", "htdemucs")
-        input_file_path = paths["input_file_path"]
-        output_dir = paths["output_dir"]
+    # Validate input paths
+    if not os.path.isfile(args.input):
+        print(f"Error: Input file '{args.input}' does not exist.")
+        exit(1)
 
-        # Validate paths
-        if not os.path.isfile(input_file_path):
-            print(f"Error: Input file '{input_file_path}' does not exist.")
-            sys.exit(1)
+    if not os.path.isdir(args.output):
+        print(f"Error: Output directory '{args.output}' does not exist.")
+        exit(1)
 
-        if not os.path.isdir(output_dir):
-            print(f"Error: Output directory '{output_dir}' does not exist.")
-            sys.exit(1)
-
-        # Run the separation process
-        separate_stems(model_name, input_file_path, output_dir)
-
-    except FileNotFoundError as e:
-        print(f"Error: File not found - {e}")
-    except json.JSONDecodeError:
-        print("Error: Failed to parse JSON file.")
-    except Exception as e:
-        print(f"Process failed: {e}")
+    # Run the stem separation process
+    separate_stems(args.model, args.input, args.output)
