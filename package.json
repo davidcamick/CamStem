@@ -5,7 +5,7 @@
   "main": "src/electron-ui/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder --debug --verbose"
   },
   "keywords": [
     "electron",
@@ -24,13 +24,14 @@
     "appId": "com.camstemsoftware.app",
     "files": [
       "src/**/*",
-      "src/python-backend/dist/backend",
-      "src/bin/ffmpeg"
+      "dist/**/*",
+      "node_modules/**/*",
+      "!**/node_modules/.cache"
     ],
     "extraResources": [
       {
-        "from": "src/python-backend/dist/backend",
-        "to": "src/python-backend/dist/backend"
+        "from": "dist/backend",
+        "to": "backend"
       }
     ],
     "mac": {

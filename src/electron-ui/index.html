@@ -3,19 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CamStem</title>
+  <title>CamStem - Stem Splitter</title>
 </head>
 <body>
   <h1>CamStem - Stem Splitter</h1>
+
+  <!-- Input File Section -->
   <div>
-    <button id="select-input">Select Audio File</button>
-    <p id="input-path"></p>
+    <button id="select-input">Select Input File</button>
+    <p id="input-path-display">No file selected</p>
   </div>
+
+  <!-- Output Folder Section -->
   <div>
     <button id="select-output">Select Output Folder</button>
-    <p id="output-path"></p>
+    <p id="output-path-display">No folder selected</p>
   </div>
+
+  <!-- Model Selection -->
   <div>
+    <label for="model-select">Select Model:</label>
     <select id="model-select">
       <option value="htdemucs">htdemucs</option>
       <option value="htdemucs_ft">htdemucs_ft</option>
@@ -23,36 +30,61 @@
       <option value="demucs_unquantized">demucs_unquantized</option>
     </select>
   </div>
+
+  <!-- Split Stems Button -->
   <button id="split-stems">Split Stems</button>
+
+  <!-- Log Output -->
   <div id="log"></div>
 
   <script>
-    const selectInput = document.getElementById('select-input');
-    const selectOutput = document.getElementById('select-output');
-    const splitButton = document.getElementById('split-stems');
+    // DOM Elements
+    const selectInputButton = document.getElementById('select-input');
+    const inputPathDisplay = document.getElementById('input-path-display');
+    const selectOutputButton = document.getElementById('select-output');
+    const outputPathDisplay = document.getElementById('output-path-display');
     const modelSelect = document.getElementById('model-select');
+    const splitButton = document.getElementById('split-stems');
     const logDiv = document.getElementById('log');
 
+    // Variables to store paths
     let inputPath = '';
     let outputPath = '';
 
-    selectInput.addEventListener('click', async () => {
+    // Select Input File
+    selectInputButton.addEventListener('click', async () => {
       inputPath = await window.electronAPI.selectFile();
-      document.getElementById('input-path').innerText = `Input: ${inputPath}`;
+      inputPathDisplay.innerText = inputPath ? `Input File: ${inputPath}` : 'No file selected';
     });
 
-    selectOutput.addEventListener('click', async () => {
+    // Select Output Folder
+    selectOutputButton.addEventListener('click', async () => {
       outputPath = await window.electronAPI.selectFolder();
-      document.getElementById('output-path').innerText = `Output: ${outputPath}`;
+      outputPathDisplay.innerText = outputPath ? `Output Folder: ${outputPath}` : 'No folder selected';
     });
 
-    splitButton.addEventListener('click', () => {
+    // Split Stems
+    splitButton.addEventListener('click', async () => {
       const model = modelSelect.value;
-      window.electronAPI.splitStems({ inputPath, outputPath, model });
-    });
 
-    window.electronAPI.onProcessLog((log) => {
-      logDiv.innerHTML += `<p>${log}</p>`;
+      if (!inputPath || !outputPath || !model) {
+        logDiv.innerHTML += `<p style="color: red;">Error: Please select an input file, output folder, and model.</p>`;
+        return;
+      }
+
+      logDiv.innerHTML += `<p>Starting split-stems process...</p>`;
+      console.log(`Sending split-stems request with:
+        Input: ${inputPath},
+        Output: ${outputPath},
+        Model: ${model}`);
+
+      try {
+        await window.electronAPI.splitStems({ inputPath, outputPath, model });
+        logDiv.innerHTML += `<p style="color: green;">Split-stems process completed successfully.</p>`;
+      } catch (error) {
+        logDiv.innerHTML += `<p style="color: red;">Error: ${error.message}</p>`;
+        console.error('Error triggering backend process:', error);
+      }
     });
   </script>
 </body>
