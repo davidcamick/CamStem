@@ -1,0 +1,41 @@
+{
+  "name": "camstemsoftware",
+  "version": "1.0.0",
+  "description": "Audio stem-splitting software using Electron and Demucs.",
+  "main": "src/electron-ui/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": [
+    "electron",
+    "demucs",
+    "audio",
+    "ffmpeg",
+    "stem-splitting"
+  ],
+  "author": "David",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.camstemsoftware.app",
+    "files": [
+      "src/**/*",
+      "src/python-backend/dist/backend",
+      "src/bin/ffmpeg"
+    ],
+    "extraResources": [
+      {
+        "from": "src/python-backend/dist/backend",
+        "to": "src/python-backend/dist/backend"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.music",
+      "target": "dmg"
+    }
+  }
+}

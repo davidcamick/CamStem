@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CamStem</title>
+</head>
+<body>
+  <h1>CamStem - Stem Splitter</h1>
+  <div>
+    <button id="select-input">Select Audio File</button>
+    <p id="input-path"></p>
+  </div>
+  <div>
+    <button id="select-output">Select Output Folder</button>
+    <p id="output-path"></p>
+  </div>
+  <div>
+    <select id="model-select">
+      <option value="htdemucs">htdemucs</option>
+      <option value="htdemucs_ft">htdemucs_ft</option>
+      <option value="demucs_quantized">demucs_quantized</option>
+      <option value="demucs_unquantized">demucs_unquantized</option>
+    </select>
+  </div>
+  <button id="split-stems">Split Stems</button>
+  <div id="log"></div>
+
+  <script>
+    const selectInput = document.getElementById('select-input');
+    const selectOutput = document.getElementById('select-output');
+    const splitButton = document.getElementById('split-stems');
+    const modelSelect = document.getElementById('model-select');
+    const logDiv = document.getElementById('log');
+
+    let inputPath = '';
+    let outputPath = '';
+
+    selectInput.addEventListener('click', async () => {
+      inputPath = await window.electronAPI.selectFile();
+      document.getElementById('input-path').innerText = `Input: ${inputPath}`;
+    });
+
+    selectOutput.addEventListener('click', async () => {
+      outputPath = await window.electronAPI.selectFolder();
+      document.getElementById('output-path').innerText = `Output: ${outputPath}`;
+    });
+
+    splitButton.addEventListener('click', () => {
+      const model = modelSelect.value;
+      window.electronAPI.splitStems({ inputPath, outputPath, model });
+    });
+
+    window.electronAPI.onProcessLog((log) => {
+      logDiv.innerHTML += `<p>${log}</p>`;
+    });
+  </script>
+</body>
+</html>
