@@ -5,14 +5,24 @@ const fs = require('fs');
 
 let mainWindow; // Reference to the main window
 
+// Function to dynamically resolve the backend path
+function getBackendPath() {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'backend') // Production path
+    : path.join(__dirname, '../../dist/backend'); // Development path
+}
+
+// Log file path
+const logPath = path.join(app.getPath('userData'), 'backend-log.txt');
+
 // Function to spawn the backend process
 function spawnBackend(model, inputPath, outputPath) {
-  const backendPath = '/Users/david/Desktop/Project-CamStem/CamStemSoftware/dist/backend';
+  const backendPath = getBackendPath();
 
   console.log(`Starting backend from: ${backendPath}`);
   console.log(`Model: ${model}, Input: ${inputPath}, Output: ${outputPath}`);
+  console.log(`Logs are saved at: ${logPath}`);
 
-  // Check if the backend executable exists
   if (!fs.existsSync(backendPath)) {
     console.error(`Backend executable not found at: ${backendPath}`);
     return null;
@@ -20,26 +30,23 @@ function spawnBackend(model, inputPath, outputPath) {
 
   try {
     const backendProcess = spawn(backendPath, ['--model', model, '--input', inputPath, '--output', outputPath], {
-      stdio: 'inherit',
+      stdio: ['ignore', 'pipe', 'pipe'], // Capture stdout and stderr
     });
 
+    // Stream logs to a file
+    const logStream = fs.createWriteStream(logPath, { flags: 'a' });
+    backendProcess.stdout.pipe(logStream);
+    backendProcess.stderr.pipe(logStream);
+
     backendProcess.on('error', (err) => {
-      if (err.code === 'EACCES') {
-        console.error(`Permission denied: ${backendPath}. Ensure it is executable.`);
-        console.error('Try running the following commands:');
-        console.error(`  chmod +x "${backendPath}"`);
-        console.error(`  xattr -r -d com.apple.quarantine "${backendPath}"`);
-      } else {
-        console.error('Failed to start backend process:', err);
-      }
+      console.error(`Backend process error: ${err.message}`);
+      logStream.write(`Backend process error: ${err.message}\n`);
     });
 
     backendProcess.on('close', (code) => {
-      if (code === 0) {
-        console.log('Backend process completed successfully.');
-      } else {
-        console.error(`Backend process exited with code ${code}`);
-      }
+      console.log(`Backend process exited with code: ${code}`);
+      logStream.write(`Backend process exited with code: ${code}\n`);
+      logStream.end();
     });
 
     return backendProcess;
@@ -51,34 +58,30 @@ function spawnBackend(model, inputPath, outputPath) {
 
 // App ready event
 app.on('ready', () => {
-  // Create the main Electron window
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'), // Preload script for secure IPC
+      preload: path.join(__dirname, 'preload.js'), // Preload script
     },
   });
 
-  // Load the frontend UI
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
-  // Handle window close
+  console.log(`Logs are saved at: ${logPath}`);
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
 });
 
-// Quit the app when all windows are closed
 app.on('window-all-closed', () => {
-  // On macOS, apps usually stay active until explicitly quit
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
 app.on('activate', () => {
-  // Re-create a window if none are open
   if (mainWindow === null) {
     mainWindow = new BrowserWindow({
       width: 800,
@@ -113,6 +116,10 @@ ipcMain.handle('split-stems', async (event, { inputPath, outputPath, model }) =>
     return;
   }
 
-  // Spawn the backend process with the provided arguments
   spawnBackend(model, inputPath, outputPath);
+});
+
+ipcMain.handle('get-log-path', () => {
+  console.log(`Log file path provided: ${logPath}`);
+  return logPath;
 });

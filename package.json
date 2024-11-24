@@ -18,7 +18,9 @@
   "license": "ISC",
   "devDependencies": {
     "electron": "^33.2.0",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "electron-installer-dmg": "^5.0.1",
+    "electron-packager": "^17.1.2"
   },
   "build": {
     "appId": "com.camstemsoftware.app",
@@ -26,7 +28,8 @@
       "src/**/*",
       "dist/**/*",
       "node_modules/**/*",
-      "!**/node_modules/.cache"
+      "!**/node_modules/.cache",
+      "!**/src/python-backend-venv-backup/**"
     ],
     "extraResources": [
       {

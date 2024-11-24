@@ -4,24 +4,42 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CamStem - Stem Splitter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .section {
+      margin: 15px 0;
+    }
+    #log-path {
+      font-family: monospace;
+      color: #444;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-top: 10px;
+      word-wrap: break-word;
+    }
+  </style>
 </head>
 <body>
   <h1>CamStem - Stem Splitter</h1>
 
-  <!-- Input File Section -->
-  <div>
+  <div class="section">
     <button id="select-input">Select Input File</button>
     <p id="input-path-display">No file selected</p>
   </div>
 
-  <!-- Output Folder Section -->
-  <div>
+  <div class="section">
     <button id="select-output">Select Output Folder</button>
     <p id="output-path-display">No folder selected</p>
   </div>
 
-  <!-- Model Selection -->
-  <div>
+  <div class="section">
     <label for="model-select">Select Model:</label>
     <select id="model-select">
       <option value="htdemucs">htdemucs</option>
@@ -31,14 +49,18 @@
     </select>
   </div>
 
-  <!-- Split Stems Button -->
-  <button id="split-stems">Split Stems</button>
+  <div class="section">
+    <button id="split-stems">Split Stems</button>
+  </div>
 
-  <!-- Log Output -->
-  <div id="log"></div>
+  <div class="section">
+    <h3>Log File Path:</h3>
+    <div id="log-path">Fetching log path...</div>
+  </div>
+
+  <div id="log" class="section"></div>
 
   <script>
-    // DOM Elements
     const selectInputButton = document.getElementById('select-input');
     const inputPathDisplay = document.getElementById('input-path-display');
     const selectOutputButton = document.getElementById('select-output');
@@ -46,25 +68,26 @@
     const modelSelect = document.getElementById('model-select');
     const splitButton = document.getElementById('split-stems');
     const logDiv = document.getElementById('log');
+    const logPathDiv = document.getElementById('log-path');
 
-    // Variables to store paths
-    let inputPath = '';
-    let outputPath = '';
+    window.addEventListener('DOMContentLoaded', async () => {
+      const logPath = await window.electronAPI.getLogPath();
+      logPathDiv.textContent = logPath;
+    });
 
-    // Select Input File
     selectInputButton.addEventListener('click', async () => {
-      inputPath = await window.electronAPI.selectFile();
+      const inputPath = await window.electronAPI.selectFile();
       inputPathDisplay.innerText = inputPath ? `Input File: ${inputPath}` : 'No file selected';
     });
 
-    // Select Output Folder
     selectOutputButton.addEventListener('click', async () => {
-      outputPath = await window.electronAPI.selectFolder();
+      const outputPath = await window.electronAPI.selectFolder();
       outputPathDisplay.innerText = outputPath ? `Output Folder: ${outputPath}` : 'No folder selected';
     });
 
-    // Split Stems
     splitButton.addEventListener('click', async () => {
+      const inputPath = inputPathDisplay.textContent.replace('Input File: ', '');
+      const outputPath = outputPathDisplay.textContent.replace('Output Folder: ', '');
       const model = modelSelect.value;
 
       if (!inputPath || !outputPath || !model) {
@@ -73,17 +96,12 @@
       }
 
       logDiv.innerHTML += `<p>Starting split-stems process...</p>`;
-      console.log(`Sending split-stems request with:
-        Input: ${inputPath},
-        Output: ${outputPath},
-        Model: ${model}`);
 
       try {
         await window.electronAPI.splitStems({ inputPath, outputPath, model });
         logDiv.innerHTML += `<p style="color: green;">Split-stems process completed successfully.</p>`;
       } catch (error) {
         logDiv.innerHTML += `<p style="color: red;">Error: ${error.message}</p>`;
-        console.error('Error triggering backend process:', error);
       }
     });
   </script>

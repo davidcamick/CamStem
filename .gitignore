@@ -1,4 +1,47 @@
-node_modules
-bin
-dist
-package-lock.json
+*.zip
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build directories
+dist/
+release/
+build/
+
+# Logs
+logs/
+*.log
+*.log.*
+backend-log.txt
+
+# PyInstaller build artifacts
+src/python-backend/__pycache__/
+src/python-backend/build/
+src/python-backend/dist/
+src/python-backend/*.spec
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Compiled Python files
+*.pyc
+*.pyo
+__pycache__/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Electron binaries
+electron-v*.zip
+electron-v*/**
+
+# Ignore specific large files accidentally added
+src/python-backend/venv/
+src/python-backend-venv-backup/
