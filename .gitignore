@@ -46,3 +46,4 @@ electron-v*/**
 # Ignore specific large files accidentally added
 src/python-backend/venv/
 src/python-backend-venv-backup/
+src/python-backend/models/*.th
