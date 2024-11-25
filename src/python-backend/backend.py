@@ -18,13 +18,29 @@ def separate_stems(model_name, input_file_path, output_dir):
     print(f"Input File: {input_file_path}")
     print(f"Output Directory: {output_dir}")
 
+    # Explicitly set PATH to include common locations for demucs
+    os.environ["PATH"] = (
+        os.environ.get("PATH", "") + ":"  # Retain the existing PATH
+        + "/Users/david/.pyenv/shims:"  # Common for pyenv users
+        + "/usr/local/bin:"  # Common for global installations
+        + "/opt/homebrew/bin"  # macOS with Homebrew
+    )
+    print(f"Updated PATH: {os.environ['PATH']}")
+
+    # Check if the `demucs` command is available
+    demucs_path = shutil.which("demucs")
+    if not demucs_path:
+        raise FileNotFoundError(
+            "The 'demucs' command was not found. Please ensure it is installed and accessible in your PATH."
+        )
+
     # Ensure output directory exists
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    # Define the command for Demucs
-    command = [
-        "demucs",
+    # Build the Demucs command
+    demucs_command = [
+        demucs_path,  # Path to the `demucs` binary
         "-n", model_name,  # Model name
         "--mp3",           # Export as MP3
         "--out", output_dir,
@@ -32,32 +48,12 @@ def separate_stems(model_name, input_file_path, output_dir):
     ]
 
     # Debugging: Print the command
-    print("Running command:", " ".join(command))
+    print("Running command:", " ".join(demucs_command))
 
     try:
         # Run the Demucs command
-        subprocess.run(command, check=True)
-
-        # After splitting, move the song folder to the output directory
-        htdemucs_folder = os.path.join(output_dir, "htdemucs")
-        if os.path.exists(htdemucs_folder):
-            for song_folder in os.listdir(htdemucs_folder):
-                song_folder_path = os.path.join(htdemucs_folder, song_folder)
-
-                # Ensure it's a directory
-                if os.path.isdir(song_folder_path):
-                    final_song_path = os.path.join(output_dir, song_folder)
-                    
-                    # Move the song folder to the output directory
-                    shutil.move(song_folder_path, final_song_path)
-                    print(f"Moved folder: {song_folder_path} -> {final_song_path}")
-            
-            # Remove the empty `htdemucs` folder
-            shutil.rmtree(htdemucs_folder)
-            print(f"Deleted folder: {htdemucs_folder}")
-
+        subprocess.run(demucs_command, check=True)
         print("Stem separation completed successfully!")
-    
     except subprocess.CalledProcessError as e:
         print(f"Error during stem separation: {e}")
         raise

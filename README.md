@@ -1,159 +1,176 @@
-Certainly! Let’s include the **file directory structure** in the `README.md` and provide a comprehensive view of the app. Here's the revised and detailed `README.md`:
+# CamStem - Stem Splitter
+
+CamStem is an audio stem-splitting application that uses **Electron** for its user interface and **Demucs** for high-quality audio separation. This app is ideal for music producers, DJs, and anyone looking to isolate instruments or vocals from a song.
 
 ---
 
-### **README.md**
-
-```markdown
-# CamStem - Stem Splitter Software
-
-CamStem is a powerful stem-splitting tool designed to separate vocals, drums, bass, and other instrumentals from audio files. It leverages the advanced **Demucs** AI model for high-quality music source separation.
-
----
-
-## How It Works
-
-1. **Input Selection**:  
-   Users can select an input audio file (e.g., `.mp3`, `.wav`) via the app’s UI.  
-
-2. **Output Directory**:  
-   Users choose a directory where the separated stems will be saved.  
-
-3. **Model Selection**:  
-   Users select the desired Demucs model for stem separation:
-   - **htdemucs**: Standard high-quality model.
-   - **htdemucs_ft**: Fine-tuned variant for better separation.
-   - **demucs_quantized**: Optimized for performance.
-   - **demucs_unquantized**: Original uncompressed version.
-
-4. **Stem Splitting**:  
-   The app processes the input file and saves the separated stems (e.g., vocals, drums, bass) in the selected output directory.  
-
-5. **Logs**:  
-   A detailed log of the backend process is saved dynamically in the appropriate location for the system:
-   - macOS: `~/Library/Application Support/CamStemSoftware/backend-log.txt`
-   - Windows: `%APPDATA%\CamStemSoftware\backend-log.txt`
-   - Linux: `~/.config/CamStemSoftware/backend-log.txt`
+## **Features**
+- Split audio into multiple stems using the power of Demucs.
+- Supports MP3 and WAV outputs.
+- Lightweight and easy to use, with a clean UI.
+- Compatible with macOS, Windows, and Linux.
 
 ---
 
-## File Directory Structure
+## **System Requirements**
+- **Operating System**: macOS 10.12+, Windows 10+, Linux with AppImage support.
+- **Python Version**: Python 3.9 or later installed.
+- **Internet Connection**: Required for downloading Demucs models if not already installed.
 
-Below is the directory structure for the project:
+---
 
+## **File Structure**
+Here's the project directory structure for developers:
+
+CamStemSoftware/ ├── dist/ # Output directory for built executables ├── release/ # Output directory for release builds ├── src/ # Source files │ ├── electron-ui/ # Frontend UI for Electron │ │ ├── index.html # Main HTML file │ │ ├── main.js # Electron main process │ │ └── preload.js # Preload script for secure IPC │ ├── python-backend/ # Backend for Demucs processing │ │ ├── backend.py # Main backend logic │ │ └── dist/ # Output for PyInstaller-built backend │ └── assets/ # Static assets (e.g., icons, styles) ├── node_modules/ # Node.js dependencies ├── package.json # NPM configuration and build scripts ├── .gitignore # Git ignored files and directories ├── README.md # Project documentation └── LICENSE # Project license
+
+
+---
+
+## **Installation Instructions**
+
+### 1. **Install Python**
+CamStem requires Python to run the backend processing. Follow these steps:
+1. Download Python 3.9 or later from the official [Python website](https://www.python.org/downloads/).
+2. During installation, make sure to check the box **Add Python to PATH**.
+3. Verify the installation by running:
+   ```bash
+   python3 --version
+
+## **Installation Instructions**
+
+### 1. **Install Python**
+CamStem requires Python to run the backend processing. Follow these steps:
+1. Download Python 3.9 or later from the official [Python website](https://www.python.org/downloads/).
+2. During installation, make sure to check the box **Add Python to PATH**.
+3. Verify the installation by running:
+   ```bash
+   python3 --version
+   ```
+
+---
+
+### 2. **Install Demucs**
+Demucs is the core audio separation tool used by CamStem. Install it via pip:
+1. Open a terminal or command prompt.
+2. Run the following command:
+   ```bash
+   pip install demucs
+   ```
+3. Verify the installation:
+   ```bash
+   demucs --help
+   ```
+
+   You should see a help menu for Demucs. If not, ensure Python and pip are properly installed.
+
+---
+
+### 3. **Configure PATH for Demucs**
+Ensure `demucs` is accessible from any environment by adding it to your `PATH`:
+1. Determine where `demucs` is installed:
+   ```bash
+   which demucs
+   ```
+   Example Output:
+   ```
+   /Users/yourname/.pyenv/shims/demucs
+   ```
+
+2. Add this directory to your `PATH`:
+   - **macOS/Linux**: Edit `~/.zshrc` (or `~/.bashrc`) and add:
+     ```bash
+     export PATH=$PATH:/Users/yourname/.pyenv/shims
+     ```
+     Then reload the shell:
+     ```bash
+     source ~/.zshrc
+     ```
+   - **Windows**: Add the directory to your system’s PATH in Environment Variables.
+
+---
+
+### 4. **Run CamStem**
+1. Download the appropriate version for your OS:
+   - macOS: `CamStem-1.0.0-arm64.dmg`
+   - Windows: `CamStem Setup 1.0.0.exe`
+   - Linux: `CamStem-1.0.0-arm64.AppImage`
+2. Install the app:
+   - On macOS, drag the `.app` file to your Applications folder.
+   - On Windows, run the installer.
+   - On Linux, make the AppImage executable:
+     ```bash
+     chmod +x CamStem-1.0.0-arm64.AppImage
+     ```
+3. Launch the app and follow these steps:
+   - **Select Input File**: Choose an MP3 or WAV file to process.
+   - **Select Output Folder**: Specify where the separated stems should be saved.
+   - **Choose Model**: Select a Demucs model (default: `htdemucs`).
+   - Click **Split Stems** to start processing.
+
+---
+
+## **Troubleshooting**
+
+### Demucs Not Found
+If you see an error like:
 ```
-CamStemSoftware/
-├── release/                     # Packaged app output directory
-│   └── CamStem-darwin-arm64/    # Packaged macOS app
-│       └── CamStem.app/         
-│           └── Contents/Resources/
-│               ├── app/         # Electron frontend resources
-│               ├── backend/     # Python backend executable
-│               ├── locales/     # Language files for Electron
-│               └── ...
-├── src/                         # Source code directory
-│   ├── electron-ui/             # Electron app files
-│   │   ├── index.html           # Frontend HTML file
-│   │   ├── main.js              # Main Electron backend logic
-│   │   └── preload.js           # Preload script for secure IPC
-│   ├── python-backend/          # Python backend files
-│   │   ├── backend.py           # Backend logic for Demucs
-│   │   ├── backend.spec         # PyInstaller spec file
-│   │   └── dist/                # Packaged Python backend executable
-│   │       └── backend          # Built backend executable
-│   └── assets/                  # Additional assets (icons, etc.)
-├── package.json                 # Node.js project configuration
-├── README.md                    # Project documentation (this file)
-└── ...
+The 'demucs' command was not found. Please ensure it is installed and in your PATH.
 ```
+1. Ensure Demucs is installed:
+   ```bash
+   pip install demucs
+   ```
+2. Check that `demucs` is in your `PATH`:
+   ```bash
+   which demucs
+   ```
+3. If the issue persists, manually add the directory to your PATH (see step 3 above).
+
+### Python Not Found
+If Python isn’t installed, download it from the [Python website](https://www.python.org/downloads/) and ensure it’s added to your `PATH`.
+
+### Slow Stem Separation
+Separation time depends on the complexity of the audio and your system's performance. Using a GPU for processing can significantly speed up Demucs. For advanced users, configure Demucs to use CUDA if you have a compatible GPU.
 
 ---
 
-## Beta Tester Instructions
+## **Building the App (For Developers)**
+If you want to modify or rebuild CamStem:
 
-### Prerequisites
-1. **Operating System**: macOS, Windows, or Linux (macOS is tested; Windows/Linux support pending).  
-2. **Dependencies**: None. The app is fully packaged and self-contained.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/CamStem.git
+   cd CamStem
+   ```
 
-### Steps to Run the App
-1. Download the `.dmg` (macOS), `.exe` (Windows), or `.AppImage` (Linux) file provided by the developer.
-2. Install the application:
-   - macOS: Drag the `.app` file into the Applications folder.
-   - Windows: Run the installer.
-   - Linux: Make the `.AppImage` file executable (`chmod +x`) and run it.
-3. Launch the application.
-4. Test the following functionality:
-   - Select an input audio file.
-   - Choose an output folder.
-   - Select a model and perform stem splitting.
-5. Verify the logs:
-   - Ensure the log file is created in the expected location (see above for log paths).
-   - Confirm the logs include the backend process details.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-6. Provide feedback on:
-   - Ease of use.
-   - Any errors encountered.
-   - Performance of the stem-splitting process.
+3. Build the backend:
+   ```bash
+   cd src/python-backend
+   pyinstaller --onefile backend.py
+   cd ../../
+   ```
 
----
+4. Package the app:
+   ```bash
+   npm run build
+   ```
 
-## Making Changes and Packaging the App
-
-### Steps to Make Changes
-1. **Frontend (Electron UI)**:
-   - Modify `src/electron-ui/index.html` for UI changes.
-   - Modify `src/electron-ui/main.js` for backend communication logic.
-   - Modify `src/electron-ui/preload.js` for secure IPC changes.
-
-2. **Backend (Python)**:
-   - Update `src/python-backend/backend.py` for any changes to the stem-splitting logic or dependencies.
-   - Modify `src/python-backend/backend.spec` to include new dependencies or files.
+   The distributable files will be located in the `dist/` directory.
 
 ---
 
-### Steps to Package the App
-1. **Build the Python Backend**:
-   - Ensure you are in the `src/python-backend/` directory:
-     ```bash
-     cd src/python-backend
-     ```
-   - Package the backend using PyInstaller:
-     ```bash
-     pyinstaller --onefile backend.py
-     ```
-
-2. **Package the Electron App**:
-   - Return to the project root directory:
-     ```bash
-     cd ../../
-     ```
-   - Package the app using Electron Packager:
-     ```bash
-     npx @electron/packager . CamStem --platform=darwin --arch=arm64 --out=release --overwrite --electronVersion=33.2.0 --extra-resource ./src/python-backend/dist/backend
-     ```
-
-3. **Verify the Packaged App**:
-   - Test the app in the `release/` directory:
-     ```bash
-     open release/CamStem-darwin-arm64/CamStem.app
-     ```
+## **Support**
+If you encounter any issues or have questions, feel free to open an issue on the [GitHub repository](https://github.com/yourusername/CamStem).
 
 ---
 
-## Troubleshooting
-
-### Issue: `FileNotFoundError: [Errno 2] No such file or directory: 'demucs'`
-**Solution**: Ensure the `demucs` dependency is installed and accessible in the environment where the backend is running. If needed, provide the full path to the `demucs` binary in `backend.py`.
-
-### Issue: Logs Not Being Written
-**Solution**: Verify that the log file directory (`~/Library/Application Support/CamStemSoftware/`) exists and is writable. Check for errors in `main.js` related to file permissions.
-
----
-
-## Feedback
-Please provide feedback or report issues via email or in the designated feedback form provided by the development team.
-
----
-
-Enjoy using CamStem!
+## **Credits**
+- [Demucs](https://github.com/facebookresearch/demucs) for audio separation.
+- All contributors and testers who made CamStem possible.
 ```

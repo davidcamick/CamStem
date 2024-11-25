@@ -5,7 +5,7 @@
   "main": "src/electron-ui/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --debug --verbose"
+    "build": "electron-builder --mac --win --linux"
   },
   "keywords": [
     "electron",
@@ -24,22 +24,30 @@
   },
   "build": {
     "appId": "com.camstemsoftware.app",
+    "productName": "CamStem",
     "files": [
-      "src/**/*",
-      "dist/**/*",
+      "src/electron-ui/**/*",
+      "src/assets/**/*",
+      "src/python-backend/dist/backend",
       "node_modules/**/*",
       "!**/node_modules/.cache",
-      "!**/src/python-backend-venv-backup/**"
+      "!**/release/**"
     ],
     "extraResources": [
       {
-        "from": "dist/backend",
+        "from": "src/python-backend/dist/backend",
         "to": "backend"
       }
     ],
     "mac": {
       "category": "public.app-category.music",
       "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
     }
   }
 }
