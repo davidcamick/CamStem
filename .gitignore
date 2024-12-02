@@ -1,0 +1,4 @@
+node_modules
+src/backend/demucs-cxfreeze-mac
+tests/
+release/
