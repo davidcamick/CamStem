@@ -165,6 +165,22 @@ async function getStoredCredentials() {
     return { clerkID, stripeID };
 }
 
+// Reintroduce select-path handler
+ipcMain.handle('select-path', async (event, type) => {
+    const options = type === 'file'
+        ? { properties: ['openFile'] }
+        : { properties: ['openDirectory'] };
+
+    const result = await dialog.showOpenDialog(options);
+
+    if (!result.canceled && result.filePaths.length > 0) {
+        logToFile(`Selected Path: ${result.filePaths[0]}`);
+        return result.filePaths[0];
+    }
+
+    return null;
+});
+
 // Check if a valid key is already stored
 ipcMain.handle('check-valid-key', async () => {
     try {
@@ -276,4 +292,74 @@ ipcMain.handle('remove-saved-key', async () => {
         logToFile(`Error removing software key: ${err.message}`);
         return { success: false, error: err.message };
     }
+});
+
+// Reintroduce the getResourcePath function and run-demucs handler from old main.js
+function getResourcePath(relativePath) {
+    const basePath = app.isPackaged
+        ? path.join(process.resourcesPath)
+        : path.join(app.getAppPath());
+    const resolvedPath = path.join(basePath, relativePath);
+    logToFile(`Resolved Path: ${resolvedPath}`);
+    return resolvedPath;
+}
+
+ipcMain.on('run-demucs', (event, args) => {
+    // Use different paths for development vs packaged
+    const relativeDemucsPath = isDev
+        ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
+        : 'demucs-cxfreeze-mac/demucs-cxfreeze';
+
+    const demucsPath = getResourcePath(relativeDemucsPath);
+    const modelRepo = getResourcePath('Models');
+
+    const { inputPath, outputPath, model, mp3Preset } = args;
+
+    logToFile('Running Demucs with args:');
+    logToFile(`Demucs Path: ${demucsPath}`);
+    logToFile(`Model Repo: ${modelRepo}`);
+    logToFile(`Input Path: ${inputPath}`);
+    logToFile(`Output Path: ${outputPath}`);
+    logToFile(`Model: ${model}`);
+    logToFile(`MP3 Preset: ${mp3Preset}`);
+
+    const commandArgs = [
+        '-n', model,
+        '--repo', modelRepo,
+        '-o', outputPath,
+        '--mp3',
+        '--mp3-preset', mp3Preset,
+        inputPath,
+    ];
+
+    logToFile(`Command Args: ${commandArgs.join(' ')}`);
+
+    const demucsProcess = execFile(demucsPath, commandArgs);
+
+    demucsProcess.stdout.on('data', (data) => {
+        logToFile(`Demucs stdout: ${data.toString()}`);
+        event.reply('demucs-log', data.toString());
+    });
+
+    demucsProcess.stderr.on('data', (data) => {
+        const stderrLog = `Demucs stderr: ${data.toString()}`;
+        logToFile(stderrLog);
+        event.reply('demucs-log', stderrLog);
+    });
+
+    demucsProcess.on('close', (code) => {
+        if (code === 0) {
+            logToFile('Demucs process completed successfully.');
+            event.reply('demucs-success', 'Process completed successfully.');
+        } else {
+            logToFile(`Demucs process exited with code ${code}.`);
+            event.reply('demucs-error', `Process exited with code ${code}.`);
+        }
+    });
+});
+
+// Handle opening the log file
+ipcMain.handle('open-log-file', () => {
+    logToFile('Opening log file.');
+    shell.showItemInFolder(logFilePath);
 });

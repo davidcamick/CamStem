@@ -4,22 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CamStem - Dashboard</title>
-    <link rel="stylesheet" href="tailwind-output.css">
+    <style>
+        /* Full gradient background */
+        body {
+            background: linear-gradient(135deg, #006494, #051923);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            color: white;
+            text-align: center;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            background-color: #0582CA;
+            border-radius: 12px;
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .dashboard-container h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+        }
+
+        .dashboard-container p {
+            font-size: 1.125rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Button styles similar to previous page */
+        .dashboard-container button {
+            background-color: #003554;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1.125rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            margin: 0.5rem 0;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+            display: inline-block;
+            width: 100%; /* Make buttons full width for consistency */
+        }
+
+        .dashboard-container button:hover {
+            background-color: #002940;
+            transform: translateY(-4px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .dashboard-container .logout-button {
+            background-color: #8B0000; /* Dark red for logout */
+        }
+
+        .dashboard-container .logout-button:hover {
+            background-color: #690000;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans flex items-center justify-center h-screen">
-    <div class="text-center">
-        <h1 class="text-4xl font-bold mb-6">Welcome to the CamStem Dashboard</h1>
-        <p class="text-lg mb-4">You are on Version Alpha v0.8.2</p>
+<body>
+    <div class="dashboard-container">
+        <h1>Welcome to the CamStem Dashboard</h1>
+        <p>You are on Version Alpha v0.8.3</p>
         <button 
             id="goToSplitterButton" 
-            class="px-6 py-3 bg-green-500 text-white text-lg rounded-md hover:bg-green-600"
         >
             Go to Audio Splitting
         </button>
-        <br><br>
         <button 
             id="logoutButton" 
-            class="px-6 py-3 bg-red-500 text-white text-lg rounded-md hover:bg-red-600"
+            class="logout-button"
         >
             Log Out / Remove All Saved Keys
         </button>

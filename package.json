@@ -1,7 +1,7 @@
 {
   "name": "CamStem",
-  "version": "0.8.1",
-  "description": "The CamStem Stem Splitter - Alphav0.8.1",
+  "version": "0.8.3",
+  "description": "The CamStem Stem Splitter - Alphav0.8.2",
   "main": "src/backend/main.js",
   "scripts": {
     "start": "electron .",
@@ -79,7 +79,7 @@
         },
         {
           "from": "src/backend/Models",
-          "to": "Models",
+          "to": "resources/Models",
           "filter": [
             "**/*"
           ]
