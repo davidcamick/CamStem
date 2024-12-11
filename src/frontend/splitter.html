@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CamStem Alpha-v0.8.1</title>
+    <link rel="stylesheet" href="tailwind-output.css">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+    <div class="container mx-auto p-8">
+        <h1 class="text-3xl font-bold text-center mb-6">CamStem Alpha-v0.8.1</h1>
+
+        <form id="demucsForm" class="space-y-4">
+            <div>
+                <label for="inputPath" class="block text-sm font-medium">Input Path:</label>
+                <div class="flex items-center">
+                    <input 
+                        type="text" 
+                        id="inputPath" 
+                        placeholder="Select input file" 
+                        readonly 
+                        class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    >
+                    <button 
+                        type="button" 
+                        id="selectInput" 
+                        class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:ring-2 focus:ring-blue-400"
+                    >
+                        Select Input
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label for="outputPath" class="block text-sm font-medium">Output Path:</label>
+                <div class="flex items-center">
+                    <input 
+                        type="text" 
+                        id="outputPath" 
+                        placeholder="Select output folder" 
+                        readonly 
+                        class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    >
+                    <button 
+                        type="button" 
+                        id="selectOutput" 
+                        class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:ring-2 focus:ring-blue-400"
+                    >
+                        Select Output
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label for="model" class="block text-sm font-medium">Select Model:</label>
+                <select 
+                    id="model" 
+                    required 
+                    class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                    <option value="htdemucs">htdemucs</option>
+                    <option value="htdemucs_ft">htdemucs_ft</option>
+                    <option value="htdemucs_6s">htdemucs_6s</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="mp3Preset" class="block text-sm font-medium">MP3 Quality Preset:</label>
+                <select 
+                    id="mp3Preset" 
+                    required 
+                    class="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                    <option value="2">2 (Highest Quality)</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7 (Fastest Speed)</option>
+                </select>
+            </div>
+
+            <button 
+                type="submit" 
+                class="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:ring-2 focus:ring-green-400"
+            >
+                Run Demucs
+            </button>
+        </form>
+
+        <button 
+            id="openLogFile" 
+            class="mt-4 w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:ring-2 focus:ring-gray-400"
+        >
+            Open Log File
+        </button>
+
+        <button 
+            id="backToDashboard" 
+            class="mt-4 w-full px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-400"
+        >
+            Back to Main Menu
+        </button>
+
+        <h2 class="text-2xl font-semibold mt-8 mb-4">Logs:</h2>
+        <div 
+            id="logs" 
+            class="bg-white p-4 border rounded-md h-48 overflow-y-auto"
+        >
+            <p class="text-gray-600">Logs will appear here...</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('selectInput').addEventListener('click', () => {
+            window.api.selectPath('file', (path) => {
+                if (path) {
+                    document.getElementById('inputPath').value = path;
+                }
+            });
+        });
+
+        document.getElementById('selectOutput').addEventListener('click', () => {
+            window.api.selectPath('directory', (path) => {
+                if (path) {
+                    document.getElementById('outputPath').value = path;
+                }
+            });
+        });
+
+        document.getElementById('demucsForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const inputPath = document.getElementById('inputPath').value;
+            const outputPath = document.getElementById('outputPath').value;
+            const model = document.getElementById('model').value;
+            const mp3Preset = document.getElementById('mp3Preset').value;
+
+            console.log('Submitted Input Path:', inputPath);
+            console.log('Submitted Output Path:', outputPath);
+            console.log('Selected Model:', model);
+            console.log('MP3 Preset:', mp3Preset);
+
+            window.api.runDemucs(inputPath, outputPath, model, mp3Preset);
+        });
+
+        document.getElementById('openLogFile').addEventListener('click', () => {
+            window.api.openLogFile();
+        });
+
+        document.getElementById('backToDashboard').addEventListener('click', () => {
+            window.location.href = 'dashboard.html';
+        });
+
+        const logsDiv = document.getElementById('logs');
+        window.api.receive('demucs-log', (message) => {
+            const logEntry = document.createElement('p');
+            logEntry.textContent = message;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        });
+    </script>
+</body>
+</html>

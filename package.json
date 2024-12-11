@@ -6,8 +6,9 @@
   "scripts": {
     "start": "electron .",
     "build:mac": "electron-builder --mac",
-    "build:win": "",
-    "build": "npm run build:mac",
+    "build:win": "electron-builder --win",
+    "build:all": "electron-builder --mac --win",
+    "build": "npm run build:all",
     "build:css": "npx tailwindcss -i ./src/frontend/index.css -o ./src/frontend/tailwind-output.css"
   },
   "author": "David Camick",
@@ -27,34 +28,73 @@
     "appId": "camstem.org",
     "productName": "CamStem",
     "asar": false,
+    "win": {
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "compression": "normal",
+      "extraResources": [
+        {
+          "from": "src/backend/demucs-cxfreeze-win-cuda",
+          "to": "demucs-cxfreeze-win-cuda",
+          "filter": [
+            "**/*"
+          ]
+        },
+        {
+          "from": "src/backend/Models",
+          "to": "Models",
+          "filter": [
+            "**/*"
+          ]
+        },
+        {
+          "from": "src/assets",
+          "to": "app/src/assets"
+        }
+      ]
+    },
     "mac": {
       "target": "dmg",
       "category": "public.app-category.utilities",
-      "artifactName": "${productName}-${version}-mac.${ext}"
+      "artifactName": "${productName}-${version}-mac.${ext}",
+      "extraResources": [
+        {
+          "from": "src/backend/demucs-cxfreeze-mac",
+          "to": "demucs-cxfreeze-mac",
+          "filter": [
+            "**/*"
+          ]
+        },
+        {
+          "from": "src/backend/Models",
+          "to": "Models",
+          "filter": [
+            "**/*"
+          ]
+        },
+        {
+          "from": "src/assets",
+          "to": "app/src/assets"
+        }
+      ]
     },
     "files": [
       "dist/**/*",
-      "src/backend/Models/**/*",
-      "src/backend/demucs-cxfreeze-mac/**/*",
-      "src/frontend/**/*",
       "src/backend/main.js",
-      "src/backend/preload.js"
-    ],
-    "extraResources": [
-      {
-        "from": "src/backend/Models",
-        "to": "Models",
-        "filter": [
-          "**/*"
-        ]
-      },
-      {
-        "from": "src/backend/demucs-cxfreeze-mac",
-        "to": "demucs-cxfreeze-mac",
-        "filter": [
-          "**/*"
-        ]
-      }
+      "src/backend/preload.js",
+      "src/frontend/**/*"
     ],
     "directories": {
       "output": "release"
@@ -62,9 +102,12 @@
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",
+    "electron-is-dev": "^3.0.1",
+    "keytar": "^7.9.0",
     "postcss": "^8.4.49",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "stripe": "^17.4.0",
     "tailwindcss": "^3.4.15"
   }
 }

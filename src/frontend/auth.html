@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Key Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+        .auth-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .auth-container h1 {
+            font-size: 1.5em;
+            margin-bottom: 1em;
+        }
+        .auth-container input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 1em;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .auth-container button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .auth-container button:disabled {
+            background-color: #aaa;
+        }
+        .auth-container .message {
+            margin-top: 1em;
+            font-size: 0.9em;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h1>Software Key Authentication</h1>
+        <input type="text" id="softwareKey" placeholder="Enter your software key">
+        <button id="validateButton">Validate Key</button>
+        <button id="logoutButton">Log Out / Remove Saved Keys</button>
+        <p id="statusMessage" class="message"></p>
+    </div>
+
+    <script>
+        const softwareKeyInput = document.getElementById('softwareKey');
+        const validateButton = document.getElementById('validateButton');
+        const logoutButton = document.getElementById('logoutButton');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // Load saved key on page load and auto-submit if key exists
+        window.addEventListener('load', async () => {
+            try {
+                const savedKey = await window.api.getSavedKey();
+                if (savedKey) {
+                    softwareKeyInput.value = savedKey;
+                    validateButton.click(); // Automatically trigger validation
+                }
+            } catch (error) {
+                console.error('Error loading saved key:', error);
+            }
+        });
+
+        validateButton.addEventListener('click', async () => {
+            const softwareKey = softwareKeyInput.value.trim();
+            if (!softwareKey) {
+                statusMessage.textContent = 'Please enter a software key.';
+                return;
+            }
+
+            // Clear the message and disable the button
+            statusMessage.textContent = '';
+            validateButton.disabled = true;
+
+            try {
+                // Activate the software key
+                const keyResult = await window.api.activateSoftwareKey(softwareKey);
+                if (!keyResult.success) {
+                    statusMessage.textContent = `Key validation failed: ${keyResult.error}`;
+                    validateButton.disabled = false;
+                    return;
+                }
+
+                // Save the software key
+                await window.api.saveSoftwareKey(softwareKey);
+
+                // Check subscription status
+                const subscriptionStatus = await window.api.checkSubscriptionStatus();
+                if (!subscriptionStatus.active) {
+                    statusMessage.textContent = `Subscription error: ${subscriptionStatus.reason}`;
+                    validateButton.disabled = false;
+                    return;
+                }
+
+                // Success
+                statusMessage.style.color = 'green';
+                statusMessage.textContent = 'Software key validated and subscription is active!';
+
+                // Proceed to main application
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+            } catch (error) {
+                statusMessage.textContent = `An error occurred: ${error.message}`;
+            } finally {
+                validateButton.disabled = false;
+            }
+        });
+
+        logoutButton.addEventListener('click', async () => {
+            try {
+                await window.api.removeSavedKey();
+                softwareKeyInput.value = '';
+                statusMessage.textContent = 'All saved keys have been removed.';
+                statusMessage.style.color = 'red';
+            } catch (error) {
+                statusMessage.textContent = `An error occurred: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

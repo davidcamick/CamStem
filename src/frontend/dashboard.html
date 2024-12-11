@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CamStem - Dashboard</title>
+    <link rel="stylesheet" href="tailwind-output.css">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans flex items-center justify-center h-screen">
+    <div class="text-center">
+        <h1 class="text-4xl font-bold mb-6">Welcome to the CamStem Dashboard</h1>
+        <p class="text-lg mb-4">You are on Version Alpha v0.8.2</p>
+        <button 
+            id="goToSplitterButton" 
+            class="px-6 py-3 bg-green-500 text-white text-lg rounded-md hover:bg-green-600"
+        >
+            Go to Audio Splitting
+        </button>
+        <br><br>
+        <button 
+            id="logoutButton" 
+            class="px-6 py-3 bg-red-500 text-white text-lg rounded-md hover:bg-red-600"
+        >
+            Log Out / Remove All Saved Keys
+        </button>
+    </div>
+
+    <script>
+        document.getElementById('goToSplitterButton').addEventListener('click', () => {
+            window.location.href = 'splitter.html';
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            try {
+                await window.api.removeSavedKey();
+                alert('All saved keys have been removed. You will be redirected to the login page.');
+                window.location.href = 'auth.html';
+            } catch (error) {
+                console.error('Error removing saved keys:', error);
+                alert('An error occurred while removing saved keys. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>
