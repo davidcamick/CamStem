@@ -63,6 +63,12 @@ app.whenReady().then(() => {
     });
 
     logToFile('App started.');
+
+    // AUTO-UPDATE CHANGES START
+    // Require and initialize the auto-updater after app is ready
+    const initAutoUpdater = require('./updater');
+    initAutoUpdater();
+    // AUTO-UPDATE CHANGES END
 });
 
 // Quit the app when all windows are closed
@@ -305,10 +311,26 @@ function getResourcePath(relativePath) {
 }
 
 ipcMain.on('run-demucs', (event, args) => {
-    // Use different paths for development vs packaged
-    const relativeDemucsPath = isDev
-        ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
-        : 'demucs-cxfreeze-mac/demucs-cxfreeze';
+    const os = require('os');
+    const platform = os.platform();
+
+    let relativeDemucsPath;
+    if (platform === 'darwin') {
+        // macOS
+        relativeDemucsPath = isDev
+            ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
+            : 'demucs-cxfreeze-mac/demucs-cxfreeze';
+    } else if (platform === 'win32') {
+        // Windows
+        relativeDemucsPath = isDev
+            ? 'src/backend/demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe'
+            : 'demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe';
+    } else {
+        // Default to mac if an unknown platform (adjust as needed)
+        relativeDemucsPath = isDev
+            ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
+            : 'demucs-cxfreeze-mac/demucs-cxfreeze';
+    }
 
     const demucsPath = getResourcePath(relativeDemucsPath);
     const modelRepo = getResourcePath('Models');
@@ -358,7 +380,6 @@ ipcMain.on('run-demucs', (event, args) => {
     });
 });
 
-// Handle opening the log file
 ipcMain.handle('open-log-file', () => {
     logToFile('Opening log file.');
     shell.showItemInFolder(logFilePath);

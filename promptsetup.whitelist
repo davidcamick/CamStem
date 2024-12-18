@@ -1,0 +1,13 @@
+src/assets
+src/frontend
+
+src/backend/main.js
+src/backend/preload.js
+src/backend/demucs-cxfreeze-mac/demucs-cxfreeze
+src/backend/demucs-cxfreeze-win-cuda/demucs-cxfreeze
+src/backend/ffmpeg
+
+package.json
+postcss.config.js
+README.md
+tailwind.config.js
