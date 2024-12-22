@@ -1,0 +1,33 @@
+name: Build macOS
+
+on:
+  push:
+    tags:
+      - "v*" # e.g. v0.9.7.1
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Use Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Tailwind CSS
+        run: npm run build:css
+
+      - name: Configure GH_TOKEN
+        run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Build macOS
+        shell: bash
+        run: |
+          npm run build:mac -- --publish=always
