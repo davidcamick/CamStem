@@ -1,13 +1,13 @@
 {
   "name": "CamStem",
-  "version": "0.8.4",
-  "description": "The CamStem Stem Splitter - Alphav0.8.4",
+  "version": "0.9.7",
+  "description": "CamStem",
   "main": "src/backend/main.js",
   "scripts": {
     "start": "electron .",
-    "build:mac": "electron-builder --mac",
-    "build:win": "electron-builder --win",
-    "build:all": "electron-builder --mac --win",
+    "build:mac": "electron-builder --mac --publish=always",
+    "build:win": "electron-builder --win --publish=always",
+    "build:all": "electron-builder --mac --win --publish=always",
     "build": "npm run build:all",
     "build:css": "npx tailwindcss -i ./src/frontend/index.css -o ./src/frontend/tailwind-output.css"
   },
@@ -28,6 +28,7 @@
     "appId": "camstem.org",
     "productName": "CamStem",
     "asar": false,
+    "compression": "maximum",
     "publish": [
       {
         "provider": "github",
@@ -35,14 +36,24 @@
         "repo": "CamStemReleases"
       }
     ],
+    "extraFiles": [
+      {
+        "from": "Models",
+        "to": "Resources/Models",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "extraResources": [
+      {
+        "from": "src/assets",
+        "to": "app/src/assets"
+      }
+    ],
     "win": {
+      "forceCodeSigning": false,
       "target": [
-        {
-          "target": "zip",
-          "arch": [
-            "x64"
-          ]
-        },
         {
           "target": "nsis",
           "arch": [
@@ -50,58 +61,55 @@
           ]
         }
       ],
-      "compression": "normal",
-      "extraResources": [
+      "compression": "maximum",
+      "extraFiles": [
         {
           "from": "src/backend/demucs-cxfreeze-win-cuda",
-          "to": "demucs-cxfreeze-win-cuda",
+          "to": "resources/demucs-cxfreeze-win-cuda",
           "filter": [
             "**/*"
           ]
-        },
-        {
-          "from": "Models",
-          "to": "Models",
-          "filter": [
-            "**/*"
-          ]
-        },
-        {
-          "from": "src/assets",
-          "to": "app/src/assets"
         }
       ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "runAfterFinish": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "differentialPackage": false
     },
     "mac": {
       "target": "dmg",
       "category": "public.app-category.utilities",
       "artifactName": "${productName}-${version}-mac.${ext}",
-      "extraResources": [
+      "extraFiles": [
         {
           "from": "src/backend/demucs-cxfreeze-mac",
-          "to": "demucs-cxfreeze-mac",
+          "to": "resources/demucs-cxfreeze-mac",
           "filter": [
             "**/*"
           ]
-        },
+        }
+      ],
+      "extraResources": [
         {
           "from": "Models",
-          "to": "Models",
+          "to": "resources/Models",
           "filter": [
             "**/*"
           ]
-        },
-        {
-          "from": "src/assets",
-          "to": "app/src/assets"
         }
       ]
+    },
+    "dmg": {
+      "format": "ULFO"
     },
     "files": [
       "dist/**/*",
       "src/backend/main.js",
       "src/backend/preload.js",
-      "src/backend/updater.js",
       "src/frontend/**/*"
     ],
     "directories": {
@@ -110,8 +118,9 @@
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",
+    "dotenv": "^16.4.7", 
     "electron-is-dev": "^3.0.1",
-    "electron-updater": "^5.3.0",
+    "electron-updater": "^6.3.9",
     "keytar": "^7.9.0",
     "postcss": "^8.4.49",
     "react": "^18.3.1",

@@ -6,6 +6,19 @@ this is my project, please read the contents and understand its functionality. o
 - `README.md`
 - `package.json`
 - `postcss.config.js`
+- `.env`
+
+`Models`
+==============
+  - `htdemucs_6s.yaml`
+  - `d12395a8-e57c48e6.th`
+  - `5c90dfd2-34c22ccb.th`
+  - `955717e8-8726e21a.th`
+  - `htdemucs.yaml`
+  - `f7e0c4bc-ba3fe64a.th`
+  - `htdemucs_ft.yaml`
+  - `04573f0d-f3cf25b2.th`
+  - `92cfc3b6-ef3bcb9c.th`
 
 `src`
 ==============
@@ -61,14 +74,14 @@ module.exports = {
 ``` 
 {
   "name": "CamStem",
-  "version": "0.8.4",
-  "description": "The CamStem Stem Splitter - Alphav0.8.4",
+  "version": "0.9.2",
+  "description": "CamStem",
   "main": "src/backend/main.js",
   "scripts": {
     "start": "electron .",
-    "build:mac": "electron-builder --mac",
-    "build:win": "electron-builder --win",
-    "build:all": "electron-builder --mac --win",
+    "build:mac": "electron-builder --mac --publish=always",
+    "build:win": "electron-builder --win --publish=always",
+    "build:all": "electron-builder --mac --win --publish=always",
     "build": "npm run build:all",
     "build:css": "npx tailwindcss -i ./src/frontend/index.css -o ./src/frontend/tailwind-output.css"
   },
@@ -80,6 +93,7 @@ module.exports = {
     "@babel/preset-react": "^7.25.9",
     "@babel/standalone": "^7.26.2",
     "babel-loader": "^9.2.1",
+    "dotenv": "^16.4.7",
     "electron": "^25.1.0",
     "electron-builder": "^25.1.8",
     "webpack": "^5.96.1",
@@ -89,14 +103,32 @@ module.exports = {
     "appId": "camstem.org",
     "productName": "CamStem",
     "asar": false,
+    "compression": "maximum",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "davidcamick",
+        "repo": "CamStemReleases"
+      }
+    ],
+    "extraFiles": [
+      {
+        "from": "Models",
+        "to": "Resources/Models",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "extraResources": [
+      {
+        "from": "src/assets",
+        "to": "app/src/assets"
+      }
+    ],
     "win": {
+      "forceCodeSigning": false,
       "target": [
-        {
-          "target": "zip",
-          "arch": [
-            "x64"
-          ]
-        },
         {
           "target": "nsis",
           "arch": [
@@ -104,52 +136,49 @@ module.exports = {
           ]
         }
       ],
-      "compression": "normal",
-      "extraResources": [
+      "compression": "maximum",
+      "extraFiles": [
         {
           "from": "src/backend/demucs-cxfreeze-win-cuda",
           "to": "demucs-cxfreeze-win-cuda",
           "filter": [
             "**/*"
           ]
-        },
-        {
-          "from": "Models",
-          "to": "Models",
-          "filter": [
-            "**/*"
-          ]
-        },
-        {
-          "from": "src/assets",
-          "to": "app/src/assets"
         }
       ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": false,
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "differentialPackage": false
     },
     "mac": {
       "target": "dmg",
       "category": "public.app-category.utilities",
       "artifactName": "${productName}-${version}-mac.${ext}",
-      "extraResources": [
+      "extraFiles": [
         {
           "from": "src/backend/demucs-cxfreeze-mac",
-          "to": "demucs-cxfreeze-mac",
+          "to": "resources/demucs-cxfreeze-mac",
           "filter": [
             "**/*"
           ]
-        },
+        }
+      ],
+      "extraResources": [
         {
           "from": "Models",
-          "to": "Models",
+          "to": "resources/Models",
           "filter": [
             "**/*"
           ]
-        },
-        {
-          "from": "src/assets",
-          "to": "app/src/assets"
         }
       ]
+    },
+    "dmg": {
+      "format": "ULFO"
     },
     "files": [
       "dist/**/*",
@@ -164,6 +193,7 @@ module.exports = {
   "dependencies": {
     "autoprefixer": "^10.4.20",
     "electron-is-dev": "^3.0.1",
+    "electron-updater": "^6.3.9",
     "keytar": "^7.9.0",
     "postcss": "^8.4.49",
     "react": "^18.3.1",
@@ -885,7 +915,6 @@ video {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CamStem - Dashboard</title>
     <style>
-        /* Full gradient background */
         body {
             background: linear-gradient(135deg, #006494, #051923);
             min-height: 100vh;
@@ -918,7 +947,6 @@ video {
             margin-bottom: 1.5rem;
         }
 
-        /* Button styles similar to previous page */
         .dashboard-container button {
             background-color: #003554;
             color: white;
@@ -930,7 +958,7 @@ video {
             margin: 0.5rem 0;
             transition: transform 0.3s ease, background-color 0.3s ease;
             display: inline-block;
-            width: 100%; /* Make buttons full width for consistency */
+            width: 100%;
         }
 
         .dashboard-container button:hover {
@@ -940,7 +968,7 @@ video {
         }
 
         .dashboard-container .logout-button {
-            background-color: #8B0000; /* Dark red for logout */
+            background-color: #8B0000; 
         }
 
         .dashboard-container .logout-button:hover {
@@ -951,12 +979,13 @@ video {
 <body>
     <div class="dashboard-container">
         <h1>Welcome to the CamStem Dashboard</h1>
-        <p>You are on Version Alpha v0.8.4</p>
+        <p>You are on Version Alpha v0.9.2</p>
         <button 
             id="goToSplitterButton" 
         >
             Go to Audio Splitting
         </button>
+        <!-- Removed the Check for Updates button -->
         <button 
             id="logoutButton" 
             class="logout-button"
@@ -969,6 +998,8 @@ video {
         document.getElementById('goToSplitterButton').addEventListener('click', () => {
             window.location.href = 'splitter.html';
         });
+
+        // Removed the checkForUpdatesButton event listener
 
         document.getElementById('logoutButton').addEventListener('click', async () => {
             try {
@@ -993,7 +1024,7 @@ video {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CamStem Alpha-v0.8.4</title>
+    <title>CamStem</title>
     <style>
         /* Full gradient background */
         body {
@@ -1227,7 +1258,7 @@ video {
 </head>
 <body>
     <div class="container">
-        <h1>CamStem Alpha-v0.8.4</h1>
+        <h1>CamStem Alpha-v0.9.0</h1>
 
         <form id="demucsForm">
             <div class="form-grid">
@@ -1934,7 +1965,6 @@ contextBridge.exposeInMainWorld('api', {
         return await ipcRenderer.invoke('remove-saved-key');
     },
 
-    // Existing methods
     checkValidKey: async () => {
         return await ipcRenderer.invoke('check-valid-key');
     },
@@ -1950,386 +1980,414 @@ contextBridge.exposeInMainWorld('api', {
 ### src\backend\main.js
 
 ``` 
+// src/backend/main.js
+
+// 1) Load environment variables from .env
+require('dotenv').config();
+
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const { execFile } = require('child_process');
 const fs = require('fs');
 const keytar = require('keytar');
 const { webcrypto } = require('crypto');
-const stripe = require('stripe')('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');
+const os = require('os');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_live_51PY8RIRwhw3E05oG...'); // fallback example
 
-let isDev = false; // Default value for production mode
+// 2) Import autoUpdater from electron-updater
+const { autoUpdater } = require('electron-updater');
+
+let isDev = false;
+
 (async () => {
-    // Dynamically import electron-is-dev
-    const isDevModule = await import('electron-is-dev');
-    isDev = isDevModule.default;
+  const isDevModule = await import('electron-is-dev');
+  isDev = isDevModule.default;
 })();
 
 let mainWindow;
 
-// Hardcoded encryption key
+// Hardcoded encryption key (if needed)
 const HARD_CODED_KEY = "DA3K9Y5kdGQ217dhKehCT4Jip0ehJ7rY";
 
-// Get path to the log file in the Application Support directory
+// Set up the log file path
 const logFilePath = path.join(app.getPath('userData'), 'demucs-log.txt');
 
-// Function to log messages to the file
-const logToFile = (message) => {
-    const timestamp = new Date().toISOString();
-    fs.appendFileSync(logFilePath, `[${timestamp}] ${message}\n`);
-    console.log(message); // Also log to the console
-};
+// Utility: Append logs to file + console
+function logToFile(message) {
+  const timestamp = new Date().toISOString();
+  const fullMsg = `[${timestamp}] ${message}\n`;
+  fs.appendFileSync(logFilePath, fullMsg);
+  console.log(fullMsg.trim());
+}
+
+// Debugging logs for auto-update events
+function setupAutoUpdaterLogs() {
+  autoUpdater.on('checking-for-update', () => {
+    logToFile('autoUpdater: Checking for updates...');
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    logToFile(`autoUpdater: Update available. Version: ${info.version}`);
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    logToFile('autoUpdater: No updates available.');
+  });
+
+  autoUpdater.on('error', (err) => {
+    logToFile(`autoUpdater: Error - ${err.message}`);
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    const msg = `autoUpdater: Download speed: ${progress.bytesPerSecond} - Progress: ${progress.percent}%`;
+    logToFile(msg);
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    logToFile(`autoUpdater: Update downloaded. Release name: ${info.releaseName}`);
+    // Optionally prompt the user or auto-install the update:
+    // autoUpdater.quitAndInstall();
+  });
+}
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+
+  mainWindow.loadFile(path.join(__dirname, '../frontend/landing.html'));
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send('set-assets-path', assetsPath);
+  });
+}
 
 // Dynamically set the assets path
 const assetsPath = isDev
-    ? path.join(__dirname, '../assets') // Dev mode
-    : path.join(process.resourcesPath, 'assets'); // Production mode
-
-// Create the main application window
-function createWindow() {
-    mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
-        },
-    });
-
-    // Load landing.html first
-    mainWindow.loadFile(path.join(__dirname, '../frontend/landing.html'));
-
-    // Send the assets path to the renderer process
-    mainWindow.webContents.on('did-finish-load', () => {
-        mainWindow.webContents.send('set-assets-path', assetsPath);
-    });
-}
-
-// Run the app when ready
-app.whenReady().then(() => {
-    createWindow();
-
-    app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
-        }
-    });
-
-    logToFile('App started.');
-});
-
-// Quit the app when all windows are closed
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        logToFile('App closed.');
-        app.quit();
-    }
-});
+  ? path.join(__dirname, '../assets')
+  : path.join(process.resourcesPath, 'assets');
 
 // Reverse string utility
 function reverseString(str) {
-    return str.split('').reverse().join('');
+  return str.split('').reverse().join('');
 }
 
 // Check key validity (14-day window)
 function isKeyValid(dateStr) {
-    const keyDate = new Date(dateStr);
-    const currentDate = new Date();
-    const diffInDays = (currentDate - keyDate) / (1000 * 60 * 60 * 24);
-    logToFile(`Key date: ${keyDate}, Current date: ${currentDate}, Difference in days: ${diffInDays}`);
-    return diffInDays <= 14;
+  const keyDate = new Date(dateStr);
+  const currentDate = new Date();
+  const diffInDays = (currentDate - keyDate) / (1000 * 60 * 60 * 24);
+  logToFile(`Key date: ${keyDate}, Current date: ${currentDate}, Difference in days: ${diffInDays}`);
+  return diffInDays <= 14;
 }
 
-// Decrypt and process the software key
+// Decrypt software key
 async function processSoftwareKey(encryptedHex) {
-    try {
-        logToFile(`Encrypted Key Received: ${encryptedHex}`);
+  try {
+    logToFile(`Encrypted Key Received: ${encryptedHex}`);
 
-        // Convert hex to Uint8Array
-        const cipherBytes = new Uint8Array(
-            encryptedHex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
-        );
+    const cipherBytes = new Uint8Array(
+      encryptedHex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
+    );
 
-        const enc = new TextEncoder();
-        const dec = new TextDecoder();
+    const enc = new TextEncoder();
+    const dec = new TextDecoder();
 
-        const keyData = enc.encode(HARD_CODED_KEY);
-        const cryptoKey = await webcrypto.subtle.importKey(
-            'raw',
-            keyData,
-            { name: 'AES-CTR', length: 256 },
-            false,
-            ['decrypt']
-        );
+    const keyData = enc.encode(HARD_CODED_KEY);
+    const cryptoKey = await webcrypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'AES-CTR', length: 256 },
+      false,
+      ['decrypt']
+    );
 
-        // Zero IV
-        const iv = new Uint8Array(16);
+    const iv = new Uint8Array(16);
 
-        const decryptedBuffer = await webcrypto.subtle.decrypt(
-            { name: 'AES-CTR', counter: iv, length: 64 },
-            cryptoKey,
-            cipherBytes
-        );
+    const decryptedBuffer = await webcrypto.subtle.decrypt(
+      { name: 'AES-CTR', counter: iv, length: 64 },
+      cryptoKey,
+      cipherBytes
+    );
 
-        const decrypted = dec.decode(decryptedBuffer);
-        logToFile(`Decrypted Key: ${decrypted}`);
+    const decrypted = dec.decode(decryptedBuffer);
+    logToFile(`Decrypted Key: ${decrypted}`);
 
-        // Use `|` as the delimiter
-        const parts = decrypted.split('|');
-        logToFile(`Decrypted Key Parts: ${JSON.stringify(parts)}`);
+    const parts = decrypted.split('|');
+    logToFile(`Decrypted Key Parts: ${JSON.stringify(parts)}`);
 
-        if (parts.length !== 4) {
-            throw new Error('Invalid key format. Expected 4 parts.');
-        }
-
-        const [date, platformCodeStr, revClerkID, revStripeID] = parts;
-        const platformCode = parseInt(platformCodeStr, 10);
-
-        // Validate date
-        if (!isKeyValid(date)) {
-            throw new Error('Software key is expired. Please generate a new one.');
-        }
-
-        // Determine current platform
-        const os = require('os');
-        const currentPlatform = os.platform() === 'darwin' ? 1 : 2;
-        logToFile(`Current platform: ${currentPlatform}, Key platform: ${platformCode}`);
-
-        if (currentPlatform !== platformCode) {
-            throw new Error('Software key does not match the current platform.');
-        }
-
-        // Reverse IDs
-        const clerkID = reverseString(revClerkID);
-        const stripeID = reverseString(revStripeID);
-        logToFile(`Decrypted Clerk ID: ${clerkID}, Decrypted Stripe ID: ${stripeID}`);
-
-        return { clerkID, stripeID };
-    } catch (err) {
-        logToFile(`Error in processSoftwareKey: ${err.message}`);
-        throw err;
+    if (parts.length !== 4) {
+      throw new Error('Invalid key format. Expected 4 parts.');
     }
+
+    const [date, platformCodeStr, revClerkID, revStripeID] = parts;
+    const platformCode = parseInt(platformCodeStr, 10);
+
+    if (!isKeyValid(date)) {
+      throw new Error('Software key is expired. Please generate a new one.');
+    }
+
+    const currentPlatform = os.platform() === 'darwin' ? 1 : 2;
+    logToFile(`Current platform: ${currentPlatform}, Key platform: ${platformCode}`);
+
+    if (currentPlatform !== platformCode) {
+      throw new Error('Software key does not match the current platform.');
+    }
+
+    const clerkID = reverseString(revClerkID);
+    const stripeID = reverseString(revStripeID);
+    logToFile(`Decrypted Clerk ID: ${clerkID}, Decrypted Stripe ID: ${stripeID}`);
+
+    return { clerkID, stripeID };
+  } catch (err) {
+    logToFile(`Error in processSoftwareKey: ${err.message}`);
+    throw err;
+  }
 }
 
 async function getStoredCredentials() {
-    const clerkID = await keytar.getPassword('camstem-app', 'clerkID');
-    const stripeID = await keytar.getPassword('camstem-app', 'stripeID');
-    logToFile(`Stored Credentials: Clerk ID: ${clerkID}, Stripe ID: ${stripeID}`);
-    return { clerkID, stripeID };
+  const clerkID = await keytar.getPassword('camstem-app', 'clerkID');
+  const stripeID = await keytar.getPassword('camstem-app', 'stripeID');
+  logToFile(`Stored Credentials: Clerk ID: ${clerkID}, Stripe ID: ${stripeID}`);
+  return { clerkID, stripeID };
 }
 
-// Reintroduce select-path handler
+// IPC Handlers
 ipcMain.handle('select-path', async (event, type) => {
-    const options = type === 'file'
-        ? { properties: ['openFile'] }
-        : { properties: ['openDirectory'] };
+  const options = type === 'file'
+    ? { properties: ['openFile'] }
+    : { properties: ['openDirectory'] };
 
-    const result = await dialog.showOpenDialog(options);
+  const result = await dialog.showOpenDialog(options);
 
-    if (!result.canceled && result.filePaths.length > 0) {
-        logToFile(`Selected Path: ${result.filePaths[0]}`);
-        return result.filePaths[0];
-    }
-
-    return null;
+  if (!result.canceled && result.filePaths.length > 0) {
+    logToFile(`Selected Path: ${result.filePaths[0]}`);
+    return result.filePaths[0];
+  }
+  return null;
 });
 
-// Check if a valid key is already stored
 ipcMain.handle('check-valid-key', async () => {
-    try {
-        const { clerkID, stripeID } = await getStoredCredentials();
-        if (clerkID && stripeID) {
-            return { valid: true };
-        } else {
-            return { valid: false, reason: 'No valid key found. Please enter a new one.' };
-        }
-    } catch (err) {
-        logToFile(`Error in check-valid-key: ${err.message}`);
-        return { valid: false, reason: 'An error occurred while checking the key.' };
+  try {
+    const { clerkID, stripeID } = await getStoredCredentials();
+    if (clerkID && stripeID) {
+      return { valid: true };
+    } else {
+      return { valid: false, reason: 'No valid key found. Please enter a new one.' };
     }
+  } catch (err) {
+    logToFile(`Error in check-valid-key: ${err.message}`);
+    return { valid: false, reason: 'An error occurred while checking the key.' };
+  }
 });
 
-// Activate the software key (decrypt, validate, store credentials)
 ipcMain.handle('activate-software-key', async (event, encryptedKey) => {
-    try {
-        const { clerkID, stripeID } = await processSoftwareKey(encryptedKey);
-        await keytar.setPassword('camstem-app', 'clerkID', clerkID);
-        await keytar.setPassword('camstem-app', 'stripeID', stripeID);
+  try {
+    const { clerkID, stripeID } = await processSoftwareKey(encryptedKey);
+    await keytar.setPassword('camstem-app', 'clerkID', clerkID);
+    await keytar.setPassword('camstem-app', 'stripeID', stripeID);
 
-        logToFile(`Clerk ID: ${clerkID}`);
-        logToFile(`Stripe Customer ID: ${stripeID}`);
+    logToFile(`Clerk ID: ${clerkID}`);
+    logToFile(`Stripe Customer ID: ${stripeID}`);
 
-        return { success: true };
-    } catch (err) {
-        logToFile(`Error processing software key: ${err.message}`);
-        return { success: false, error: err.message };
-    }
+    return { success: true };
+  } catch (err) {
+    logToFile(`Error processing software key: ${err.message}`);
+    return { success: false, error: err.message };
+  }
 });
 
 ipcMain.handle('get-user-id', async () => {
-    try {
-        const { clerkID } = await getStoredCredentials();
-        if (!clerkID) {
-            throw new Error('Clerk ID not found in stored credentials.');
-        }
-        logToFile(`Retrieved User ID: ${clerkID}`);
-        return { userId: clerkID };
-    } catch (err) {
-        logToFile(`Error in get-user-id handler: ${err.message}`);
-        throw err;
+  try {
+    const { clerkID } = await getStoredCredentials();
+    if (!clerkID) {
+      throw new Error('Clerk ID not found in stored credentials.');
     }
+    logToFile(`Retrieved User ID: ${clerkID}`);
+    return { userId: clerkID };
+  } catch (err) {
+    logToFile(`Error in get-user-id handler: ${err.message}`);
+    throw err;
+  }
 });
 
 ipcMain.handle('check-subscription-status', async () => {
-    try {
-        const { stripeID } = await getStoredCredentials();
-        if (!stripeID) {
-            throw new Error('Stripe ID not found in stored credentials.');
-        }
-
-        logToFile(`Checking subscription status for Stripe ID: ${stripeID}`);
-
-        const subscriptions = await stripe.subscriptions.list({
-            customer: stripeID,
-            status: 'all',
-        });
-
-        const activeSubscription = subscriptions.data.find(
-            (sub) => sub.status === 'active' || sub.status === 'trialing'
-        );
-
-        if (!activeSubscription) {
-            logToFile('No active subscription found.');
-            return { active: false, reason: 'Subscription is canceled or expired.' };
-        }
-
-        logToFile(`Active subscription found: ${activeSubscription.id}`);
-        return { active: true };
-    } catch (err) {
-        logToFile(`Error checking subscription status: ${err.message}`);
-        return { active: false, reason: err.message };
+  try {
+    const { stripeID } = await getStoredCredentials();
+    if (!stripeID) {
+      throw new Error('Stripe ID not found in stored credentials.');
     }
+
+    logToFile(`Checking subscription status for Stripe ID: ${stripeID}`);
+
+    const subscriptions = await stripe.subscriptions.list({
+      customer: stripeID,
+      status: 'all',
+    });
+
+    const activeSubscription = subscriptions.data.find(
+      (sub) => sub.status === 'active' || sub.status === 'trialing'
+    );
+
+    if (!activeSubscription) {
+      logToFile('No active subscription found.');
+      return { active: false, reason: 'Subscription is canceled or expired.' };
+    }
+
+    logToFile(`Active subscription found: ${activeSubscription.id}`);
+    return { active: true };
+  } catch (err) {
+    logToFile(`Error checking subscription status: ${err.message}`);
+    return { active: false, reason: err.message };
+  }
 });
 
-// Save software key securely
 ipcMain.handle('save-software-key', async (event, key) => {
-    try {
-        await keytar.setPassword('camstem-app', 'softwareKey', key);
-        logToFile(`Software key saved: ${key}`);
-        return { success: true };
-    } catch (err) {
-        logToFile(`Error saving software key: ${err.message}`);
-        return { success: false, error: err.message };
-    }
+  try {
+    await keytar.setPassword('camstem-app', 'softwareKey', key);
+    logToFile(`Software key saved: ${key}`);
+    return { success: true };
+  } catch (err) {
+    logToFile(`Error saving software key: ${err.message}`);
+    return { success: false, error: err.message };
+  }
 });
 
-// Retrieve saved software key
 ipcMain.handle('get-saved-key', async () => {
-    try {
-        const savedKey = await keytar.getPassword('camstem-app', 'softwareKey');
-        logToFile(`Retrieved software key: ${savedKey}`);
-        return savedKey || null;
-    } catch (err) {
-        logToFile(`Error retrieving software key: ${err.message}`);
-        throw err;
-    }
+  try {
+    const savedKey = await keytar.getPassword('camstem-app', 'softwareKey');
+    logToFile(`Retrieved software key: ${savedKey}`);
+    return savedKey || null;
+  } catch (err) {
+    logToFile(`Error retrieving software key: ${err.message}`);
+    throw err;
+  }
 });
 
-// Remove saved software key
 ipcMain.handle('remove-saved-key', async () => {
-    try {
-        await keytar.deletePassword('camstem-app', 'softwareKey');
-        logToFile('Software key removed.');
-        return { success: true };
-    } catch (err) {
-        logToFile(`Error removing software key: ${err.message}`);
-        return { success: false, error: err.message };
-    }
+  try {
+    await keytar.deletePassword('camstem-app', 'softwareKey');
+    logToFile('Software key removed.');
+    return { success: true };
+  } catch (err) {
+    logToFile(`Error removing software key: ${err.message}`);
+    return { success: false, error: err.message };
+  }
 });
 
-// Reintroduce the getResourcePath function and run-demucs handler from old main.js
 function getResourcePath(relativePath) {
-    const basePath = app.isPackaged
-        ? path.join(process.resourcesPath)
-        : path.join(app.getAppPath());
-    const resolvedPath = path.join(basePath, relativePath);
-    logToFile(`Resolved Path: ${resolvedPath}`);
-    return resolvedPath;
+  const basePath = app.isPackaged
+    ? path.join(process.resourcesPath)
+    : path.join(app.getAppPath());
+  const resolvedPath = path.join(basePath, relativePath);
+  logToFile(`Resolved Path: ${resolvedPath}`);
+  return resolvedPath;
 }
 
+// Run demucs
 ipcMain.on('run-demucs', (event, args) => {
-    const os = require('os');
-    const platform = os.platform();
+  const platform = os.platform();
 
-    let relativeDemucsPath;
-    if (platform === 'darwin') {
-        // macOS
-        relativeDemucsPath = isDev
-            ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
-            : 'demucs-cxfreeze-mac/demucs-cxfreeze';
-    } else if (platform === 'win32') {
-        // Windows
-        relativeDemucsPath = isDev
-            ? 'src/backend/demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe'
-            : 'demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe';
+  let relativeDemucsPath;
+  if (platform === 'darwin') {
+    relativeDemucsPath = isDev
+      ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
+      : 'demucs-cxfreeze-mac/demucs-cxfreeze';
+  } else if (platform === 'win32') {
+    relativeDemucsPath = isDev
+      ? 'src/backend/demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe'
+      : 'demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe';
+  } else {
+    relativeDemucsPath = isDev
+      ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
+      : 'demucs-cxfreeze-mac/demucs-cxfreeze';
+  }
+
+  const demucsPath = getResourcePath(relativeDemucsPath);
+  const modelRepo = getResourcePath('Models');
+
+  const { inputPath, outputPath, model, mp3Preset } = args;
+
+  logToFile('Running Demucs with args:');
+  logToFile(`Demucs Path: ${demucsPath}`);
+  logToFile(`Model Repo: ${modelRepo}`);
+  logToFile(`Input Path: ${inputPath}`);
+  logToFile(`Output Path: ${outputPath}`);
+  logToFile(`Model: ${model}`);
+  logToFile(`MP3 Preset: ${mp3Preset}`);
+
+  const commandArgs = [
+    '-n', model,
+    '--repo', modelRepo,
+    '-o', outputPath,
+    '--mp3',
+    '--mp3-preset', mp3Preset,
+    inputPath,
+  ];
+
+  logToFile(`Command Args: ${commandArgs.join(' ')}`);
+
+  const demucsProcess = execFile(demucsPath, commandArgs);
+
+  demucsProcess.stdout.on('data', (data) => {
+    logToFile(`Demucs stdout: ${data.toString()}`);
+    event.reply('demucs-log', data.toString());
+  });
+
+  demucsProcess.stderr.on('data', (data) => {
+    const stderrLog = `Demucs stderr: ${data.toString()}`;
+    logToFile(stderrLog);
+    event.reply('demucs-log', stderrLog);
+  });
+
+  demucsProcess.on('close', (code) => {
+    if (code === 0) {
+      logToFile('Demucs process completed successfully.');
+      event.reply('demucs-success', 'Process completed successfully.');
     } else {
-        // Default to mac if an unknown platform (adjust as needed)
-        relativeDemucsPath = isDev
-            ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
-            : 'demucs-cxfreeze-mac/demucs-cxfreeze';
+      logToFile(`Demucs process exited with code ${code}.`);
+      event.reply('demucs-error', `Process exited with code ${code}.`);
     }
-
-    const demucsPath = getResourcePath(relativeDemucsPath);
-    const modelRepo = getResourcePath('Models');
-
-    const { inputPath, outputPath, model, mp3Preset } = args;
-
-    logToFile('Running Demucs with args:');
-    logToFile(`Demucs Path: ${demucsPath}`);
-    logToFile(`Model Repo: ${modelRepo}`);
-    logToFile(`Input Path: ${inputPath}`);
-    logToFile(`Output Path: ${outputPath}`);
-    logToFile(`Model: ${model}`);
-    logToFile(`MP3 Preset: ${mp3Preset}`);
-
-    const commandArgs = [
-        '-n', model,
-        '--repo', modelRepo,
-        '-o', outputPath,
-        '--mp3',
-        '--mp3-preset', mp3Preset,
-        inputPath,
-    ];
-
-    logToFile(`Command Args: ${commandArgs.join(' ')}`);
-
-    const demucsProcess = execFile(demucsPath, commandArgs);
-
-    demucsProcess.stdout.on('data', (data) => {
-        logToFile(`Demucs stdout: ${data.toString()}`);
-        event.reply('demucs-log', data.toString());
-    });
-
-    demucsProcess.stderr.on('data', (data) => {
-        const stderrLog = `Demucs stderr: ${data.toString()}`;
-        logToFile(stderrLog);
-        event.reply('demucs-log', stderrLog);
-    });
-
-    demucsProcess.on('close', (code) => {
-        if (code === 0) {
-            logToFile('Demucs process completed successfully.');
-            event.reply('demucs-success', 'Process completed successfully.');
-        } else {
-            logToFile(`Demucs process exited with code ${code}.`);
-            event.reply('demucs-error', `Process exited with code ${code}.`);
-        }
-    });
+  });
 });
 
-
-// Handle opening the log file
+// open log file
 ipcMain.handle('open-log-file', () => {
-    logToFile('Opening log file.');
-    shell.showItemInFolder(logFilePath);
-});```
+  logToFile('Opening log file...');
+  shell.showItemInFolder(logFilePath);
+});
+
+//----------------------------------
+// App Lifecycle
+//----------------------------------
+app.whenReady().then(() => {
+  createWindow();
+  setupAutoUpdaterLogs();
+
+  // Initiate auto-update checks after a small delay so the window can load
+  setTimeout(() => {
+    logToFile('Calling autoUpdater.checkForUpdatesAndNotify()');
+    autoUpdater.checkForUpdatesAndNotify();
+  }, 5000);
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+
+  logToFile('App started.');
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    logToFile('App closed.');
+    app.quit();
+  }
+});
+```
 

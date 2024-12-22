@@ -1,105 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CamStem - Dashboard</title>
-    <style>
-        /* Full gradient background */
-        body {
-            background: linear-gradient(135deg, #006494, #051923);
-            min-height: 100vh;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            color: white;
-            text-align: center;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CamStem - Dashboard</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #006494, #051923);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      color: white;
+      text-align: center;
+    }
 
-        .dashboard-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 2rem;
-            background-color: #0582CA;
-            border-radius: 12px;
-            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-        }
+    .dashboard-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 2rem;
+      background-color: #0582CA;
+      border-radius: 12px;
+      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+    }
 
-        .dashboard-container h1 {
-            font-size: 2rem;
-            font-weight: bold;
-            margin-bottom: 1.5rem;
-        }
+    .dashboard-container h1 {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
 
-        .dashboard-container p {
-            font-size: 1.125rem;
-            margin-bottom: 1.5rem;
-        }
+    .dashboard-container p {
+      font-size: 1.125rem;
+      margin-bottom: 1rem;
+    }
 
-        /* Button styles similar to previous page */
-        .dashboard-container button {
-            background-color: #003554;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-size: 1.125rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            margin: 0.5rem 0;
-            transition: transform 0.3s ease, background-color 0.3s ease;
-            display: inline-block;
-            width: 100%; /* Make buttons full width for consistency */
-        }
+    .dashboard-container button {
+      background-color: #003554;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 1.125rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      margin: 0.5rem 0;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      display: inline-block;
+      width: 100%;
+    }
 
-        .dashboard-container button:hover {
-            background-color: #002940;
-            transform: translateY(-4px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
+    .dashboard-container button:hover {
+      background-color: #002940;
+      transform: translateY(-4px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
 
-        .dashboard-container .logout-button {
-            background-color: #8B0000; /* Dark red for logout */
-        }
+    .logout-button {
+      background-color: #8B0000;
+    }
 
-        .dashboard-container .logout-button:hover {
-            background-color: #690000;
-        }
-    </style>
+    .logout-button:hover {
+      background-color: #690000;
+    }
+
+    /* Progress Bar Styling */
+    #updateProgress {
+      width: 100%;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      display: none; /* hidden by default */
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <h1>Welcome to the CamStem Dashboard</h1>
-        <p>You are on Version Alpha v0.8.4</p>
-        <button 
-            id="goToSplitterButton" 
-        >
-            Go to Audio Splitting
-        </button>
-        <button 
-            id="logoutButton" 
-            class="logout-button"
-        >
-            Log Out / Remove All Saved Keys
-        </button>
-    </div>
+  <div class="dashboard-container">
+    <h1>Welcome to the CamStem Dashboard</h1>
 
-    <script>
-        document.getElementById('goToSplitterButton').addEventListener('click', () => {
-            window.location.href = 'splitter.html';
-        });
+    <!-- Current version text -->
+    <p id="currentVersionText">Loading version...</p>
 
-        document.getElementById('logoutButton').addEventListener('click', async () => {
-            try {
-                await window.api.removeSavedKey();
-                alert('All saved keys have been removed. You will be redirected to the login page.');
-                window.location.href = 'auth.html';
-            } catch (error) {
-                console.error('Error removing saved keys:', error);
-                alert('An error occurred while removing saved keys. Please try again.');
-            }
-        });
-    </script>
+    <!-- Update info -->
+    <p id="updateStatus" class="hidden"></p>
+    <progress id="updateProgress" max="100" value="0"></progress>
+
+    <!-- Check for updates button -->
+    <button id="checkForUpdatesButton">
+      Check for Updates
+    </button>
+
+    <!-- Install update now -->
+    <button id="installUpdateButton" class="hidden">
+      Install Update Now
+    </button>
+
+    <!-- Go to splitter -->
+    <button id="goToSplitterButton">
+      Go to Audio Splitting
+    </button>
+
+    <!-- Log out / remove keys -->
+    <button id="logoutButton" class="logout-button">
+      Log Out / Remove All Saved Keys
+    </button>
+  </div>
+
+  <script>
+    // Grab all elements
+    const currentVersionText = document.getElementById('currentVersionText');
+    const checkUpdatesButton = document.getElementById('checkForUpdatesButton');
+    const updateStatus = document.getElementById('updateStatus');
+    const updateProgress = document.getElementById('updateProgress');
+    const installUpdateButton = document.getElementById('installUpdateButton');
+    const goToSplitterButton = document.getElementById('goToSplitterButton');
+    const logoutButton = document.getElementById('logoutButton');
+
+    // 1. On load, get current app version
+    (async () => {
+      try {
+        // Use the named method from preload.js
+        const version = await window.api.getAppVersion();
+        currentVersionText.textContent = `You are on version: v${version}`;
+      } catch (err) {
+        console.error('Error getting app version:', err);
+        currentVersionText.textContent = `Version: Unknown`;
+      }
+    })();
+
+    // 2. Listen for autoUpdater events
+    //    (We rely on main.js broadcasting 'autoUpdater-event')
+    window.api.receive('autoUpdater-event', (data) => {
+      console.log('autoUpdater-event:', data);
+
+      switch (data.event) {
+        case 'checking-for-update':
+          updateStatus.classList.remove('hidden');
+          updateStatus.textContent = 'Checking for updates...';
+          break;
+
+        case 'update-available':
+          updateStatus.classList.remove('hidden');
+          updateStatus.textContent = `Update available! New version: ${data.version}. Downloading...`;
+          updateProgress.style.display = 'block'; // Show progress bar
+          break;
+
+        case 'download-progress':
+          updateProgress.value = data.percent.toFixed(2);
+          break;
+
+        case 'update-downloaded':
+          updateStatus.textContent = `Update downloaded (v${data.version}). Choose "Install Update Now" to restart.`;
+          installUpdateButton.classList.remove('hidden'); // Show the "Install Now" button
+          break;
+
+        case 'update-not-available':
+          updateStatus.classList.remove('hidden');
+          updateStatus.textContent = 'No updates available.';
+          break;
+
+        case 'error':
+          updateStatus.classList.remove('hidden');
+          updateStatus.textContent = `AutoUpdater Error: ${data.message}`;
+          console.error('autoUpdater error:', data.message);
+          break;
+
+        default:
+          break;
+      }
+    });
+
+    // 3. Buttons
+    checkUpdatesButton.addEventListener('click', async () => {
+      // Reset update UI
+      updateProgress.value = 0;
+      updateProgress.style.display = 'none';
+      installUpdateButton.classList.add('hidden');
+      updateStatus.textContent = '';
+      updateStatus.classList.add('hidden');
+
+      // Trigger a manual check
+      try {
+        await window.api.checkForUpdates();
+      } catch (err) {
+        console.error('Error checking for updates:', err);
+      }
+    });
+
+    installUpdateButton.addEventListener('click', async () => {
+      // The update is already downloaded at this point.
+      // This will quit and install the new version.
+      try {
+        await window.api.installUpdateNow();
+      } catch (err) {
+        console.error('Error installing update:', err);
+      }
+    });
+
+    goToSplitterButton.addEventListener('click', () => {
+      window.location.href = 'splitter.html';
+    });
+
+    logoutButton.addEventListener('click', async () => {
+      try {
+        await window.api.removeSavedKey();
+        alert('All saved keys have been removed. You will be redirected to the login page.');
+        window.location.href = 'auth.html';
+      } catch (error) {
+        console.error('Error removing saved keys:', error);
+        alert('An error occurred while removing saved keys. Please try again.');
+      }
+    });
+  </script>
 </body>
 </html>
