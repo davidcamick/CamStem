@@ -5,7 +5,7 @@
   "main": "src/backend/main.js",
   "scripts": {
     "start": "electron .",
-    "build:mac": "electron-builder --mac --publish=always",
+    "build:mac": "electron-builder --mac",
     "build:win": "electron-builder --win --publish=always",
     "build:all": "electron-builder --mac --win --publish=always",
     "build": "npm run build:all",
@@ -81,7 +81,10 @@
       "differentialPackage": false
     },
     "mac": {
-      "target": "dmg",
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "category": "public.app-category.utilities",
       "artifactName": "${productName}-${version}-mac.${ext}",
       "extraFiles": [
@@ -118,7 +121,7 @@
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",
-    "dotenv": "^16.4.7", 
+    "dotenv": "^16.4.7",
     "electron-is-dev": "^3.0.1",
     "electron-updater": "^6.3.9",
     "keytar": "^7.9.0",

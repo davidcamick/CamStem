@@ -1,4 +1,4 @@
-this is my project, please read the contents and understand its functionality. once done, let me know and await my requests.
+here is what my entire project looks like right now, so you can understand the updates and work with this version now
 
 `.` (Root)
 ==============
@@ -74,12 +74,12 @@ module.exports = {
 ``` 
 {
   "name": "CamStem",
-  "version": "0.9.2",
+  "version": "0.9.7",
   "description": "CamStem",
   "main": "src/backend/main.js",
   "scripts": {
     "start": "electron .",
-    "build:mac": "electron-builder --mac --publish=always",
+    "build:mac": "electron-builder --mac",
     "build:win": "electron-builder --win --publish=always",
     "build:all": "electron-builder --mac --win --publish=always",
     "build": "npm run build:all",
@@ -93,7 +93,6 @@ module.exports = {
     "@babel/preset-react": "^7.25.9",
     "@babel/standalone": "^7.26.2",
     "babel-loader": "^9.2.1",
-    "dotenv": "^16.4.7",
     "electron": "^25.1.0",
     "electron-builder": "^25.1.8",
     "webpack": "^5.96.1",
@@ -140,7 +139,7 @@ module.exports = {
       "extraFiles": [
         {
           "from": "src/backend/demucs-cxfreeze-win-cuda",
-          "to": "demucs-cxfreeze-win-cuda",
+          "to": "resources/demucs-cxfreeze-win-cuda",
           "filter": [
             "**/*"
           ]
@@ -148,14 +147,18 @@ module.exports = {
       ]
     },
     "nsis": {
-      "oneClick": true,
+      "oneClick": false,
       "perMachine": false,
       "runAfterFinish": false,
+      "allowToChangeInstallationDirectory": true,
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "differentialPackage": false
     },
     "mac": {
-      "target": "dmg",
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "category": "public.app-category.utilities",
       "artifactName": "${productName}-${version}-mac.${ext}",
       "extraFiles": [
@@ -192,6 +195,7 @@ module.exports = {
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",
+    "dotenv": "^16.4.7",
     "electron-is-dev": "^3.0.1",
     "electron-updater": "^6.3.9",
     "keytar": "^7.9.0",
@@ -215,7 +219,7 @@ module.exports = {
 };
 ```
 
-### src\frontend\tailwind-output.css
+### src/frontend/tailwind-output.css
 
 ``` 
 *, ::before, ::after {
@@ -897,7 +901,7 @@ video {
 }
 ```
 
-### src\frontend\index.css
+### src/frontend/index.css
 
 ``` 
 @tailwind base;
@@ -905,118 +909,232 @@ video {
 @tailwind utilities;
 ```
 
-### src\frontend\dashboard.html
+### src/frontend/dashboard.html
 
 ``` 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CamStem - Dashboard</title>
-    <style>
-        body {
-            background: linear-gradient(135deg, #006494, #051923);
-            min-height: 100vh;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            color: white;
-            text-align: center;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CamStem - temp</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #006494, #051923);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      color: white;
+      text-align: center;
+    }
 
-        .dashboard-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 2rem;
-            background-color: #0582CA;
-            border-radius: 12px;
-            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-        }
+    .dashboard-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 2rem;
+      background-color: #0582CA;
+      border-radius: 12px;
+      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+    }
 
-        .dashboard-container h1 {
-            font-size: 2rem;
-            font-weight: bold;
-            margin-bottom: 1.5rem;
-        }
+    .dashboard-container h1 {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
 
-        .dashboard-container p {
-            font-size: 1.125rem;
-            margin-bottom: 1.5rem;
-        }
+    .dashboard-container p {
+      font-size: 1.125rem;
+      margin-bottom: 1rem;
+    }
 
-        .dashboard-container button {
-            background-color: #003554;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-size: 1.125rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            margin: 0.5rem 0;
-            transition: transform 0.3s ease, background-color 0.3s ease;
-            display: inline-block;
-            width: 100%;
-        }
+    .dashboard-container button {
+      background-color: #003554;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 1.125rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      margin: 0.5rem 0;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      display: inline-block;
+      width: 100%;
+    }
 
-        .dashboard-container button:hover {
-            background-color: #002940;
-            transform: translateY(-4px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
+    .dashboard-container button:hover {
+      background-color: #002940;
+      transform: translateY(-4px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
 
-        .dashboard-container .logout-button {
-            background-color: #8B0000; 
-        }
+    .logout-button {
+      background-color: #8B0000;
+    }
 
-        .dashboard-container .logout-button:hover {
-            background-color: #690000;
-        }
-    </style>
+    .logout-button:hover {
+      background-color: #690000;
+    }
+
+    /* Progress Bar Styling */
+    #updateProgress {
+      width: 100%;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      display: none; /* hidden by default */
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <h1>Welcome to the CamStem Dashboard</h1>
-        <p>You are on Version Alpha v0.9.2</p>
-        <button 
-            id="goToSplitterButton" 
-        >
-            Go to Audio Splitting
-        </button>
-        <!-- Removed the Check for Updates button -->
-        <button 
-            id="logoutButton" 
-            class="logout-button"
-        >
-            Log Out / Remove All Saved Keys
-        </button>
-    </div>
+  <div class="dashboard-container">
+    <h1>Welcome to the CamStem Dashboard</h1>
 
-    <script>
-        document.getElementById('goToSplitterButton').addEventListener('click', () => {
-            window.location.href = 'splitter.html';
-        });
+    <!-- Current version text -->
+    <p id="currentVersionText">Loading version...</p>
 
-        // Removed the checkForUpdatesButton event listener
+    <!-- Update info -->
+    <p id="updateStatus" class="hidden"></p>
+    <progress id="updateProgress" max="100" value="0"></progress>
 
-        document.getElementById('logoutButton').addEventListener('click', async () => {
-            try {
-                await window.api.removeSavedKey();
-                alert('All saved keys have been removed. You will be redirected to the login page.');
-                window.location.href = 'auth.html';
-            } catch (error) {
-                console.error('Error removing saved keys:', error);
-                alert('An error occurred while removing saved keys. Please try again.');
-            }
-        });
-    </script>
+    <!-- Check for updates button -->
+    <button id="checkForUpdatesButton">
+      Check for Updates
+    </button>
+
+    <!-- Install update now -->
+    <button id="installUpdateButton" class="hidden">
+      Install Update Now
+    </button>
+
+    <!-- Go to splitter -->
+    <button id="goToSplitterButton">
+      Go to Audio Splitting
+    </button>
+
+    <!-- Log out / remove keys -->
+    <button id="logoutButton" class="logout-button">
+      Log Out / Remove All Saved Keys
+    </button>
+  </div>
+
+  <script>
+    // Grab all elements
+    const currentVersionText = document.getElementById('currentVersionText');
+    const checkUpdatesButton = document.getElementById('checkForUpdatesButton');
+    const updateStatus = document.getElementById('updateStatus');
+    const updateProgress = document.getElementById('updateProgress');
+    const installUpdateButton = document.getElementById('installUpdateButton');
+    const goToSplitterButton = document.getElementById('goToSplitterButton');
+    const logoutButton = document.getElementById('logoutButton');
+
+    // 1. On load, get current app version
+    (async () => {
+      try {
+        // Use the named method from preload.js
+        const version = await window.api.getAppVersion();
+        currentVersionText.textContent = `You are on version: v${version}`;
+      } catch (err) {
+        console.error('Error getting app version:', err);
+        currentVersionText.textContent = `Version: Unknown`;
+      }
+    })();
+
+    // 2. Listen for autoUpdater events
+    //    (We rely on main.js broadcasting 'autoUpdater-event')
+    window.api.receive('autoUpdater-event', (data) => {
+      console.log('autoUpdater-event:', data);
+
+      switch (data.event) {
+        case 'checking-for-update':
+          updateStatus.classList.remove('hidden');
+          updateStatus.textContent = 'Checking for updates...';
+          break;
+
+        case 'update-available':
+          updateStatus.classList.remove('hidden');
+          updateStatus.textContent = `Update available! New version: ${data.version}. Downloading...`;
+          updateProgress.style.display = 'block'; // Show progress bar
+          break;
+
+        case 'download-progress':
+          updateProgress.value = data.percent.toFixed(2);
+          break;
+
+        case 'update-downloaded':
+          updateStatus.textContent = `Update downloaded (v${data.version}). Choose "Install Update Now" to restart.`;
+          installUpdateButton.classList.remove('hidden'); // Show the "Install Now" button
+          break;
+
+        case 'update-not-available':
+          updateStatus.classList.remove('hidden');
+          updateStatus.textContent = 'No updates available.';
+          break;
+
+        case 'error':
+          updateStatus.classList.remove('hidden');
+          updateStatus.textContent = `AutoUpdater Error: ${data.message}`;
+          console.error('autoUpdater error:', data.message);
+          break;
+
+        default:
+          break;
+      }
+    });
+
+    // 3. Buttons
+    checkUpdatesButton.addEventListener('click', async () => {
+      // Reset update UI
+      updateProgress.value = 0;
+      updateProgress.style.display = 'none';
+      installUpdateButton.classList.add('hidden');
+      updateStatus.textContent = '';
+      updateStatus.classList.add('hidden');
+
+      // Trigger a manual check
+      try {
+        await window.api.checkForUpdates();
+      } catch (err) {
+        console.error('Error checking for updates:', err);
+      }
+    });
+
+    installUpdateButton.addEventListener('click', async () => {
+      // The update is already downloaded at this point.
+      // This will quit and install the new version.
+      try {
+        await window.api.installUpdateNow();
+      } catch (err) {
+        console.error('Error installing update:', err);
+      }
+    });
+
+    goToSplitterButton.addEventListener('click', () => {
+      window.location.href = 'splitter.html';
+    });
+
+    logoutButton.addEventListener('click', async () => {
+      try {
+        await window.api.removeSavedKey();
+        alert('All saved keys have been removed. You will be redirected to the login page.');
+        window.location.href = 'auth.html';
+      } catch (error) {
+        console.error('Error removing saved keys:', error);
+        alert('An error occurred while removing saved keys. Please try again.');
+      }
+    });
+  </script>
 </body>
 </html>
 ```
 
-### src\frontend\splitter.html
+### src/frontend/splitter.html
 
 ``` 
 <!DOCTYPE html>
@@ -1258,7 +1376,7 @@ video {
 </head>
 <body>
     <div class="container">
-        <h1>CamStem Alpha-v0.9.0</h1>
+        <h1>CamStem</h1>
 
         <form id="demucsForm">
             <div class="form-grid">
@@ -1296,9 +1414,9 @@ video {
                             required 
                             style="width: 100%; padding: 0.6rem; border: none; border-radius: 6px; background-color: #e9ecef; color: #333;"
                         >
-                            <option value="htdemucs">htdemucs</option>
-                            <option value="htdemucs_ft">htdemucs_ft</option>
-                            <option value="htdemucs_6s">htdemucs_6s</option>
+                            <option value="htdemucs">Default</option>
+                            <option value="htdemucs_ft">Fine Tuned</option>
+                            <option value="htdemucs_6s">Six Stem Model</option>
                         </select>
                     </div>
 
@@ -1480,7 +1598,7 @@ video {
 </html>
 ```
 
-### src\frontend\landing.html
+### src/frontend/landing.html
 
 ``` 
 <!DOCTYPE html>
@@ -1754,7 +1872,7 @@ video {
 </html>
 ```
 
-### src\frontend\auth.html
+### src/frontend/auth.html
 
 ``` 
 <!DOCTYPE html>
@@ -1931,53 +2049,46 @@ video {
 </html>
 ```
 
-### src\backend\preload.js
+### src/backend/preload.js
 
 ``` 
+// src/backend/preload.js
 const { contextBridge, ipcRenderer, shell } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
-    runDemucs: (inputPath, outputPath, model, mp3Preset) => {
-        ipcRenderer.send('run-demucs', { inputPath, outputPath, model, mp3Preset });
-    },
-    receive: (channel, func) => {
-        ipcRenderer.on(channel, (event, ...args) => func(...args));
-    },
-    selectPath: async (type, callback) => {
-        const path = await ipcRenderer.invoke('select-path', type);
-        callback(path);
-    },
-    openLogFile: () => {
-        ipcRenderer.invoke('open-log-file');
-    },
-    openExternal: (url) => {
-        shell.openExternal(url);
-    },
+  runDemucs: (inputPath, outputPath, model, mp3Preset) => {
+    ipcRenderer.send('run-demucs', { inputPath, outputPath, model, mp3Preset });
+  },
+  receive: (channel, func) => {
+    ipcRenderer.on(channel, (event, ...args) => func(...args));
+  },
+  selectPath: async (type, callback) => {
+    const path = await ipcRenderer.invoke('select-path', type);
+    callback(path);
+  },
+  openLogFile: () => {
+    ipcRenderer.invoke('open-log-file');
+  },
+  openExternal: (url) => {
+    shell.openExternal(url);
+  },
 
-    // Software key methods
-    saveSoftwareKey: async (key) => {
-        return await ipcRenderer.invoke('save-software-key', key);
-    },
-    getSavedKey: async () => {
-        return await ipcRenderer.invoke('get-saved-key');
-    },
-    removeSavedKey: async () => {
-        return await ipcRenderer.invoke('remove-saved-key');
-    },
+  // Key methods
+  saveSoftwareKey: async (key) => ipcRenderer.invoke('save-software-key', key),
+  getSavedKey: async () => ipcRenderer.invoke('get-saved-key'),
+  removeSavedKey: async () => ipcRenderer.invoke('remove-saved-key'),
+  checkValidKey: async () => ipcRenderer.invoke('check-valid-key'),
+  activateSoftwareKey: async (encryptedKey) => ipcRenderer.invoke('activate-software-key', encryptedKey),
+  checkSubscriptionStatus: async () => ipcRenderer.invoke('check-subscription-status'),
 
-    checkValidKey: async () => {
-        return await ipcRenderer.invoke('check-valid-key');
-    },
-    activateSoftwareKey: async (encryptedKey) => {
-        return await ipcRenderer.invoke('activate-software-key', encryptedKey);
-    },
-    checkSubscriptionStatus: async () => {
-        return await ipcRenderer.invoke('check-subscription-status');
-    }
+  // Auto-updater methods
+  getAppVersion: async () => ipcRenderer.invoke('get-app-version'),
+  checkForUpdates: async () => ipcRenderer.invoke('check-for-updates'),
+  installUpdateNow: async () => ipcRenderer.invoke('install-update-now'),
 });
 ```
 
-### src\backend\main.js
+### src/backend/main.js
 
 ``` 
 // src/backend/main.js
@@ -1992,7 +2103,7 @@ const fs = require('fs');
 const keytar = require('keytar');
 const { webcrypto } = require('crypto');
 const os = require('os');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_live_51PY8RIRwhw3E05oG...'); // fallback example
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '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'); // fallback
 
 // 2) Import autoUpdater from electron-updater
 const { autoUpdater } = require('electron-updater');
@@ -2020,36 +2131,74 @@ function logToFile(message) {
   console.log(fullMsg.trim());
 }
 
-// Debugging logs for auto-update events
+// ---------- AUTO-UPDATER SETUP -----------
 function setupAutoUpdaterLogs() {
+  // Let the user decide when to install after download
+  autoUpdater.autoInstallOnAppQuit = false;
+
   autoUpdater.on('checking-for-update', () => {
     logToFile('autoUpdater: Checking for updates...');
+    if (mainWindow) {
+      mainWindow.webContents.send('autoUpdater-event', {
+        event: 'checking-for-update',
+      });
+    }
   });
 
   autoUpdater.on('update-available', (info) => {
     logToFile(`autoUpdater: Update available. Version: ${info.version}`);
+    if (mainWindow) {
+      mainWindow.webContents.send('autoUpdater-event', {
+        event: 'update-available',
+        version: info.version,
+      });
+    }
   });
 
   autoUpdater.on('update-not-available', () => {
     logToFile('autoUpdater: No updates available.');
+    if (mainWindow) {
+      mainWindow.webContents.send('autoUpdater-event', {
+        event: 'update-not-available',
+      });
+    }
   });
 
   autoUpdater.on('error', (err) => {
     logToFile(`autoUpdater: Error - ${err.message}`);
+    if (mainWindow) {
+      mainWindow.webContents.send('autoUpdater-event', {
+        event: 'error',
+        message: err.message,
+      });
+    }
   });
 
   autoUpdater.on('download-progress', (progress) => {
     const msg = `autoUpdater: Download speed: ${progress.bytesPerSecond} - Progress: ${progress.percent}%`;
     logToFile(msg);
+
+    if (mainWindow) {
+      mainWindow.webContents.send('autoUpdater-event', {
+        event: 'download-progress',
+        percent: progress.percent,
+      });
+    }
   });
 
   autoUpdater.on('update-downloaded', (info) => {
     logToFile(`autoUpdater: Update downloaded. Release name: ${info.releaseName}`);
-    // Optionally prompt the user or auto-install the update:
-    // autoUpdater.quitAndInstall();
+    // Now we let the user choose: we'll notify the renderer
+    if (mainWindow) {
+      mainWindow.webContents.send('autoUpdater-event', {
+        event: 'update-downloaded',
+        version: info.version,
+      });
+    }
   });
 }
 
+// ---------- CREATE THE MAIN WINDOW -----------
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
@@ -2156,7 +2305,7 @@ async function getStoredCredentials() {
   return { clerkID, stripeID };
 }
 
-// IPC Handlers
+// ----------------- IPC HANDLERS -----------------
 ipcMain.handle('select-path', async (event, type) => {
   const options = type === 'file'
     ? { properties: ['openFile'] }
@@ -2279,6 +2428,22 @@ ipcMain.handle('remove-saved-key', async () => {
   }
 });
 
+// ---------- NEW IPC FOR AUTO-UPDATER CONTROL ----------
+ipcMain.handle('get-app-version', () => {
+  return app.getVersion();
+});
+
+ipcMain.handle('check-for-updates', () => {
+  logToFile('Manual check-for-updates triggered');
+  autoUpdater.checkForUpdates(); // no "notify", so user decides
+});
+
+ipcMain.handle('install-update-now', () => {
+  logToFile('User chose to install update now');
+  autoUpdater.quitAndInstall();
+});
+
+// ---------- DEMUCS RUNNER -----------
 function getResourcePath(relativePath) {
   const basePath = app.isPackaged
     ? path.join(process.resourcesPath)
@@ -2288,7 +2453,6 @@ function getResourcePath(relativePath) {
   return resolvedPath;
 }
 
-// Run demucs
 ipcMain.on('run-demucs', (event, args) => {
   const platform = os.platform();
 
@@ -2361,18 +2525,16 @@ ipcMain.handle('open-log-file', () => {
   shell.showItemInFolder(logFilePath);
 });
 
-//----------------------------------
-// App Lifecycle
-//----------------------------------
+// ---------- APP LIFECYCLE ----------
 app.whenReady().then(() => {
   createWindow();
   setupAutoUpdaterLogs();
 
-  // Initiate auto-update checks after a small delay so the window can load
-  setTimeout(() => {
-    logToFile('Calling autoUpdater.checkForUpdatesAndNotify()');
-    autoUpdater.checkForUpdatesAndNotify();
-  }, 5000);
+  // (OPTIONAL) If you want an automatic check after 5 seconds:
+  // setTimeout(() => {
+  //   logToFile('Calling autoUpdater.checkForUpdates()');
+  //   autoUpdater.checkForUpdates();
+  // }, 5000);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
