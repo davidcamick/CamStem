@@ -1,0 +1,43 @@
+name: Build & Publish CamStem
+
+on:
+  push:
+    tags:
+      - "v*"  # e.g., v0.9.7, v1.0.0, etc.
+
+jobs:
+  build-and-publish:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Use Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Tailwind CSS
+        run: npm run build:css
+
+      - name: Configure GH_TOKEN
+        # Append GH_TOKEN to environment so electron-builder can publish
+        run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Build for current OS
+        shell: bash  # Force Bash on Windows
+        run: |
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            # Build for Mac (publishes automatically)
+            npm run build:mac -- --publish=always
+          else
+            # Build for Windows (already has --publish=always in package.json scripts)
+            npm run build:win
+          fi

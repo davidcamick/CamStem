@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CamStem</title>
+    <link rel="stylesheet" href="tailwind-output.css">
+    <style>
+        /* Full gradient background */
+        body {
+            background: linear-gradient(135deg, #006494, #051923);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        /* Centered box styles */
+        #mainContent {
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            background-color: rgba(5, 130, 202, 0.95); /* Slight transparency */
+            border-radius: 12px;
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            position: relative;
+        }
+
+        /* Intro video wrapper stays full-screen */
+        #introVideoWrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50; /* Ensure it stays on top */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none; /* No background color */
+        }
+
+        /* The video itself */
+        #introVideo {
+            width: 100%;
+            height: auto;
+            object-fit: cover; /* Maintain aspect ratio and scaling */
+        }
+
+        /* Hide the video wrapper after 4 seconds */
+        .hidden {
+            display: none;
+        }
+
+        /* Button styles */
+        .actionButton {
+            background-color: #003554; /* Button color */
+            color: white; /* Button text color */
+            padding: 0.75rem 1.5rem;
+            font-size: 1.125rem; /* Text size (lg) */
+            border-radius: 0.375rem; /* Rounded corners */
+            transition: transform 0.3s ease, background-color 0.3s ease; /* Smooth animation */
+            transform: translateY(0); /* Default position */
+            margin-bottom: 1rem; /* Spacing between buttons */
+            display: inline-block; /* Consistent block-like buttons */
+            border: none;
+            cursor: pointer;
+        }
+
+        .actionButton:hover {
+            background-color: #002940; /* Slightly darker on hover */
+            transform: translateY(-4px); /* Raise the button slightly */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 100; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background-color: #0582CA;
+            margin: auto;
+            padding: 2rem;
+            border: 1px solid #888;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+
+        .modal-content p {
+            margin: 1rem 0;
+            font-size: 1rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-buttons .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            width: 100px;
+        }
+
+        .btn-primary {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #138496;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            #mainContent {
+                padding: 1.5rem;
+            }
+
+            .modal-content {
+                padding: 1.5rem;
+            }
+
+            .actionButton {
+                width: 100%;
+                margin-bottom: 0.75rem;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .modal-buttons .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Video Wrapper -->
+    <div id="introVideoWrapper">
+        <video id="introVideo" autoplay muted playsinline>
+            <source src="../assets/output-vp9.webm" type="video/webm">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <!-- Main Landing Content -->
+    <div id="mainContent" class="hidden">
+        <h1 class="text-4xl font-bold mb-4">CamStem</h1>
+        <p class="text-lg font-medium mb-6">Your Auditory Journey Awaits</p>
+        <!-- Sign In Button -->
+        <button 
+            id="signInButton" 
+            class="actionButton focus:ring-2 focus:ring-blue-400"
+        >
+            Sign In
+        </button>
+        <!-- Sign Up Button -->
+        <button 
+            id="signUpButton" 
+            class="actionButton focus:ring-2 focus:ring-blue-400"
+        >
+            Sign Up
+        </button>
+    </div>
+
+    <!-- Modal Popup for Sign Up -->
+    <div id="signUpModal" class="modal">
+        <div class="modal-content">
+            <h2>Sign Up Information</h2>
+            <p>In order to sign up, please visit our website:</p>
+            <p>camstem.org/signup</p>
+            <div class="modal-buttons">
+                <button id="closeModalButton" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Wait for 4 seconds, then hide the video and show the main content
+        const introVideoWrapper = document.getElementById('introVideoWrapper');
+        const mainContent = document.getElementById('mainContent');
+
+        setTimeout(() => {
+            introVideoWrapper.style.pointerEvents = 'none'; // Disable interaction with the video wrapper
+            mainContent.classList.remove('hidden'); // Show the main content
+        }, 4000); // Delay in milliseconds (4 seconds)
+
+        // Sign-in button event listener
+        document.getElementById('signInButton').addEventListener('click', () => {
+            window.location.href = 'auth.html';
+        });
+
+        // Sign-up button event listener to show modal
+        const signUpButton = document.getElementById('signUpButton');
+        const signUpModal = document.getElementById('signUpModal');
+        const closeModalButton = document.getElementById('closeModalButton');
+
+        signUpButton.addEventListener('click', () => {
+            signUpModal.style.display = 'flex';
+        });
+
+        closeModalButton.addEventListener('click', () => {
+            signUpModal.style.display = 'none';
+        });
+
+        // Close the modal when clicking outside of it
+        window.addEventListener('click', (event) => {
+            if (event.target == signUpModal) {
+                signUpModal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

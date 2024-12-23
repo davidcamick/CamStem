@@ -1,0 +1,7 @@
+node_modules
+src/backend/demucs-cxfreeze-mac
+src/backend/demucs-cxfreeze-win-cuda
+src/backend/ffmpeg
+Models
+tests/
+release/
