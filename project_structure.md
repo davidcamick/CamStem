@@ -1,4 +1,4 @@
-Hi, you are a software developer who will help me program. This is a MD file of all the files and their paths in my program. Please read over it, and wait for my requests. When I request changes, I'd like you to send all changes in FULL CODE form, meaning send me the entire file each time (and any other files that ever need to be updated). I'd also like you to skim over the documentation of whatever we are working on EACH TIME we make a change, if possible. Also, never alter any functionality I don't ask you to. You may now read over this and tell me that you understand these rules
+here is what my entire project looks like right now, so you can understand the updates and work with this version now
 
 `.` (Root)
 ==============
@@ -7,6 +7,13 @@ Hi, you are a software developer who will help me program. This is a MD file of 
 - `package.json`
 - `postcss.config.js`
 - `.env`
+
+`.github`
+==============
+
+  `workflows`
+  ==============
+    - `buildmac.yml`
 
 `Models`
 ==============
@@ -195,6 +202,7 @@ module.exports = {
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",
+    "choco": "^0.2.1",
     "dotenv": "^16.4.7",
     "electron-is-dev": "^3.0.1",
     "electron-updater": "^6.3.9",

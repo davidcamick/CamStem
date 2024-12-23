@@ -1,33 +1,86 @@
-name: Build macOS
+name: Build Mac
 
 on:
   push:
-    tags:
-      - "v*" # e.g. v0.9.7.1
+    branches: [ "main" ]
+  # or use `workflow_dispatch:` if you want to trigger manually
+  # workflow_dispatch:
 
 jobs:
   build-mac:
     runs-on: macos-latest
 
     steps:
-      - name: Check out repository
+      # 1) Check out the code
+      - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Use Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
+      # 2) Download demucs-cxfreeze-mac.zip from the release tag: release-assets
+      - name: Download demucs-cxfreeze-mac.zip
+        id: download_demucs
+        run: |
+          # We'll fetch the release info for tag=release-assets
+          RELEASE_DATA=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/davidcamick/camstem/releases/tags/release-assets")
 
+          # Parse out the asset ID for demucs-cxfreeze-mac.zip using jq
+          ASSET_ID=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="demucs-cxfreeze-mac.zip") | .id')
+
+          if [ -z "$ASSET_ID" ] || [ "$ASSET_ID" == "null" ]; then
+            echo "Could not find demucs-cxfreeze-mac.zip in release-assets!"
+            exit 1
+          fi
+
+          # Download the asset
+          curl -L \
+            -H "Accept: application/octet-stream" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/davidcamick/camstem/releases/assets/$ASSET_ID" \
+            -o demucs-cxfreeze-mac.zip
+
+          # Remove any existing folder, then unzip
+          rm -rf src/backend/demucs-cxfreeze-mac
+          unzip demucs-cxfreeze-mac.zip -d src/backend
+          rm demucs-cxfreeze-mac.zip
+
+      # 3) Download Models.zip
+      - name: Download Models.zip
+        id: download_models
+        run: |
+          RELEASE_DATA=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/davidcamick/camstem/releases/tags/release-assets")
+
+          ASSET_ID=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="Models.zip") | .id')
+
+          if [ -z "$ASSET_ID" ] || [ "$ASSET_ID" == "null" ]; then
+            echo "Could not find Models.zip in release-assets!"
+            exit 1
+          fi
+
+          curl -L \
+            -H "Accept: application/octet-stream" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/davidcamick/camstem/releases/assets/$ASSET_ID" \
+            -o Models.zip
+
+          # Remove existing Models folder, then unzip
+          rm -rf Models
+          unzip Models.zip -d .
+          rm Models.zip
+
+      # 4) Install dependencies
       - name: Install dependencies
         run: npm install
 
-      - name: Build Tailwind CSS
-        run: npm run build:css
+      # 5) Build for mac
+      - name: Build Mac
+        run: npm run build:mac
 
-      - name: Configure GH_TOKEN
-        run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $GITHUB_ENV
-
-      - name: Build macOS
-        shell: bash
-        run: |
-          npm run build:mac -- --publish=always
+      # 6) (Optional) Upload built artifact (dmg/zip) so you can download from the workflow
+      - name: Upload mac artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: mac-build
+          path: release  # or wherever electron-builder outputs your mac build artifacts
