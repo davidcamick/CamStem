@@ -12,7 +12,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      # 1) Check out the code
+      # 1) Check out code
       - name: Check out code
         uses: actions/checkout@v3
 
