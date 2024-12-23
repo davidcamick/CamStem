@@ -36,7 +36,6 @@
         "repo": "CamStemReleases"
       }
     ],
-
     "extraFiles": [
       {
         "from": "Models",
@@ -85,11 +84,8 @@
       "target": [ "zip" ],
       "category": "public.app-category.utilities",
       "artifactName": "${productName}-${version}-mac.${ext}",
-
-      // IMPORTANT: your identity must match the one in Keychain
       "identity": "Developer ID Application: Kagen Jensen (78VJ3W63WV)",
       "hardenedRuntime": true,
-
       "extraFiles": [
         {
           "from": "src/backend/demucs-cxfreeze-mac",
