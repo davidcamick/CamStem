@@ -1,10 +1,11 @@
-name: Build Mac
+name: Build Mac and Publish
 
 on:
-  push:
-    branches: [ "main" ]
-  # or use `workflow_dispatch:` if you want to trigger manually
-  # workflow_dispatch:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number for the Mac build (e.g. 0.9.8)"
+        required: true
 
 jobs:
   build-mac:
@@ -15,72 +16,73 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      # 2) Download demucs-cxfreeze-mac.zip from the release tag: release-assets
-      - name: Download demucs-cxfreeze-mac.zip
-        id: download_demucs
+      # 2) Bump version in package.json (but don't create a local git tag)
+      - name: Set app version
         run: |
-          # We'll fetch the release info for tag=release-assets
+          echo "Bumping version to ${{ github.event.inputs.version }}"
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+
+      # 3) Download demucs-cxfreeze-mac.zip from your 'release-assets' release
+      - name: Download demucs-cxfreeze-mac.zip
+        run: |
+          echo "Fetching release data from 'release-assets'..."
           RELEASE_DATA=$(curl -s \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             "https://api.github.com/repos/davidcamick/camstem/releases/tags/release-assets")
 
-          # Parse out the asset ID for demucs-cxfreeze-mac.zip using jq
-          ASSET_ID=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="demucs-cxfreeze-mac.zip") | .id')
+          ASSET_ID=$(echo "$RELEASE_DATA" | \
+            jq -r '.assets[] | select(.name=="demucs-cxfreeze-mac.zip") | .id')
 
           if [ -z "$ASSET_ID" ] || [ "$ASSET_ID" == "null" ]; then
             echo "Could not find demucs-cxfreeze-mac.zip in release-assets!"
             exit 1
           fi
 
-          # Download the asset
+          echo "Downloading demucs-cxfreeze-mac.zip (asset id=$ASSET_ID) ..."
           curl -L \
             -H "Accept: application/octet-stream" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             "https://api.github.com/repos/davidcamick/camstem/releases/assets/$ASSET_ID" \
             -o demucs-cxfreeze-mac.zip
 
-          # Remove any existing folder, then unzip
+          # Remove old folder, then unzip into src/backend
           rm -rf src/backend/demucs-cxfreeze-mac
-          unzip demucs-cxfreeze-mac.zip -d src/backend
+          unzip -q demucs-cxfreeze-mac.zip -d src/backend
           rm demucs-cxfreeze-mac.zip
 
-      # 3) Download Models.zip
+      # 4) Download Models.zip from 'release-assets'
       - name: Download Models.zip
-        id: download_models
         run: |
           RELEASE_DATA=$(curl -s \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             "https://api.github.com/repos/davidcamick/camstem/releases/tags/release-assets")
 
-          ASSET_ID=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="Models.zip") | .id')
+          ASSET_ID=$(echo "$RELEASE_DATA" | \
+            jq -r '.assets[] | select(.name=="Models.zip") | .id')
 
           if [ -z "$ASSET_ID" ] || [ "$ASSET_ID" == "null" ]; then
             echo "Could not find Models.zip in release-assets!"
             exit 1
           fi
 
+          echo "Downloading Models.zip (asset id=$ASSET_ID) ..."
           curl -L \
             -H "Accept: application/octet-stream" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             "https://api.github.com/repos/davidcamick/camstem/releases/assets/$ASSET_ID" \
             -o Models.zip
 
-          # Remove existing Models folder, then unzip
+          # Remove old folder, then unzip at project root -> creates 'Models/'
           rm -rf Models
-          unzip Models.zip -d .
+          unzip -q Models.zip -d .
           rm Models.zip
 
-      # 4) Install dependencies
+      # 5) Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # 5) Build for mac
-      - name: Build Mac
+      # 6) Build & publish to CamStemReleases
+      - name: Build Mac (publish to GitHub)
         run: npm run build:mac
-
-      # 6) (Optional) Upload built artifact (dmg/zip) so you can download from the workflow
-      - name: Upload mac artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: mac-build
-          path: release  # or wherever electron-builder outputs your mac build artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
