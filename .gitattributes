@@ -1,2 +1,2 @@
 src/backend/ filter=lfs diff=lfs merge=lfs -text
-Models/ filter=lfs diff=lfs merge=lfs -text
+Models/** filter=lfs diff=lfs merge=lfs -text
