@@ -40,9 +40,7 @@
       {
         "from": "Models",
         "to": "Resources/Models",
-        "filter": [
-          "**/*"
-        ]
+        "filter": [ "**/*" ]
       }
     ],
     "extraResources": [
@@ -65,9 +63,7 @@
         {
           "from": "src/backend/demucs-cxfreeze-win-cuda",
           "to": "resources/demucs-cxfreeze-win-cuda",
-          "filter": [
-            "**/*"
-          ]
+          "filter": [ "**/*" ]
         }
       ]
     },
@@ -84,24 +80,19 @@
       "target": [ "zip" ],
       "category": "public.app-category.utilities",
       "artifactName": "${productName}-${version}-mac.${ext}",
-      "identity": "Developer ID Application: Kagen Jensen (78VJ3W63WV)",
       "hardenedRuntime": true,
       "extraFiles": [
         {
           "from": "src/backend/demucs-cxfreeze-mac",
           "to": "resources/demucs-cxfreeze-mac",
-          "filter": [
-            "**/*"
-          ]
+          "filter": [ "**/*" ]
         }
       ],
       "extraResources": [
         {
           "from": "Models",
           "to": "resources/Models",
-          "filter": [
-            "**/*"
-          ]
+          "filter": [ "**/*" ]
         }
       ]
     },
