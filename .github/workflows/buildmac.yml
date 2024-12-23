@@ -38,7 +38,7 @@ jobs:
       - name: Set env for Notarization
         run: |
           echo "APPLE_ID=${{ secrets.APPLE_ID }}" >> $GITHUB_ENV
-          echo "APPLE_ID_PASSWORD=${{ secrets.APPLE_ID_PASSWORD }}" >> $GITHUB_ENV
+          echo "APPLE_APP_SPECIFIC_PASSWORD=${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}" >> $GITHUB_ENV
 
       # 5) Download demucs-cxfreeze-mac.zip from 'release-assets'
       - name: Download demucs-cxfreeze-mac.zip
