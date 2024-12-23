@@ -86,7 +86,7 @@ module.exports = {
   "main": "src/backend/main.js",
   "scripts": {
     "start": "electron .",
-    "build:mac": "electron-builder --mac",
+    "build:mac": "electron-builder --mac --publish=always",
     "build:win": "electron-builder --win --publish=always",
     "build:all": "electron-builder --mac --win --publish=always",
     "build": "npm run build:all",

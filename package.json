@@ -36,6 +36,7 @@
         "repo": "CamStemReleases"
       }
     ],
+
     "extraFiles": [
       {
         "from": "Models",
@@ -51,6 +52,7 @@
         "to": "app/src/assets"
       }
     ],
+
     "win": {
       "forceCodeSigning": false,
       "target": [
@@ -80,9 +82,9 @@
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "differentialPackage": false
     },
+
     "mac": {
       "target": [
-        "dmg",
         "zip"
       ],
       "category": "public.app-category.utilities",
@@ -106,9 +108,7 @@
         }
       ]
     },
-    "dmg": {
-      "format": "ULFO"
-    },
+
     "files": [
       "dist/**/*",
       "src/backend/main.js",
