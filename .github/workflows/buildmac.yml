@@ -12,11 +12,11 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      # 1) Check out code
+      # 1) Check out the code
       - name: Check out code
         uses: actions/checkout@v3
 
-      # 2) Bump version in package.json (no local Git tag)
+      # 2) Bump version in package.json
       - name: Set app version
         run: |
           echo "Bumping version to ${{ github.event.inputs.version }}"
@@ -25,24 +25,13 @@ jobs:
       # 3) Install Developer ID Certificate
       - name: Install Developer ID Certificate
         run: |
-          # Decode the base64-encoded .p12 from your secret
           echo "${{ secrets.MAC_CERT_P12 }}" | base64 --decode > /tmp/cert.p12
-
-          # Create a keychain with no password
           security create-keychain -p "" build.keychain
           security set-keychain-settings build.keychain
-
-          # Add new keychain to the search list, set as default
           security list-keychains -s build.keychain $(security list-keychains -s | tr -d '"')
           security default-keychain -s build.keychain
-
-          # Unlock the keychain
           security unlock-keychain -p "" build.keychain
-
-          # Import the p12 with the password from the secret
           security import /tmp/cert.p12 -k build.keychain -P "${{ secrets.MAC_CERT_PW }}" -T /usr/bin/codesign -T /usr/bin/security
-
-          # Allow codesign access
           security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
 
       # 4) Provide Apple ID creds for Notarization
@@ -59,8 +48,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             "https://api.github.com/repos/davidcamick/camstem/releases/tags/release-assets")
 
-          ASSET_ID=$(echo "$RELEASE_DATA" | \
-            jq -r '.assets[] | select(.name=="demucs-cxfreeze-mac.zip") | .id')
+          ASSET_ID=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="demucs-cxfreeze-mac.zip") | .id')
 
           if [ -z "$ASSET_ID" ] || [ "$ASSET_ID" == "null" ]; then
             echo "Could not find demucs-cxfreeze-mac.zip in release-assets!"
@@ -74,7 +62,6 @@ jobs:
             "https://api.github.com/repos/davidcamick/camstem/releases/assets/$ASSET_ID" \
             -o demucs-cxfreeze-mac.zip
 
-          # Remove old folder, then unzip
           rm -rf src/backend/demucs-cxfreeze-mac
           unzip -q demucs-cxfreeze-mac.zip -d src/backend
           rm demucs-cxfreeze-mac.zip
@@ -86,8 +73,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             "https://api.github.com/repos/davidcamick/camstem/releases/tags/release-assets")
 
-          ASSET_ID=$(echo "$RELEASE_DATA" | \
-            jq -r '.assets[] | select(.name=="Models.zip") | .id')
+          ASSET_ID=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="Models.zip") | .id')
 
           if [ -z "$ASSET_ID" ] || [ "$ASSET_ID" == "null" ]; then
             echo "Could not find Models.zip in release-assets!"
@@ -101,7 +87,6 @@ jobs:
             "https://api.github.com/repos/davidcamick/camstem/releases/assets/$ASSET_ID" \
             -o Models.zip
 
-          # Remove old folder, then unzip
           rm -rf Models
           unzip -q Models.zip -d .
           rm Models.zip
@@ -110,7 +95,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # 8) Build & publish to GitHub (signed & notarized)
+      # 8) Build & publish to GitHub (signed & notarized if dev cert is found)
       - name: Build Mac (publish to GitHub)
         run: npm run build:mac
         env:
