@@ -36,8 +36,6 @@
         "repo": "CamStemReleases"
       }
     ],
-
- 
     "extraResources": [
       {
         "from": "src/assets",
@@ -51,7 +49,6 @@
         ]
       }
     ],
-
     "win": {
       "forceCodeSigning": false,
       "target": [
@@ -81,7 +78,6 @@
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "differentialPackage": false
     },
-
     "mac": {
       "target": [
         "zip"
@@ -97,18 +93,8 @@
             "**/*"
           ]
         }
-      ],
-      "extraResources": [
-        {
-          "from": "Models",
-          "to": "Models",
-          "filter": [
-            "**/*"
-          ]
-        }
       ]
     },
-
     "files": [
       "dist/**/*",
       "src/backend/main.js",
@@ -118,7 +104,6 @@
     "directories": {
       "output": "release"
     },
-
     "afterPack": "src/backend/afterPack.js"
   },
   "dependencies": {
