@@ -1,12 +1,12 @@
-here is what my entire project looks like right now, so you can understand the updates and work with this version now
+this is my project, please read the contents and understand its functionality. once done, let me know and await my requests.
 
 `.` (Root)
 ==============
 - `tailwind.config.js`
 - `README.md`
-- `package.json`
 - `postcss.config.js`
 - `.env`
+- `package.json`
 
 `.github`
 ==============
@@ -74,146 +74,6 @@ module.exports = {
   },
   plugins: [],
 };
-```
-
-### package.json
-
-``` 
-{
-  "name": "CamStem",
-  "version": "0.9.7",
-  "description": "CamStem",
-  "main": "src/backend/main.js",
-  "scripts": {
-    "start": "electron .",
-    "build:mac": "electron-builder --mac --publish=always",
-    "build:win": "electron-builder --win --publish=always",
-    "build:all": "electron-builder --mac --win --publish=always",
-    "build": "npm run build:all",
-    "build:css": "npx tailwindcss -i ./src/frontend/index.css -o ./src/frontend/tailwind-output.css"
-  },
-  "author": "David Camick",
-  "license": "MIT",
-  "devDependencies": {
-    "@babel/core": "^7.26.0",
-    "@babel/preset-env": "^7.26.0",
-    "@babel/preset-react": "^7.25.9",
-    "@babel/standalone": "^7.26.2",
-    "babel-loader": "^9.2.1",
-    "electron": "^25.1.0",
-    "electron-builder": "^25.1.8",
-    "webpack": "^5.96.1",
-    "webpack-cli": "^5.1.4"
-  },
-  "build": {
-    "appId": "camstem.org",
-    "productName": "CamStem",
-    "asar": false,
-    "compression": "maximum",
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "davidcamick",
-        "repo": "CamStemReleases"
-      }
-    ],
-    "extraFiles": [
-      {
-        "from": "Models",
-        "to": "Resources/Models",
-        "filter": [
-          "**/*"
-        ]
-      }
-    ],
-    "extraResources": [
-      {
-        "from": "src/assets",
-        "to": "app/src/assets"
-      }
-    ],
-    "win": {
-      "forceCodeSigning": false,
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "compression": "maximum",
-      "extraFiles": [
-        {
-          "from": "src/backend/demucs-cxfreeze-win-cuda",
-          "to": "resources/demucs-cxfreeze-win-cuda",
-          "filter": [
-            "**/*"
-          ]
-        }
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": false,
-      "runAfterFinish": false,
-      "allowToChangeInstallationDirectory": true,
-      "artifactName": "${productName}-Setup-${version}.${ext}",
-      "differentialPackage": false
-    },
-    "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "category": "public.app-category.utilities",
-      "artifactName": "${productName}-${version}-mac.${ext}",
-      "extraFiles": [
-        {
-          "from": "src/backend/demucs-cxfreeze-mac",
-          "to": "resources/demucs-cxfreeze-mac",
-          "filter": [
-            "**/*"
-          ]
-        }
-      ],
-      "extraResources": [
-        {
-          "from": "Models",
-          "to": "resources/Models",
-          "filter": [
-            "**/*"
-          ]
-        }
-      ]
-    },
-    "dmg": {
-      "format": "ULFO"
-    },
-    "files": [
-      "dist/**/*",
-      "src/backend/main.js",
-      "src/backend/preload.js",
-      "src/frontend/**/*"
-    ],
-    "directories": {
-      "output": "release"
-    }
-  },
-  "dependencies": {
-    "autoprefixer": "^10.4.20",
-    "choco": "^0.2.1",
-    "dotenv": "^16.4.7",
-    "electron-is-dev": "^3.0.1",
-    "electron-updater": "^6.3.9",
-    "keytar": "^7.9.0",
-    "postcss": "^8.4.49",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "stripe": "^17.4.0",
-    "tailwindcss": "^3.4.15"
-  }
-}
 ```
 
 ### postcss.config.js
@@ -834,6 +694,10 @@ video {
 
 .mb-6 {
   margin-bottom: 1.5rem;
+}
+
+.block {
+  display: block;
 }
 
 .flex {
@@ -2559,5 +2423,133 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
+```
+
+### package.json
+
+``` 
+{
+  "name": "CamStem",
+  "version": "0.9.9",
+  "description": "CamStem",
+  "main": "src/backend/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac --publish=always",
+    "build:win": "electron-builder --win --publish=always",
+    "build:all": "electron-builder --mac --win --publish=always",
+    "build": "npm run build:all",
+    "build:css": "npx tailwindcss -i ./src/frontend/index.css -o ./src/frontend/tailwind-output.css"
+
+  },
+  "author": "David Camick",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.25.9",
+    "@babel/standalone": "^7.26.2",
+    "babel-loader": "^9.2.1",
+    "electron": "^25.1.0",
+    "electron-builder": "^25.1.8",
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4"
+  },
+  "build": {
+    "appId": "camstem.org",
+    "productName": "CamStem",
+    "asar": false,
+    "compression": "maximum",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "davidcamick",
+        "repo": "CamStemReleases"
+      }
+    ],
+    "extraResources": [
+      {
+        "from": "src/assets",
+        "to": "app/src/assets"
+      },
+      {
+        "from": "Models",
+        "to": "Models",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "forceCodeSigning": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "compression": "maximum",
+      "extraFiles": [
+        {
+          "from": "src/backend/demucs-cxfreeze-win-cuda",
+          "to": "resources/demucs-cxfreeze-win-cuda",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "runAfterFinish": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "differentialPackage": false
+    },
+    "mac": {
+      "target": [
+        "zip"
+      ],
+      "category": "public.app-category.utilities",
+      "artifactName": "${productName}-${version}-mac.${ext}",
+      "hardenedRuntime": true,
+      "extraFiles": [
+        {
+          "from": "src/backend/demucs-cxfreeze-mac",
+          "to": "resources/demucs-cxfreeze-mac",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ]
+    },
+    "files": [
+      "dist/**/*",
+      "src/backend/main.js",
+      "src/backend/preload.js",
+      "src/frontend/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "afterPack": "src/backend/afterPack.js"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.4.20",
+    "choco": "^0.2.1",
+    "dotenv": "^16.4.7",
+    "electron-is-dev": "^3.0.1",
+    "electron-updater": "^6.3.9",
+    "keytar": "^7.9.0",
+    "postcss": "^8.4.49",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "stripe": "^17.4.0",
+    "tailwindcss": "^3.4.15"
+  }
+}
 ```
 
