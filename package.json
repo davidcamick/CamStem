@@ -36,17 +36,27 @@
         "repo": "CamStemReleases"
       }
     ],
+
     "extraFiles": [
       {
         "from": "Models",
         "to": "Resources/Models",
-        "filter": [ "**/*" ]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "extraResources": [
       {
         "from": "src/assets",
         "to": "app/src/assets"
+      },
+      {
+        "from": "Models",
+        "to": "Models",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
 
@@ -55,7 +65,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": [ "x64" ]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "compression": "maximum",
@@ -63,7 +75,9 @@
         {
           "from": "src/backend/demucs-cxfreeze-win-cuda",
           "to": "resources/demucs-cxfreeze-win-cuda",
-          "filter": [ "**/*" ]
+          "filter": [
+            "**/*"
+          ]
         }
       ]
     },
@@ -77,7 +91,9 @@
     },
 
     "mac": {
-      "target": [ "zip" ],
+      "target": [
+        "zip"
+      ],
       "category": "public.app-category.utilities",
       "artifactName": "${productName}-${version}-mac.${ext}",
       "hardenedRuntime": true,
@@ -85,14 +101,18 @@
         {
           "from": "src/backend/demucs-cxfreeze-mac",
           "to": "resources/demucs-cxfreeze-mac",
-          "filter": [ "**/*" ]
+          "filter": [
+            "**/*"
+          ]
         }
       ],
       "extraResources": [
         {
           "from": "Models",
-          "to": "resources/Models",
-          "filter": [ "**/*" ]
+          "to": "Models",
+          "filter": [
+            "**/*"
+          ]
         }
       ]
     },
@@ -105,7 +125,9 @@
     ],
     "directories": {
       "output": "release"
-    }
+    },
+
+    "afterPack": "src/backend/afterPack.js"
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",
