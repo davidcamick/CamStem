@@ -37,10 +37,7 @@
       }
     ],
 
-    /*
-     * Removed the top-level extraFiles for Models to avoid EEXIST collisions.
-     * If you had it here before, it's now gone.
-     */
+ 
     "extraResources": [
       {
         "from": "src/assets",
@@ -122,10 +119,6 @@
       "output": "release"
     },
 
-    /*
-     * If you're using an afterPack script to chmod demucs-cxfreeze on mac,
-     * keep it here. Otherwise, remove if not needed.
-     */
     "afterPack": "src/backend/afterPack.js"
   },
   "dependencies": {
