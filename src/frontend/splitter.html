@@ -1,459 +1,233 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CamStem</title>
-    <style>
-        /* Full gradient background */
-        body {
-            background: linear-gradient(135deg, #006494, #051923);
-            min-height: 100vh;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            color: white;
-        }
-
-        /* Container styles */
-        .container {
-            width: 60%;
-            max-width: 800px;
-            padding: 2rem;
-            background-color: rgba(5, 130, 202, 0.95); /* Slight transparency */
-            border-radius: 12px;
-            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-            position: relative;
-        }
-
-        .container h1 {
-            text-align: center;
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        /* Two-column form layout */
-        .form-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .form-column {
-            flex: 1 1 45%;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .form-group label {
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-            font-size: 0.95rem;
-        }
-
-        /* Button styles */
-        .btn {
-            padding: 0.6rem 1.2rem;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-            width: 100%;
-            max-width: 180px;
-            margin-top: 0.3rem;
-        }
-
-        .btn-secondary {
-            background-color: #17a2b8;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #138496;
-            transform: translateY(-2px);
-        }
-
-        .btn-primary {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #218838;
-            transform: translateY(-2px);
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background-color: #c82333;
-            transform: translateY(-2px);
-        }
-
-        /* Buttons container */
-        .buttons-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 0.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .buttons-container button {
-            flex: 1;
-            max-width: 33%;
-        }
-
-        /* Collapsible Log Section */
-        .log-section {
-            margin-top: 1.5rem;
-        }
-
-        .log-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            background-color: #006494;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-        }
-
-        .log-header h2 {
-            margin: 0;
-            font-size: 1.2rem;
-        }
-
-        .log-toggle {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-
-        .logs {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease, padding 0.3s ease;
-            background-color: #ffffff;
-            color: #333;
-            padding: 0 1rem;
-            border-radius: 6px;
-            margin-top: 0.5rem;
-        }
-
-        .logs.open {
-            max-height: 300px; /* Adjust as needed */
-            padding: 1rem;
-        }
-
-        .logs p {
-            margin: 0.5rem 0;
-            font-size: 0.95rem;
-            color: #333;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 100; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background-color: #0582CA;
-            margin: auto;
-            padding: 2rem;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 12px;
-            color: white;
-            text-align: center;
-        }
-
-        .modal-content h2 {
-            margin-top: 0;
-            font-size: 1.5rem;
-        }
-
-        .modal-content p {
-            margin: 1rem 0;
-            font-size: 1rem;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .modal-buttons .btn {
-            max-width: 100px;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .form-column {
-                flex: 1 1 100%;
-            }
-
-            .buttons-container {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-
-            .buttons-container button {
-                max-width: 100%;
-            }
-
-            .modal-content {
-                width: 90%;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CamStem - Stem Splitting</title>
+  <!-- Include Tailwind + Custom Index CSS -->
+  <link rel="stylesheet" href="tailwind-output.css">
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <div class="container">
-        <h1>CamStem</h1>
+  <!-- Use the .container from index.css, with a max-width for consistency -->
+  <div class="container" style="max-width: 480px;">
+    <!-- Add the .page-title class for a consistent heading style -->
+    <h1 class="page-title">Stem Splitting</h1>
 
-        <form id="demucsForm">
-            <div class="form-grid">
-                <!-- Left Column: Input and Output Path Selection -->
-                <div class="form-column">
-                    <div class="form-group">
-                        <label for="inputPath">Input Path:</label>
-                        <button 
-                            type="button" 
-                            id="selectInput" 
-                            class="btn btn-secondary"
-                        >
-                            Select Input
-                        </button>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="outputPath">Output Path:</label>
-                        <button 
-                            type="button" 
-                            id="selectOutput" 
-                            class="btn btn-secondary"
-                        >
-                            Select Output
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Right Column: Model and Quality Selection -->
-                <div class="form-column">
-                    <div class="form-group">
-                        <label for="model">Select Model:</label>
-                        <select 
-                            id="model" 
-                            required 
-                            style="width: 100%; padding: 0.6rem; border: none; border-radius: 6px; background-color: #e9ecef; color: #333;"
-                        >
-                            <option value="htdemucs">Default</option>
-                            <option value="htdemucs_ft">Fine Tuned</option>
-                            <option value="htdemucs_6s">Six Stem Model</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="mp3Preset">MP3 Quality Preset:</label>
-                        <select 
-                            id="mp3Preset" 
-                            required 
-                            style="width: 100%; padding: 0.6rem; border: none; border-radius: 6px; background-color: #e9ecef; color: #333;"
-                        >
-                            <option value="2">2 (Highest Quality)</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7 (Fastest Speed)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Buttons Container -->
-            <div class="buttons-container">
-                <button 
-                    type="button" 
-                    id="splitStemsButton" 
-                    class="btn btn-primary"
-                >
-                    Split Stems
-                </button>
-
-                <button 
-                    type="button" 
-                    id="openLogFile" 
-                    class="btn btn-secondary"
-                >
-                    Open Log File
-                </button>
-
-                <button 
-                    type="button" 
-                    id="backToDashboard" 
-                    class="btn btn-danger"
-                >
-                    Back to Main Menu
-                </button>
-            </div>
-        </form>
-
-        <!-- Collapsible Log Section -->
-        <div class="log-section">
-            <div class="log-header" id="logHeader">
-                <h2>Logs</h2>
-                <button class="log-toggle" id="toggleLogs">Show Logs</button>
-            </div>
-            <div id="logs" class="logs">
-                <p class="text-gray-600">Logs will appear here...</p>
-            </div>
+    <form id="demucsForm">
+      <div class="form-grid">
+        <!-- Left Column: Input and Output Path Selection -->
+        <div class="form-column">
+          <div class="form-group">
+            <label for="inputPath">Input Path:</label>
+            <button 
+              type="button" 
+              id="selectInput" 
+              class="btn btn-secondary"
+            >
+              Select Input
+            </button>
+          </div>
+          <div class="form-group">
+            <label for="outputPath">Output Path:</label>
+            <button 
+              type="button" 
+              id="selectOutput" 
+              class="btn btn-secondary"
+            >
+              Select Output
+            </button>
+          </div>
         </div>
-    </div>
 
-    <!-- Modal Popup -->
-    <div id="infoModal" class="modal">
-        <div class="modal-content">
-            <h2>Important Information</h2>
-            <p>A new folder will be created in your output directory where the stems will be stored.</p>
-            <p>If this is your first time splitting, it may take up to 5 minutes to start the splitting process.</p>
-            <p>If you don't see any progress after 10 minutes (including in the logs), please email us at <a href="mailto:devs@camstem.org" style="color: #FFD700; text-decoration: underline;">devs@camstem.org</a> and attach the log file by clicking on "Open Log File".</p>
-            <div class="modal-buttons">
-                <button id="proceedButton" class="btn btn-primary">Proceed</button>
-                <button id="cancelButton" class="btn btn-danger">Cancel</button>
-            </div>
+        <!-- Right Column: Model and Quality Selection -->
+        <div class="form-column">
+          <div class="form-group">
+            <label for="model">Select Model:</label>
+            <select 
+              id="model" 
+              required 
+              class="mp3-model-select"
+            >
+              <option value="htdemucs">Default</option>
+              <option value="htdemucs_ft">Fine Tuned</option>
+              <option value="htdemucs_6s">Six Stem Model</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="mp3Preset">MP3 Quality Preset:</label>
+            <select 
+              id="mp3Preset" 
+              required 
+              class="mp3-model-select"
+            >
+              <option value="2">2 (Highest Quality)</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7 (Fastest Speed)</option>
+            </select>
+          </div>
         </div>
+      </div>
+
+      <!-- Buttons Container -->
+      <div class="buttons-container">
+        <button 
+          type="button" 
+          id="splitStemsButton" 
+          class="btn btn-primary"
+        >
+          Split Stems
+        </button>
+        <button 
+          type="button" 
+          id="openLogFile" 
+          class="btn btn-secondary"
+        >
+          Open Log File
+        </button>
+        <button 
+          type="button" 
+          id="backToDashboard" 
+          class="btn btn-danger"
+        >
+          Back to Main Menu
+        </button>
+      </div>
+    </form>
+
+    <!-- Collapsible Log Section -->
+    <div class="log-section">
+      <div class="log-header" id="logHeader">
+        <h2>Logs</h2>
+        <button class="log-toggle" id="toggleLogs">Show Logs</button>
+      </div>
+      <div id="logs" class="logs">
+        <p class="text-gray-600">Logs will appear here...</p>
+      </div>
     </div>
+  </div>
 
-    <script>
-        const selectInputButton = document.getElementById('selectInput');
-        const selectOutputButton = document.getElementById('selectOutput');
-        const splitStemsButton = document.getElementById('splitStemsButton');
-        const openLogFileButton = document.getElementById('openLogFile');
-        const backToDashboardButton = document.getElementById('backToDashboard');
-        const logsDiv = document.getElementById('logs');
-        const toggleLogsButton = document.getElementById('toggleLogs');
+  <!-- Modal Popup -->
+  <div id="infoModal" class="modal">
+    <div class="modal-content">
+      <h2>Important Information</h2>
+      <p>A new folder will be created in your output directory where the stems will be stored.</p>
+      <p>If this is your first time splitting, it may take up to 5 minutes to start the splitting process.</p>
+      <p>If you don't see any progress after 10 minutes (including in the logs), please email us at 
+        <a href="mailto:devs@camstem.org" style="color: #FFD700; text-decoration: underline;">devs@camstem.org</a> 
+        and attach the log file by clicking on "Open Log File".
+      </p>
+      <div class="modal-buttons">
+        <button id="proceedButton" class="btn btn-primary">Proceed</button>
+        <button id="cancelButton" class="btn btn-danger">Cancel</button>
+      </div>
+    </div>
+  </div>
 
-        const infoModal = document.getElementById('infoModal');
-        const proceedButton = document.getElementById('proceedButton');
-        const cancelButton = document.getElementById('cancelButton');
+  <script>
+    const selectInputButton = document.getElementById('selectInput');
+    const selectOutputButton = document.getElementById('selectOutput');
+    const splitStemsButton = document.getElementById('splitStemsButton');
+    const openLogFileButton = document.getElementById('openLogFile');
+    const backToDashboardButton = document.getElementById('backToDashboard');
+    const logsDiv = document.getElementById('logs');
+    const toggleLogsButton = document.getElementById('toggleLogs');
 
-        let inputPath = '';
-        let outputPath = '';
+    const infoModal = document.getElementById('infoModal');
+    const proceedButton = document.getElementById('proceedButton');
+    const cancelButton = document.getElementById('cancelButton');
 
-        selectInputButton.addEventListener('click', () => {
-            window.api.selectPath('file', (path) => {
-                if (path) {
-                    inputPath = path;
-                    selectInputButton.textContent = 'Input Selected';
-                    selectInputButton.disabled = true;
-                }
-            });
-        });
+    let inputPath = '';
+    let outputPath = '';
 
-        selectOutputButton.addEventListener('click', () => {
-            window.api.selectPath('directory', (path) => {
-                if (path) {
-                    outputPath = path;
-                    selectOutputButton.textContent = 'Output Selected';
-                    selectOutputButton.disabled = true;
-                }
-            });
-        });
-
-        splitStemsButton.addEventListener('click', () => {
-            if (!inputPath || !outputPath) {
-                alert('Please select both input and output paths before splitting.');
-                return;
-            }
-            // Show the modal
-            infoModal.style.display = 'flex';
-        });
-
-        proceedButton.addEventListener('click', () => {
-            // Hide the modal
-            infoModal.style.display = 'none';
-            // Proceed with splitting
-            runSplitStems();
-        });
-
-        cancelButton.addEventListener('click', () => {
-            // Hide the modal
-            infoModal.style.display = 'none';
-        });
-
-        function runSplitStems() {
-            const model = document.getElementById('model').value;
-            const mp3Preset = document.getElementById('mp3Preset').value;
-
-            console.log('Submitted Input Path:', inputPath);
-            console.log('Submitted Output Path:', outputPath);
-            console.log('Selected Model:', model);
-            console.log('MP3 Preset:', mp3Preset);
-
-            window.api.runDemucs(inputPath, outputPath, model, mp3Preset);
+    selectInputButton.addEventListener('click', () => {
+      window.api.selectPath('file', (path) => {
+        if (path) {
+          inputPath = path;
+          selectInputButton.textContent = 'Input Selected';
+          selectInputButton.disabled = true;
         }
+      });
+    });
 
-        openLogFileButton.addEventListener('click', () => {
-            window.api.openLogFile();
-        });
+    selectOutputButton.addEventListener('click', () => {
+      window.api.selectPath('directory', (path) => {
+        if (path) {
+          outputPath = path;
+          selectOutputButton.textContent = 'Output Selected';
+          selectOutputButton.disabled = true;
+        }
+      });
+    });
 
-        backToDashboardButton.addEventListener('click', () => {
-            window.location.href = 'dashboard.html';
-        });
+    splitStemsButton.addEventListener('click', () => {
+      if (!inputPath || !outputPath) {
+        alert('Please select both input and output paths before splitting.');
+        return;
+      }
+      // Show the modal
+      infoModal.style.display = 'flex';
+    });
 
-        window.api.receive('demucs-log', (message) => {
-            const logEntry = document.createElement('p');
-            logEntry.textContent = message;
-            logsDiv.appendChild(logEntry);
-            logsDiv.scrollTop = logsDiv.scrollHeight;
-        });
+    proceedButton.addEventListener('click', () => {
+      // Hide the modal
+      infoModal.style.display = 'none';
+      // Proceed with splitting
+      runSplitStems();
+    });
 
-        // Collapsible Logs Functionality
-        toggleLogsButton.addEventListener('click', () => {
-            if (logsDiv.classList.contains('open')) {
-                logsDiv.classList.remove('open');
-                toggleLogsButton.textContent = 'Show Logs';
-            } else {
-                logsDiv.classList.add('open');
-                toggleLogsButton.textContent = 'Hide Logs';
-            }
-        });
+    cancelButton.addEventListener('click', () => {
+      // Hide the modal
+      infoModal.style.display = 'none';
+    });
 
-        // Close modal when clicking outside of it
-        window.addEventListener('click', (event) => {
-            if (event.target == infoModal) {
-                infoModal.style.display = 'none';
-            }
-        });
-    </script>
+    function runSplitStems() {
+      const model = document.getElementById('model').value;
+      const mp3Preset = document.getElementById('mp3Preset').value;
+
+      console.log('Submitted Input Path:', inputPath);
+      console.log('Submitted Output Path:', outputPath);
+      console.log('Selected Model:', model);
+      console.log('MP3 Preset:', mp3Preset);
+
+      window.api.runDemucs(inputPath, outputPath, model, mp3Preset);
+    }
+
+    openLogFileButton.addEventListener('click', () => {
+      window.api.openLogFile();
+    });
+
+    backToDashboardButton.addEventListener('click', () => {
+      window.location.href = 'dashboard.html';
+    });
+
+    window.api.receive('demucs-log', (message) => {
+      const logEntry = document.createElement('p');
+      logEntry.textContent = message;
+      logsDiv.appendChild(logEntry);
+      logsDiv.scrollTop = logsDiv.scrollHeight;
+    });
+
+    // Collapsible Logs Functionality
+    toggleLogsButton.addEventListener('click', () => {
+      if (logsDiv.classList.contains('open')) {
+        logsDiv.classList.remove('open');
+        toggleLogsButton.textContent = 'Show Logs';
+      } else {
+        logsDiv.classList.add('open');
+        toggleLogsButton.textContent = 'Hide Logs';
+      }
+    });
+
+    // Close modal when clicking outside of it
+    window.addEventListener('click', (event) => {
+      if (event.target == infoModal) {
+        infoModal.style.display = 'none';
+      }
+    });
+  </script>
 </body>
 </html>

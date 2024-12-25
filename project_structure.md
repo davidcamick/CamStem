@@ -1,4 +1,4 @@
-this is my project, please read the contents and understand its functionality. once done, let me know and await my requests.
+here is what my entire project looks like right now, so you can understand the updates and work with this version now
 
 `.` (Root)
 ==============
@@ -38,6 +38,10 @@ this is my project, please read the contents and understand its functionality. o
     - `splitter.html`
     - `landing.html`
     - `auth.html`
+    - `settings.html`
+    - `about.html`
+    - `update.html`
+    - `premiere.html`
 
   `backend`
   ==============
@@ -56,6 +60,11 @@ this is my project, please read the contents and understand its functionality. o
   `assets`
   ==============
     - `output-vp9.webm`
+    - `icon.ico`
+    - `installerHeader.bmp`
+    - `logo.png`
+    - `installerSidebar.bmp`
+    - `icon.icns`
 
 
 ## Included Files with Code
@@ -776,10 +785,376 @@ video {
 ### src\frontend\index.css
 
 ``` 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-```
+/* =======================
+   Tailwind Directives
+   (Already present in your file)
+   ======================= */
+
+   @tailwind base;
+   @tailwind components;
+   @tailwind utilities;
+   
+   /* =======================
+      Global Body Styles
+      ======================= */
+   
+   body {
+     background: linear-gradient(135deg, #006494, #051923);
+     min-height: 100vh;
+     margin: 0;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     font-family: Arial, sans-serif;
+     color: white;
+     text-align: center;
+   }
+   
+   /* =======================
+      Container Class
+      (Used by about.html, dashboard.html, auth.html, etc.)
+      ======================= */
+   
+   .container {
+     width: 100%;
+     max-width: 400px; /* Some pages override this via inline style or a special class */
+     padding: 2rem;
+     background-color: rgba(5, 130, 202, 0.95);
+     border-radius: 12px;
+     box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+   }
+   
+   /* =======================
+      Buttons (Shared .btn)
+      ======================= */
+   
+   /* A generic .btn baseline */
+   .btn {
+     display: inline-block;
+     padding: 0.75rem 1.5rem;
+     font-size: 1rem;
+     border-radius: 0.375rem;
+     border: none;
+     cursor: pointer;
+     background-color: #003554; /* default color if needed */
+     color: white;
+     transition: transform 0.3s ease, background-color 0.3s ease;
+     margin-bottom: 1rem; /* in some pages, all buttons are spaced out */
+   }
+   
+   .btn:hover {
+     background-color: #002940;
+     transform: translateY(-4px);
+     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+   }
+   
+   /* Variation: .btn-primary */
+   .btn-primary {
+     background-color: #28a745;
+   }
+   .btn-primary:hover {
+     background-color: #218838;
+     transform: translateY(-2px);
+   }
+   
+   /* Variation: .btn-secondary */
+   .btn-secondary {
+     background-color: #17a2b8;
+   }
+   .btn-secondary:hover {
+     background-color: #138496;
+     transform: translateY(-2px);
+   }
+   
+   /* Variation: .btn-danger */
+   .btn-danger {
+     background-color: #dc3545;
+   }
+   .btn-danger:hover {
+     background-color: #c82333;
+     transform: translateY(-2px);
+   }
+   
+   /* =======================
+      Additional button classes from various pages
+      ======================= */
+   
+   /* The `.actionButton` used on landing.html */
+   .actionButton {
+     background-color: #003554;
+     color: white;
+     padding: 0.75rem 1.5rem;
+     font-size: 1.125rem;
+     border-radius: 0.375rem;
+     transition: transform 0.3s ease, background-color 0.3s ease;
+     margin-bottom: 1rem;
+     display: inline-block;
+     border: none;
+     cursor: pointer;
+   }
+   .actionButton:hover {
+     background-color: #002940;
+     transform: translateY(-4px);
+     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+   }
+   
+   /* The `.danger-button` from settings.html (same as .btn-danger but included for references). */
+   .danger-button {
+     background-color: #8B0000;
+   }
+   .danger-button:hover {
+     background-color: #690000;
+   }
+   
+   /* Pill-shaped version button from dashboard.html */
+   .version-button {
+     display: inline-block;
+     padding: 0.35rem 0.75rem;
+     border-radius: 9999px;
+     background-color: rgba(255, 255, 255, 0.15);
+     color: rgba(255, 255, 255, 0.9);
+     font-size: 0.85rem;
+     margin-top: 1rem;
+     cursor: pointer;
+     transition: background-color 0.3s ease, transform 0.3s ease;
+     text-decoration: none;
+   }
+   .version-button:hover {
+     background-color: rgba(255, 255, 255, 0.25);
+     transform: translateY(-2px);
+   }
+   
+   /* The ".back-btn" link from update.html */
+   .back-btn {
+     margin-top: 1rem;
+     background-color: #003554;
+     display: inline-block;
+     padding: 0.75rem 1.5rem;
+     border-radius: 0.375rem;
+     font-size: 1rem;
+     cursor: pointer;
+     transition: background-color 0.3s ease, transform 0.3s ease;
+     text-decoration: none;
+     color: white;
+   }
+   .back-btn:hover {
+     background-color: #002940;
+     transform: translateY(-4px);
+     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+   }
+   
+   /* =======================
+      Modals (Error modal, info modal, sign-up modal, etc.)
+      ======================= */
+   
+   .modal {
+     display: none; /* Hidden by default */
+     position: fixed;
+     z-index: 99;
+     left: 0;
+     top: 0;
+     width: 100%;
+     height: 100%;
+     overflow: auto;
+     background-color: rgba(0, 0, 0, 0.6);
+     align-items: center;
+     justify-content: center;
+   }
+   
+   .modal-content {
+     background-color: #003554;
+     margin: auto;
+     padding: 1.5rem;
+     border-radius: 8px;
+     width: 80%;
+     max-width: 400px;
+     color: #fff;
+     text-align: center;
+   }
+   
+   /* The "Close" button inside a modal */
+   .close-btn {
+     background-color: #8B0000;
+     color: #fff;
+     border: none;
+     border-radius: 4px;
+     padding: 0.5rem 1rem;
+     font-size: 1rem;
+     cursor: pointer;
+     transition: background-color 0.3s ease, transform 0.3s ease;
+   }
+   .close-btn:hover {
+     background-color: #690000;
+     transform: translateY(-3px);
+   }
+   
+   /* .modal-buttons typically used for two side-by-side buttons in the modal */
+   .modal-buttons {
+     display: flex;
+     justify-content: center;
+     gap: 1rem;
+     margin-top: 1.5rem;
+   }
+   .modal-buttons .btn {
+     max-width: 100px;
+   }
+   
+   /* =======================
+      Landing Page Specific (landing.html)
+      ======================= */
+   
+   /* The #introVideoWrapper & #introVideo & .hidden from landing.html */
+   #introVideoWrapper {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     z-index: 50;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     background: none; /* no background color behind the video */
+   }
+   
+   #introVideo {
+     width: 100%;
+     height: auto;
+     object-fit: cover; /* maintain aspect ratio + fill space */
+   }
+   
+   /* Hide elements (e.g., #mainContent during video) */
+   .hidden {
+     display: none;
+   }
+   
+   /* =======================
+      About Page Specific (about.html)
+      ======================= */
+   .credits-grid {
+     display: grid;
+     grid-template-columns: 1fr 1fr;
+     gap: 1rem;
+     margin-bottom: 2rem;
+   }
+   
+   /* =======================
+      Dashboard Page Specific (dashboard.html)
+      ======================= */
+   .dashboard-buttons {
+     display: grid;
+     grid-template-columns: repeat(2, 1fr);
+     gap: 1rem;
+     margin-top: 1rem;
+   }
+   
+   /* =======================
+      Splitter Page Specific (splitter.html)
+      ======================= */
+   
+   /* Two-column layout for the form */
+   .form-grid {
+     display: flex;
+     flex-wrap: wrap;
+     gap: 1rem;
+   }
+   .form-column {
+     flex: 1 1 45%;
+     display: flex;
+     flex-direction: column;
+     gap: 1rem;
+   }
+   
+   /* Form group styling */
+   .form-group {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+   }
+   .form-group label {
+     margin-bottom: 0.5rem;
+     font-weight: bold;
+     font-size: 0.95rem;
+   }
+   
+   /* Additional select styling used for models/presets if needed */
+   .mp3-model-select {
+     width: 100%;
+     padding: 0.6rem;
+     border: none;
+     border-radius: 6px;
+     background-color: #e9ecef;
+     color: #333;
+   }
+   
+   /* Buttons container inside the form */
+   .buttons-container {
+     display: flex;
+     justify-content: space-between;
+     gap: 0.5rem;
+     margin-top: 1.5rem;
+   }
+   .buttons-container button {
+     flex: 1;
+     max-width: 33%;
+   }
+   
+   /* Collapsible log section */
+   .log-section {
+     margin-top: 1.5rem;
+   }
+   .log-header {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     cursor: pointer;
+     background-color: #006494;
+     padding: 0.5rem 1rem;
+     border-radius: 6px;
+   }
+   .log-header h2 {
+     margin: 0;
+     font-size: 1.2rem;
+   }
+   .log-toggle {
+     background: none;
+     border: none;
+     color: white;
+     font-size: 1rem;
+     cursor: pointer;
+   }
+   
+   /* The logs content container (collapsed by default) */
+   .logs {
+     max-height: 0;
+     overflow: hidden;
+     transition: max-height 0.3s ease, padding 0.3s ease;
+     background-color: #ffffff;
+     color: #333;
+     padding: 0 1rem; /* Start collapsed with zero side padding if you prefer */
+     border-radius: 6px;
+     margin-top: 0.5rem;
+   }
+   .logs.open {
+     max-height: 300px; /* or another limit */
+     padding: 1rem; /* show padding once expanded */
+   }
+   .logs p {
+     margin: 0.5rem 0;
+     font-size: 0.95rem;
+     color: #333;
+   }
+   
+   /* =======================
+      Update Page Specific (update.html)
+      ======================= */
+   .buttons {
+     display: grid;
+     grid-template-columns: 1fr 1fr;
+     gap: 1rem;
+     margin-top: 1rem;
+   }
+   ```
 
 ### src\frontend\dashboard.html
 
@@ -789,217 +1164,98 @@ video {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CamStem - temp</title>
-  <style>
-    body {
-      background: linear-gradient(135deg, #006494, #051923);
-      min-height: 100vh;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: Arial, sans-serif;
-      color: white;
-      text-align: center;
-    }
-
-    .dashboard-container {
-      width: 100%;
-      max-width: 400px;
-      padding: 2rem;
-      background-color: #0582CA;
-      border-radius: 12px;
-      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-    }
-
-    .dashboard-container h1 {
-      font-size: 2rem;
-      font-weight: bold;
-      margin-bottom: 1.5rem;
-    }
-
-    .dashboard-container p {
-      font-size: 1.125rem;
-      margin-bottom: 1rem;
-    }
-
-    .dashboard-container button {
-      background-color: #003554;
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      font-size: 1.125rem;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      margin: 0.5rem 0;
-      transition: transform 0.3s ease, background-color 0.3s ease;
-      display: inline-block;
-      width: 100%;
-    }
-
-    .dashboard-container button:hover {
-      background-color: #002940;
-      transform: translateY(-4px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .logout-button {
-      background-color: #8B0000;
-    }
-
-    .logout-button:hover {
-      background-color: #690000;
-    }
-
-    /* Progress Bar Styling */
-    #updateProgress {
-      width: 100%;
-      margin-top: 1rem;
-      margin-bottom: 1rem;
-      display: none; /* hidden by default */
-    }
-
-    .hidden {
-      display: none !important;
-    }
-  </style>
+  <title>CamStem</title>
+  <!-- Include Tailwind + Custom Index CSS -->
+  <link rel="stylesheet" href="tailwind-output.css">
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <div class="dashboard-container">
-    <h1>Welcome to the CamStem Dashboard</h1>
+  <!-- .container from index.css (max-width ~400px) -->
+  <div class="container">
+    <h1>CamStem Dashboard</h1>
 
-    <!-- Current version text -->
-    <p id="currentVersionText">Loading version...</p>
+    <!-- 2×2 grid of new buttons -->
+    <!-- If .dashboard-buttons is unique, define it in index.css -->
+    <div class="dashboard-buttons">
+      <button id="goToSplitterButton">Stem Splitting</button>
+      <button id="goToPremiereButton">Premiere Pro Integration</button>
+      <button id="goToSettingsButton">Settings</button>
+      <button id="goToAboutButton">About</button>
+    </div>
 
-    <!-- Update info -->
-    <p id="updateStatus" class="hidden"></p>
-    <progress id="updateProgress" max="100" value="0"></progress>
+    <!-- Pill-shaped button at bottom that goes to update.html -->
+    <a id="versionButton" class="version-button">
+      v?.?.?
+    </a>
+    <!-- 
+      (OPTIONAL) Old logout button was commented out; 
+      if you want it, just add it again here and rely on .btn styles.
+    -->
+  </div>
 
-    <!-- Check for updates button -->
-    <button id="checkForUpdatesButton">
-      Check for Updates
-    </button>
-
-    <!-- Install update now -->
-    <button id="installUpdateButton" class="hidden">
-      Install Update Now
-    </button>
-
-    <!-- Go to splitter -->
-    <button id="goToSplitterButton">
-      Go to Audio Splitting
-    </button>
-
-    <!-- Log out / remove keys -->
-    <button id="logoutButton" class="logout-button">
-      Log Out / Remove All Saved Keys
-    </button>
+  <!-- Error Modal -->
+  <!-- The .modal and .modal-content come from index.css -->
+  <div class="modal" id="errorModal">
+    <div class="modal-content">
+      <h2>Error</h2>
+      <p id="errorMessage"></p>
+      <button id="errorModalCloseButton" class="close-btn">Close</button>
+    </div>
   </div>
 
   <script>
-    // Grab all elements
-    const currentVersionText = document.getElementById('currentVersionText');
-    const checkUpdatesButton = document.getElementById('checkForUpdatesButton');
-    const updateStatus = document.getElementById('updateStatus');
-    const updateProgress = document.getElementById('updateProgress');
-    const installUpdateButton = document.getElementById('installUpdateButton');
+    // Error modal references
+    const errorModal = document.getElementById('errorModal');
+    const errorMessageElem = document.getElementById('errorMessage');
+    const errorModalCloseButton = document.getElementById('errorModalCloseButton');
+
+    function showErrorModal(message) {
+      errorMessageElem.textContent = message;
+      errorModal.style.display = 'flex';
+    }
+
+    errorModalCloseButton.addEventListener('click', () => {
+      errorModal.style.display = 'none';
+    });
+    window.addEventListener('click', (event) => {
+      if (event.target === errorModal) {
+        errorModal.style.display = 'none';
+      }
+    });
+
+    // Buttons
     const goToSplitterButton = document.getElementById('goToSplitterButton');
-    const logoutButton = document.getElementById('logoutButton');
-
-    // 1. On load, get current app version
-    (async () => {
-      try {
-        // Use the named method from preload.js
-        const version = await window.api.getAppVersion();
-        currentVersionText.textContent = `You are on version: v${version}`;
-      } catch (err) {
-        console.error('Error getting app version:', err);
-        currentVersionText.textContent = `Version: Unknown`;
-      }
-    })();
-
-    // 2. Listen for autoUpdater events
-    //    (We rely on main.js broadcasting 'autoUpdater-event')
-    window.api.receive('autoUpdater-event', (data) => {
-      console.log('autoUpdater-event:', data);
-
-      switch (data.event) {
-        case 'checking-for-update':
-          updateStatus.classList.remove('hidden');
-          updateStatus.textContent = 'Checking for updates...';
-          break;
-
-        case 'update-available':
-          updateStatus.classList.remove('hidden');
-          updateStatus.textContent = `Update available! New version: ${data.version}. Downloading...`;
-          updateProgress.style.display = 'block'; // Show progress bar
-          break;
-
-        case 'download-progress':
-          updateProgress.value = data.percent.toFixed(2);
-          break;
-
-        case 'update-downloaded':
-          updateStatus.textContent = `Update downloaded (v${data.version}). Choose "Install Update Now" to restart.`;
-          installUpdateButton.classList.remove('hidden'); // Show the "Install Now" button
-          break;
-
-        case 'update-not-available':
-          updateStatus.classList.remove('hidden');
-          updateStatus.textContent = 'No updates available.';
-          break;
-
-        case 'error':
-          updateStatus.classList.remove('hidden');
-          updateStatus.textContent = `AutoUpdater Error: ${data.message}`;
-          console.error('autoUpdater error:', data.message);
-          break;
-
-        default:
-          break;
-      }
-    });
-
-    // 3. Buttons
-    checkUpdatesButton.addEventListener('click', async () => {
-      // Reset update UI
-      updateProgress.value = 0;
-      updateProgress.style.display = 'none';
-      installUpdateButton.classList.add('hidden');
-      updateStatus.textContent = '';
-      updateStatus.classList.add('hidden');
-
-      // Trigger a manual check
-      try {
-        await window.api.checkForUpdates();
-      } catch (err) {
-        console.error('Error checking for updates:', err);
-      }
-    });
-
-    installUpdateButton.addEventListener('click', async () => {
-      // The update is already downloaded at this point.
-      // This will quit and install the new version.
-      try {
-        await window.api.installUpdateNow();
-      } catch (err) {
-        console.error('Error installing update:', err);
-      }
-    });
+    const goToPremiereButton = document.getElementById('goToPremiereButton');
+    const goToSettingsButton = document.getElementById('goToSettingsButton');
+    const goToAboutButton = document.getElementById('goToAboutButton');
 
     goToSplitterButton.addEventListener('click', () => {
       window.location.href = 'splitter.html';
     });
+    goToPremiereButton.addEventListener('click', () => {
+      window.location.href = 'premiere.html';
+    });
+    goToSettingsButton.addEventListener('click', () => {
+      window.location.href = 'settings.html';
+    });
+    goToAboutButton.addEventListener('click', () => {
+      window.location.href = 'about.html';
+    });
 
-    logoutButton.addEventListener('click', async () => {
+    // Pill-shaped version button -> update.html
+    const versionButton = document.getElementById('versionButton');
+    (async () => {
       try {
-        await window.api.removeSavedKey();
-        alert('All saved keys have been removed. You will be redirected to the login page.');
-        window.location.href = 'auth.html';
-      } catch (error) {
-        console.error('Error removing saved keys:', error);
-        alert('An error occurred while removing saved keys. Please try again.');
+        const version = await window.api.getAppVersion();
+        versionButton.textContent = `v${version}`;
+      } catch (err) {
+        console.error('Error getting app version:', err);
+        versionButton.textContent = 'v?.?.?';
       }
+    })();
+
+    versionButton.addEventListener('click', () => {
+      window.location.href = 'update.html';
     });
   </script>
 </body>
@@ -1012,460 +1268,233 @@ video {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CamStem</title>
-    <style>
-        /* Full gradient background */
-        body {
-            background: linear-gradient(135deg, #006494, #051923);
-            min-height: 100vh;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            color: white;
-        }
-
-        /* Container styles */
-        .container {
-            width: 60%;
-            max-width: 800px;
-            padding: 2rem;
-            background-color: rgba(5, 130, 202, 0.95); /* Slight transparency */
-            border-radius: 12px;
-            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-            position: relative;
-        }
-
-        .container h1 {
-            text-align: center;
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        /* Two-column form layout */
-        .form-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .form-column {
-            flex: 1 1 45%;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .form-group label {
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-            font-size: 0.95rem;
-        }
-
-        /* Button styles */
-        .btn {
-            padding: 0.6rem 1.2rem;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-            width: 100%;
-            max-width: 180px;
-            margin-top: 0.3rem;
-        }
-
-        .btn-secondary {
-            background-color: #17a2b8;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #138496;
-            transform: translateY(-2px);
-        }
-
-        .btn-primary {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #218838;
-            transform: translateY(-2px);
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background-color: #c82333;
-            transform: translateY(-2px);
-        }
-
-        /* Buttons container */
-        .buttons-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 0.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .buttons-container button {
-            flex: 1;
-            max-width: 33%;
-        }
-
-        /* Collapsible Log Section */
-        .log-section {
-            margin-top: 1.5rem;
-        }
-
-        .log-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            background-color: #006494;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-        }
-
-        .log-header h2 {
-            margin: 0;
-            font-size: 1.2rem;
-        }
-
-        .log-toggle {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-
-        .logs {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease, padding 0.3s ease;
-            background-color: #ffffff;
-            color: #333;
-            padding: 0 1rem;
-            border-radius: 6px;
-            margin-top: 0.5rem;
-        }
-
-        .logs.open {
-            max-height: 300px; /* Adjust as needed */
-            padding: 1rem;
-        }
-
-        .logs p {
-            margin: 0.5rem 0;
-            font-size: 0.95rem;
-            color: #333;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 100; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background-color: #0582CA;
-            margin: auto;
-            padding: 2rem;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 12px;
-            color: white;
-            text-align: center;
-        }
-
-        .modal-content h2 {
-            margin-top: 0;
-            font-size: 1.5rem;
-        }
-
-        .modal-content p {
-            margin: 1rem 0;
-            font-size: 1rem;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .modal-buttons .btn {
-            max-width: 100px;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .form-column {
-                flex: 1 1 100%;
-            }
-
-            .buttons-container {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-
-            .buttons-container button {
-                max-width: 100%;
-            }
-
-            .modal-content {
-                width: 90%;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CamStem</title>
+  <!-- Include Tailwind + Custom Index CSS -->
+  <link rel="stylesheet" href="tailwind-output.css">
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <div class="container">
-        <h1>CamStem</h1>
+  <!-- .container from index.css (if you want a wider layout, override with a style or a special class) -->
+  <div class="container" style="max-width: 800px;">
+    <h1>CamStem</h1>
 
-        <form id="demucsForm">
-            <div class="form-grid">
-                <!-- Left Column: Input and Output Path Selection -->
-                <div class="form-column">
-                    <div class="form-group">
-                        <label for="inputPath">Input Path:</label>
-                        <button 
-                            type="button" 
-                            id="selectInput" 
-                            class="btn btn-secondary"
-                        >
-                            Select Input
-                        </button>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="outputPath">Output Path:</label>
-                        <button 
-                            type="button" 
-                            id="selectOutput" 
-                            class="btn btn-secondary"
-                        >
-                            Select Output
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Right Column: Model and Quality Selection -->
-                <div class="form-column">
-                    <div class="form-group">
-                        <label for="model">Select Model:</label>
-                        <select 
-                            id="model" 
-                            required 
-                            style="width: 100%; padding: 0.6rem; border: none; border-radius: 6px; background-color: #e9ecef; color: #333;"
-                        >
-                            <option value="htdemucs">Default</option>
-                            <option value="htdemucs_ft">Fine Tuned</option>
-                            <option value="htdemucs_6s">Six Stem Model</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="mp3Preset">MP3 Quality Preset:</label>
-                        <select 
-                            id="mp3Preset" 
-                            required 
-                            style="width: 100%; padding: 0.6rem; border: none; border-radius: 6px; background-color: #e9ecef; color: #333;"
-                        >
-                            <option value="2">2 (Highest Quality)</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7 (Fastest Speed)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Buttons Container -->
-            <div class="buttons-container">
-                <button 
-                    type="button" 
-                    id="splitStemsButton" 
-                    class="btn btn-primary"
-                >
-                    Split Stems
-                </button>
-
-                <button 
-                    type="button" 
-                    id="openLogFile" 
-                    class="btn btn-secondary"
-                >
-                    Open Log File
-                </button>
-
-                <button 
-                    type="button" 
-                    id="backToDashboard" 
-                    class="btn btn-danger"
-                >
-                    Back to Main Menu
-                </button>
-            </div>
-        </form>
-
-        <!-- Collapsible Log Section -->
-        <div class="log-section">
-            <div class="log-header" id="logHeader">
-                <h2>Logs</h2>
-                <button class="log-toggle" id="toggleLogs">Show Logs</button>
-            </div>
-            <div id="logs" class="logs">
-                <p class="text-gray-600">Logs will appear here...</p>
-            </div>
+    <form id="demucsForm">
+      <div class="form-grid">
+        <!-- Left Column: Input and Output Path Selection -->
+        <div class="form-column">
+          <div class="form-group">
+            <label for="inputPath">Input Path:</label>
+            <button 
+              type="button" 
+              id="selectInput" 
+              class="btn btn-secondary"
+            >
+              Select Input
+            </button>
+          </div>
+          <div class="form-group">
+            <label for="outputPath">Output Path:</label>
+            <button 
+              type="button" 
+              id="selectOutput" 
+              class="btn btn-secondary"
+            >
+              Select Output
+            </button>
+          </div>
         </div>
-    </div>
 
-    <!-- Modal Popup -->
-    <div id="infoModal" class="modal">
-        <div class="modal-content">
-            <h2>Important Information</h2>
-            <p>A new folder will be created in your output directory where the stems will be stored.</p>
-            <p>If this is your first time splitting, it may take up to 5 minutes to start the splitting process.</p>
-            <p>If you don't see any progress after 10 minutes (including in the logs), please email us at <a href="mailto:devs@camstem.org" style="color: #FFD700; text-decoration: underline;">devs@camstem.org</a> and attach the log file by clicking on "Open Log File".</p>
-            <div class="modal-buttons">
-                <button id="proceedButton" class="btn btn-primary">Proceed</button>
-                <button id="cancelButton" class="btn btn-danger">Cancel</button>
-            </div>
+        <!-- Right Column: Model and Quality Selection -->
+        <div class="form-column">
+          <div class="form-group">
+            <label for="model">Select Model:</label>
+            <select 
+              id="model" 
+              required 
+              class="mp3-model-select"
+            >
+              <option value="htdemucs">Default</option>
+              <option value="htdemucs_ft">Fine Tuned</option>
+              <option value="htdemucs_6s">Six Stem Model</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="mp3Preset">MP3 Quality Preset:</label>
+            <select 
+              id="mp3Preset" 
+              required 
+              class="mp3-model-select"
+            >
+              <option value="2">2 (Highest Quality)</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7 (Fastest Speed)</option>
+            </select>
+          </div>
         </div>
+      </div>
+
+      <!-- Buttons Container -->
+      <div class="buttons-container">
+        <button 
+          type="button" 
+          id="splitStemsButton" 
+          class="btn btn-primary"
+        >
+          Split Stems
+        </button>
+        <button 
+          type="button" 
+          id="openLogFile" 
+          class="btn btn-secondary"
+        >
+          Open Log File
+        </button>
+        <button 
+          type="button" 
+          id="backToDashboard" 
+          class="btn btn-danger"
+        >
+          Back to Main Menu
+        </button>
+      </div>
+    </form>
+
+    <!-- Collapsible Log Section -->
+    <div class="log-section">
+      <div class="log-header" id="logHeader">
+        <h2>Logs</h2>
+        <button class="log-toggle" id="toggleLogs">Show Logs</button>
+      </div>
+      <div id="logs" class="logs">
+        <p class="text-gray-600">Logs will appear here...</p>
+      </div>
     </div>
+  </div>
 
-    <script>
-        const selectInputButton = document.getElementById('selectInput');
-        const selectOutputButton = document.getElementById('selectOutput');
-        const splitStemsButton = document.getElementById('splitStemsButton');
-        const openLogFileButton = document.getElementById('openLogFile');
-        const backToDashboardButton = document.getElementById('backToDashboard');
-        const logsDiv = document.getElementById('logs');
-        const toggleLogsButton = document.getElementById('toggleLogs');
+  <!-- Modal Popup -->
+  <div id="infoModal" class="modal">
+    <div class="modal-content">
+      <h2>Important Information</h2>
+      <p>A new folder will be created in your output directory where the stems will be stored.</p>
+      <p>If this is your first time splitting, it may take up to 5 minutes to start the splitting process.</p>
+      <p>If you don't see any progress after 10 minutes (including in the logs), please email us at 
+        <a href="mailto:devs@camstem.org" style="color: #FFD700; text-decoration: underline;">devs@camstem.org</a> 
+        and attach the log file by clicking on "Open Log File".
+      </p>
+      <div class="modal-buttons">
+        <button id="proceedButton" class="btn btn-primary">Proceed</button>
+        <button id="cancelButton" class="btn btn-danger">Cancel</button>
+      </div>
+    </div>
+  </div>
 
-        const infoModal = document.getElementById('infoModal');
-        const proceedButton = document.getElementById('proceedButton');
-        const cancelButton = document.getElementById('cancelButton');
+  <script>
+    const selectInputButton = document.getElementById('selectInput');
+    const selectOutputButton = document.getElementById('selectOutput');
+    const splitStemsButton = document.getElementById('splitStemsButton');
+    const openLogFileButton = document.getElementById('openLogFile');
+    const backToDashboardButton = document.getElementById('backToDashboard');
+    const logsDiv = document.getElementById('logs');
+    const toggleLogsButton = document.getElementById('toggleLogs');
 
-        let inputPath = '';
-        let outputPath = '';
+    const infoModal = document.getElementById('infoModal');
+    const proceedButton = document.getElementById('proceedButton');
+    const cancelButton = document.getElementById('cancelButton');
 
-        selectInputButton.addEventListener('click', () => {
-            window.api.selectPath('file', (path) => {
-                if (path) {
-                    inputPath = path;
-                    selectInputButton.textContent = 'Input Selected';
-                    selectInputButton.disabled = true;
-                }
-            });
-        });
+    let inputPath = '';
+    let outputPath = '';
 
-        selectOutputButton.addEventListener('click', () => {
-            window.api.selectPath('directory', (path) => {
-                if (path) {
-                    outputPath = path;
-                    selectOutputButton.textContent = 'Output Selected';
-                    selectOutputButton.disabled = true;
-                }
-            });
-        });
-
-        splitStemsButton.addEventListener('click', () => {
-            if (!inputPath || !outputPath) {
-                alert('Please select both input and output paths before splitting.');
-                return;
-            }
-            // Show the modal
-            infoModal.style.display = 'flex';
-        });
-
-        proceedButton.addEventListener('click', () => {
-            // Hide the modal
-            infoModal.style.display = 'none';
-            // Proceed with splitting
-            runSplitStems();
-        });
-
-        cancelButton.addEventListener('click', () => {
-            // Hide the modal
-            infoModal.style.display = 'none';
-        });
-
-        function runSplitStems() {
-            const model = document.getElementById('model').value;
-            const mp3Preset = document.getElementById('mp3Preset').value;
-
-            console.log('Submitted Input Path:', inputPath);
-            console.log('Submitted Output Path:', outputPath);
-            console.log('Selected Model:', model);
-            console.log('MP3 Preset:', mp3Preset);
-
-            window.api.runDemucs(inputPath, outputPath, model, mp3Preset);
+    selectInputButton.addEventListener('click', () => {
+      window.api.selectPath('file', (path) => {
+        if (path) {
+          inputPath = path;
+          selectInputButton.textContent = 'Input Selected';
+          selectInputButton.disabled = true;
         }
+      });
+    });
 
-        openLogFileButton.addEventListener('click', () => {
-            window.api.openLogFile();
-        });
+    selectOutputButton.addEventListener('click', () => {
+      window.api.selectPath('directory', (path) => {
+        if (path) {
+          outputPath = path;
+          selectOutputButton.textContent = 'Output Selected';
+          selectOutputButton.disabled = true;
+        }
+      });
+    });
 
-        backToDashboardButton.addEventListener('click', () => {
-            window.location.href = 'dashboard.html';
-        });
+    splitStemsButton.addEventListener('click', () => {
+      if (!inputPath || !outputPath) {
+        alert('Please select both input and output paths before splitting.');
+        return;
+      }
+      // Show the modal
+      infoModal.style.display = 'flex';
+    });
 
-        window.api.receive('demucs-log', (message) => {
-            const logEntry = document.createElement('p');
-            logEntry.textContent = message;
-            logsDiv.appendChild(logEntry);
-            logsDiv.scrollTop = logsDiv.scrollHeight;
-        });
+    proceedButton.addEventListener('click', () => {
+      // Hide the modal
+      infoModal.style.display = 'none';
+      // Proceed with splitting
+      runSplitStems();
+    });
 
-        // Collapsible Logs Functionality
-        toggleLogsButton.addEventListener('click', () => {
-            if (logsDiv.classList.contains('open')) {
-                logsDiv.classList.remove('open');
-                toggleLogsButton.textContent = 'Show Logs';
-            } else {
-                logsDiv.classList.add('open');
-                toggleLogsButton.textContent = 'Hide Logs';
-            }
-        });
+    cancelButton.addEventListener('click', () => {
+      // Hide the modal
+      infoModal.style.display = 'none';
+    });
 
-        // Close modal when clicking outside of it
-        window.addEventListener('click', (event) => {
-            if (event.target == infoModal) {
-                infoModal.style.display = 'none';
-            }
-        });
-    </script>
+    function runSplitStems() {
+      const model = document.getElementById('model').value;
+      const mp3Preset = document.getElementById('mp3Preset').value;
+
+      console.log('Submitted Input Path:', inputPath);
+      console.log('Submitted Output Path:', outputPath);
+      console.log('Selected Model:', model);
+      console.log('MP3 Preset:', mp3Preset);
+
+      window.api.runDemucs(inputPath, outputPath, model, mp3Preset);
+    }
+
+    openLogFileButton.addEventListener('click', () => {
+      window.api.openLogFile();
+    });
+
+    backToDashboardButton.addEventListener('click', () => {
+      window.location.href = 'dashboard.html';
+    });
+
+    window.api.receive('demucs-log', (message) => {
+      const logEntry = document.createElement('p');
+      logEntry.textContent = message;
+      logsDiv.appendChild(logEntry);
+      logsDiv.scrollTop = logsDiv.scrollHeight;
+    });
+
+    // Collapsible Logs Functionality
+    toggleLogsButton.addEventListener('click', () => {
+      if (logsDiv.classList.contains('open')) {
+        logsDiv.classList.remove('open');
+        toggleLogsButton.textContent = 'Show Logs';
+      } else {
+        logsDiv.classList.add('open');
+        toggleLogsButton.textContent = 'Hide Logs';
+      }
+    });
+
+    // Close modal when clicking outside of it
+    window.addEventListener('click', (event) => {
+      if (event.target == infoModal) {
+        infoModal.style.display = 'none';
+      }
+    });
+  </script>
 </body>
 </html>
 ```
@@ -1476,270 +1505,112 @@ video {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CamStem</title>
-    <link rel="stylesheet" href="tailwind-output.css">
-    <style>
-        /* Full gradient background */
-        body {
-            background: linear-gradient(135deg, #006494, #051923);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            color: white;
-        }
-
-        /* Centered box styles */
-        #mainContent {
-            width: 100%;
-            max-width: 400px;
-            padding: 2rem;
-            background-color: rgba(5, 130, 202, 0.95); /* Slight transparency */
-            border-radius: 12px;
-            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            position: relative;
-        }
-
-        /* Intro video wrapper stays full-screen */
-        #introVideoWrapper {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 50; /* Ensure it stays on top */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: none; /* No background color */
-        }
-
-        /* The video itself */
-        #introVideo {
-            width: 100%;
-            height: auto;
-            object-fit: cover; /* Maintain aspect ratio and scaling */
-        }
-
-        /* Hide the video wrapper after 4 seconds */
-        .hidden {
-            display: none;
-        }
-
-        /* Button styles */
-        .actionButton {
-            background-color: #003554; /* Button color */
-            color: white; /* Button text color */
-            padding: 0.75rem 1.5rem;
-            font-size: 1.125rem; /* Text size (lg) */
-            border-radius: 0.375rem; /* Rounded corners */
-            transition: transform 0.3s ease, background-color 0.3s ease; /* Smooth animation */
-            transform: translateY(0); /* Default position */
-            margin-bottom: 1rem; /* Spacing between buttons */
-            display: inline-block; /* Consistent block-like buttons */
-            border: none;
-            cursor: pointer;
-        }
-
-        .actionButton:hover {
-            background-color: #002940; /* Slightly darker on hover */
-            transform: translateY(-4px); /* Raise the button slightly */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 100; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-
-        .modal-content {
-            background-color: #0582CA;
-            margin: auto;
-            padding: 2rem;
-            border: 1px solid #888;
-            width: 100%;
-            max-width: 500px;
-            border-radius: 12px;
-            color: white;
-            text-align: center;
-            position: relative;
-        }
-
-        .modal-content h2 {
-            margin-top: 0;
-            font-size: 1.5rem;
-        }
-
-        .modal-content p {
-            margin: 1rem 0;
-            font-size: 1rem;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .modal-buttons .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 6px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-            width: 100px;
-        }
-
-        .btn-primary {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #218838;
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background-color: #17a2b8;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #138496;
-            transform: translateY(-2px);
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background-color: #c82333;
-            transform: translateY(-2px);
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 600px) {
-            #mainContent {
-                padding: 1.5rem;
-            }
-
-            .modal-content {
-                padding: 1.5rem;
-            }
-
-            .actionButton {
-                width: 100%;
-                margin-bottom: 0.75rem;
-            }
-
-            .modal-buttons {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-
-            .modal-buttons .btn {
-                width: 100%;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CamStem</title>
+  <!-- Include Tailwind + Custom Index CSS -->
+  <link rel="stylesheet" href="tailwind-output.css">
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <!-- Video Wrapper -->
-    <div id="introVideoWrapper">
-        <video id="introVideo" autoplay muted playsinline>
-            <source src="../assets/output-vp9.webm" type="video/webm">
-            Your browser does not support the video tag.
-        </video>
+  <!-- Video Wrapper -->
+  <div id="introVideoWrapper">
+    <video id="introVideo" autoplay muted playsinline>
+      <source src="../assets/output-vp9.webm" type="video/webm">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
+  <!-- Main Landing Content -->
+  <div id="mainContent" class="hidden">
+    <h1 class="text-4xl font-bold mb-4">CamStem</h1>
+    <p class="text-lg font-medium mb-6">Your Auditory Journey Awaits</p>
+    <!-- Sign In Button -->
+    <button 
+      id="signInButton" 
+      class="actionButton focus:ring-2 focus:ring-blue-400"
+    >
+      Sign In
+    </button>
+    <!-- Sign Up Button -->
+    <button 
+      id="signUpButton" 
+      class="actionButton focus:ring-2 focus:ring-blue-400"
+    >
+      Sign Up
+    </button>
+  </div>
+
+  <!-- Modal Popup for Sign Up -->
+  <div id="signUpModal" class="modal">
+    <div class="modal-content">
+      <h2>Sign Up Information</h2>
+      <p>In order to sign up, please visit our website:</p>
+      <p>camstem.org/signup</p>
+      <div class="modal-buttons">
+        <button id="closeModalButton" class="btn btn-primary">OK</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Main Landing Content -->
-    <div id="mainContent" class="hidden">
-        <h1 class="text-4xl font-bold mb-4">CamStem</h1>
-        <p class="text-lg font-medium mb-6">Your Auditory Journey Awaits</p>
-        <!-- Sign In Button -->
-        <button 
-            id="signInButton" 
-            class="actionButton focus:ring-2 focus:ring-blue-400"
-        >
-            Sign In
-        </button>
-        <!-- Sign Up Button -->
-        <button 
-            id="signUpButton" 
-            class="actionButton focus:ring-2 focus:ring-blue-400"
-        >
-            Sign Up
-        </button>
-    </div>
+  <script>
+    const introVideoWrapper = document.getElementById('introVideoWrapper');
+    const mainContent = document.getElementById('mainContent');
+    const signUpModal = document.getElementById('signUpModal');
+    const closeModalButton = document.getElementById('closeModalButton');
+    const signUpButton = document.getElementById('signUpButton');
 
-    <!-- Modal Popup for Sign Up -->
-    <div id="signUpModal" class="modal">
-        <div class="modal-content">
-            <h2>Sign Up Information</h2>
-            <p>In order to sign up, please visit our website:</p>
-            <p>camstem.org/signup</p>
-            <div class="modal-buttons">
-                <button id="closeModalButton" class="btn btn-primary">OK</button>
-            </div>
-        </div>
-    </div>
+    // We'll store the user's auth validity here. Default to false.
+    window.authOk = false;
 
-    <script>
-        // Wait for 4 seconds, then hide the video and show the main content
-        const introVideoWrapper = document.getElementById('introVideoWrapper');
-        const mainContent = document.getElementById('mainContent');
+    // After 4 seconds, hide the video and show main content
+    setTimeout(() => {
+      introVideoWrapper.style.pointerEvents = 'none';
+      mainContent.classList.remove('hidden');
+    }, 4000);
 
-        setTimeout(() => {
-            introVideoWrapper.style.pointerEvents = 'none'; // Disable interaction with the video wrapper
-            mainContent.classList.remove('hidden'); // Show the main content
-        }, 4000); // Delay in milliseconds (4 seconds)
-
-        // Sign-in button event listener
-        document.getElementById('signInButton').addEventListener('click', () => {
-            window.location.href = 'auth.html';
-        });
-
-        // Sign-up button event listener to show modal
-        const signUpButton = document.getElementById('signUpButton');
-        const signUpModal = document.getElementById('signUpModal');
-        const closeModalButton = document.getElementById('closeModalButton');
-
-        signUpButton.addEventListener('click', () => {
-            signUpModal.style.display = 'flex';
-        });
-
-        closeModalButton.addEventListener('click', () => {
-            signUpModal.style.display = 'none';
-        });
-
-        // Close the modal when clicking outside of it
-        window.addEventListener('click', (event) => {
-            if (event.target == signUpModal) {
-                signUpModal.style.display = 'none';
+    // Background check on page load for any stored key
+    (async () => {
+      try {
+        const savedKey = await window.api.getSavedKey();
+        if (savedKey) {
+          const activateResult = await window.api.activateSoftwareKey(savedKey);
+          if (activateResult.success) {
+            const subscriptionResult = await window.api.checkSubscriptionStatus();
+            if (subscriptionResult.active) {
+              window.authOk = true;
             }
-        });
-    </script>
+          }
+        }
+      } catch (err) {
+        console.error('Error while checking saved key in background:', err);
+        window.authOk = false;
+      }
+    })();
+
+    // Sign In button: if authOk, go directly to dashboard; otherwise, go to normal auth
+    document.getElementById('signInButton').addEventListener('click', () => {
+      if (window.authOk) {
+        window.location.href = 'dashboard.html';
+      } else {
+        window.location.href = 'auth.html';
+      }
+    });
+
+    // Sign Up button -> open modal
+    signUpButton.addEventListener('click', () => {
+      signUpModal.style.display = 'flex';
+    });
+    closeModalButton.addEventListener('click', () => {
+      signUpModal.style.display = 'none';
+    });
+    // Close the modal when clicking outside it
+    window.addEventListener('click', (event) => {
+      if (event.target === signUpModal) {
+        signUpModal.style.display = 'none';
+      }
+    });
+  </script>
 </body>
 </html>
 ```
@@ -1750,173 +1621,389 @@ video {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Software Key Authentication</title>
-    <style>
-        /* Full gradient background */
-        body {
-            background: linear-gradient(135deg, #006494, #051923);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-
-        /* Container styles similar to example */
-        .auth-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 2rem;
-            background-color: #0582CA;
-            border-radius: 12px;
-            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            color: white;
-        }
-
-        .auth-container h1 {
-            font-size: 1.5em;
-            margin-bottom: 1em;
-        }
-
-        .auth-container input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 1em;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1em;
-        }
-
-        /* Button styles inspired by example */
-        .auth-container button {
-            background-color: #003554;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-size: 1.125rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            margin: 0.5rem;
-            transition: transform 0.3s ease, background-color 0.3s ease;
-        }
-
-        .auth-container button:hover {
-            background-color: #002940;
-            transform: translateY(-4px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .auth-container button:disabled {
-            background-color: #aaa;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .auth-container .message {
-            margin-top: 1em;
-            font-size: 0.9em;
-            color: #ffdddd; /* Light red for error messages */
-        }
-
-        /* Success messages in green for clarity */
-        .auth-container .message.success {
-            color: #d0ffd0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Software Key Authentication</title>
+  <!-- Include Tailwind + Custom Index CSS -->
+  <link rel="stylesheet" href="tailwind-output.css">
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <div class="auth-container">
-        <h1>Software Key Authentication</h1>
-        <input type="text" id="softwareKey" placeholder="Enter your software key">
-        <button id="validateButton">Validate Key</button>
-        <button id="logoutButton">Log Out / Remove Saved Keys</button>
-        <p id="statusMessage" class="message"></p>
+  <!-- 
+    .container styling is in index.css.
+    If you had unique .auth-container rules, 
+    consolidate them into index.css or unify with .container.
+  -->
+  <div class="container">
+    <h1>Software Key Authentication</h1>
+    <input type="text" id="softwareKey" placeholder="Enter your software key">
+
+    <!-- The same button styles from index.css -->
+    <button id="validateButton">Validate Key</button>
+    <button id="logoutButton">Log Out / Remove Saved Keys</button>
+
+    <p id="statusMessage" class="message"></p>
+  </div>
+
+  <script>
+    const softwareKeyInput = document.getElementById('softwareKey');
+    const validateButton = document.getElementById('validateButton');
+    const logoutButton = document.getElementById('logoutButton');
+    const statusMessage = document.getElementById('statusMessage');
+
+    // Load saved key on page load and auto-submit if key exists
+    window.addEventListener('load', async () => {
+      try {
+        const savedKey = await window.api.getSavedKey();
+        if (savedKey) {
+          softwareKeyInput.value = savedKey;
+          validateButton.click(); // Automatically trigger validation
+        }
+      } catch (error) {
+        console.error('Error loading saved key:', error);
+      }
+    });
+
+    validateButton.addEventListener('click', async () => {
+      const softwareKey = softwareKeyInput.value.trim();
+      if (!softwareKey) {
+        statusMessage.textContent = 'Please enter a software key.';
+        statusMessage.classList.remove('success');
+        return;
+      }
+
+      // Clear the message and disable the button
+      statusMessage.textContent = '';
+      statusMessage.classList.remove('success');
+      validateButton.disabled = true;
+
+      try {
+        // Activate the software key
+        const keyResult = await window.api.activateSoftwareKey(softwareKey);
+        if (!keyResult.success) {
+          statusMessage.textContent = `Key validation failed: ${keyResult.error}`;
+          validateButton.disabled = false;
+          return;
+        }
+
+        // Save the software key
+        await window.api.saveSoftwareKey(softwareKey);
+
+        // Check subscription status
+        const subscriptionStatus = await window.api.checkSubscriptionStatus();
+        if (!subscriptionStatus.active) {
+          statusMessage.textContent = `Subscription error: ${subscriptionStatus.reason}`;
+          validateButton.disabled = false;
+          return;
+        }
+
+        // Success
+        statusMessage.classList.add('success');
+        statusMessage.textContent = 'Software key validated and subscription is active!';
+
+        // Proceed to main application
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 2000);
+      } catch (error) {
+        statusMessage.textContent = `An error occurred: ${error.message}`;
+      } finally {
+        validateButton.disabled = false;
+      }
+    });
+
+    logoutButton.addEventListener('click', async () => {
+      try {
+        await window.api.removeSavedKey();
+        softwareKeyInput.value = '';
+        statusMessage.textContent = 'All saved keys have been removed.';
+        statusMessage.classList.remove('success');
+        statusMessage.style.color = '#ffdddd';
+      } catch (error) {
+        statusMessage.textContent = `An error occurred: ${error.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
+```
+
+### src\frontend\settings.html
+
+``` 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CamStem - Settings</title>
+  <!-- Include Tailwind + Custom Index CSS -->
+  <link rel="stylesheet" href="tailwind-output.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Settings</h1>
+    <!-- Remove All Saved Keys -->
+    <button id="removeKeysButton" class="button danger-button">
+      Remove All Saved Keys
+    </button>
+    <!-- Update Page -->
+    <button
+      class="button"
+      onclick="window.location.href='update.html'"
+    >
+      Go to Update Page
+    </button>
+    <!-- Back to Menu -->
+    <button
+      class="button"
+      onclick="window.location.href='dashboard.html'"
+    >
+      Back to Menu
+    </button>
+  </div>
+
+  <script>
+    const removeKeysButton = document.getElementById('removeKeysButton');
+
+    removeKeysButton.addEventListener('click', async () => {
+      try {
+        await window.api.removeSavedKey();
+        alert('All saved keys have been removed. You will be redirected to the login page.');
+        window.location.href = 'auth.html';
+      } catch (error) {
+        alert('An error occurred while removing saved keys. Check console for details.');
+        console.error('Error removing saved keys:', error);
+      }
+    });
+  </script>
+</body>
+</html>
+```
+
+### src\frontend\about.html
+
+``` 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CamStem - About</title>
+  <!-- Include Tailwind + Custom Index CSS -->
+  <link rel="stylesheet" href="tailwind-output.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <!-- 
+    .container now comes from index.css
+    If you want a wider container (600px) here, 
+    you can add a class or inline style to override the default 400px.
+  -->
+  <div class="container" style="max-width: 600px;">
+    <h1>About</h1>
+    <p>
+      Welcome to CamStem. This software empowers you to separate audio stems, integrate with editing workflows, 
+      and more. Below are some of the individuals who have contributed to this project.
+    </p>
+
+    <!-- 
+      If .credits-grid is unique to this page, 
+      place its styling into index.css (or any shared stylesheet)
+    -->
+    <div class="credits-grid">
+      <!-- 10 placeholders for contributor names -->
+      <div>Name 1</div>
+      <div>Name 2</div>
+      <div>Name 3</div>
+      <div>Name 4</div>
+      <div>Name 5</div>
+      <div>Name 6</div>
+      <div>Name 7</div>
+      <div>Name 8</div>
+      <div>Name 9</div>
+      <div>Name 10</div>
     </div>
 
-    <script>
-        const softwareKeyInput = document.getElementById('softwareKey');
-        const validateButton = document.getElementById('validateButton');
-        const logoutButton = document.getElementById('logoutButton');
-        const statusMessage = document.getElementById('statusMessage');
+    <!-- Back to Menu button -->
+    <button
+      class="button"
+      onclick="window.location.href='dashboard.html'"
+    >
+      Back to Menu
+    </button>
+  </div>
+</body>
+</html>
+```
 
-        // Load saved key on page load and auto-submit if key exists
-        window.addEventListener('load', async () => {
-            try {
-                const savedKey = await window.api.getSavedKey();
-                if (savedKey) {
-                    softwareKeyInput.value = savedKey;
-                    validateButton.click(); // Automatically trigger validation
-                }
-            } catch (error) {
-                console.error('Error loading saved key:', error);
-            }
-        });
+### src\frontend\update.html
 
-        validateButton.addEventListener('click', async () => {
-            const softwareKey = softwareKeyInput.value.trim();
-            if (!softwareKey) {
-                statusMessage.textContent = 'Please enter a software key.';
-                statusMessage.classList.remove('success');
-                return;
-            }
+``` 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CamStem - Update</title>
+  <!-- Include Tailwind + Custom Index CSS -->
+  <link rel="stylesheet" href="tailwind-output.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Update Page</h1>
 
-            // Clear the message and disable the button
-            statusMessage.textContent = '';
-            statusMessage.classList.remove('success');
-            validateButton.disabled = true;
+    <p id="updateStatus" class="hidden"></p>
+    <progress id="updateProgress" max="100" value="0" style="display:none;"></progress>
 
-            try {
-                // Activate the software key
-                const keyResult = await window.api.activateSoftwareKey(softwareKey);
-                if (!keyResult.success) {
-                    statusMessage.textContent = `Key validation failed: ${keyResult.error}`;
-                    validateButton.disabled = false;
-                    return;
-                }
+    <div class="buttons">
+      <button id="checkForUpdatesButton" class="btn">
+        Check for Updates
+      </button>
+      <button id="installUpdateButton" class="btn">
+        Install Update
+      </button>
+    </div>
 
-                // Save the software key
-                await window.api.saveSoftwareKey(softwareKey);
+    <!-- Back to Menu link -->
+    <a href="dashboard.html" class="back-btn">Back to Menu</a>
+  </div>
 
-                // Check subscription status
-                const subscriptionStatus = await window.api.checkSubscriptionStatus();
-                if (!subscriptionStatus.active) {
-                    statusMessage.textContent = `Subscription error: ${subscriptionStatus.reason}`;
-                    validateButton.disabled = false;
-                    return;
-                }
+  <!-- Error Modal -->
+  <div class="modal" id="errorModal">
+    <div class="modal-content">
+      <h2>Error</h2>
+      <p id="errorMessage"></p>
+      <button id="errorModalCloseButton" class="close-btn">Close</button>
+    </div>
+  </div>
 
-                // Success
-                statusMessage.classList.add('success');
-                statusMessage.textContent = 'Software key validated and subscription is active!';
+  <script>
+    // Grab elements
+    const updateStatus = document.getElementById('updateStatus');
+    const updateProgress = document.getElementById('updateProgress');
+    const checkUpdatesButton = document.getElementById('checkForUpdatesButton');
+    const installUpdateButton = document.getElementById('installUpdateButton');
 
-                // Proceed to main application
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 2000);
-            } catch (error) {
-                statusMessage.textContent = `An error occurred: ${error.message}`;
-            } finally {
-                validateButton.disabled = false;
-            }
-        });
+    // Modal
+    const errorModal = document.getElementById('errorModal');
+    const errorMessageElem = document.getElementById('errorMessage');
+    const errorModalCloseButton = document.getElementById('errorModalCloseButton');
 
-        logoutButton.addEventListener('click', async () => {
-            try {
-                await window.api.removeSavedKey();
-                softwareKeyInput.value = '';
-                statusMessage.textContent = 'All saved keys have been removed.';
-                statusMessage.classList.remove('success');
-                statusMessage.style.color = '#ffdddd';
-            } catch (error) {
-                statusMessage.textContent = `An error occurred: ${error.message}`;
-            }
-        });
-    </script>
+    function showErrorModal(message) {
+      errorMessageElem.textContent = message;
+      errorModal.style.display = 'flex';
+    }
+
+    errorModalCloseButton.addEventListener('click', () => {
+      errorModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+      if (event.target === errorModal) {
+        errorModal.style.display = 'none';
+      }
+    });
+
+    // Listen for autoUpdater events from main.js
+    window.api.receive('autoUpdater-event', (data) => {
+      console.log('autoUpdater-event:', data);
+      switch (data.event) {
+        case 'checking-for-update':
+          updateStatus.classList.remove('hidden');
+          updateStatus.textContent = 'Checking for updates...';
+          break;
+        case 'update-available':
+          updateStatus.classList.remove('hidden');
+          updateStatus.textContent = `Update available! New version: ${data.version}. Downloading...`;
+          updateProgress.style.display = 'block';
+          break;
+        case 'download-progress':
+          updateProgress.value = data.percent.toFixed(2);
+          break;
+        case 'update-downloaded':
+          updateStatus.classList.remove('hidden');
+          updateStatus.textContent = `Update downloaded (v${data.version}). Click "Install Update" to proceed.`;
+          break;
+        case 'update-not-available':
+          updateStatus.classList.remove('hidden');
+          updateStatus.textContent = 'No updates available.';
+          break;
+        case 'error':
+          console.error('autoUpdater error:', data.message);
+          showErrorModal(`AutoUpdater Error: ${data.message}`);
+          break;
+        default:
+          break;
+      }
+    });
+
+    // Check for updates on load
+    (async () => {
+      try {
+        await window.api.checkForUpdates();
+      } catch (err) {
+        console.error('Error checking for updates automatically:', err);
+      }
+    })();
+
+    // Button handlers
+    checkUpdatesButton.addEventListener('click', async () => {
+      // Reset UI
+      updateStatus.textContent = '';
+      updateStatus.classList.add('hidden');
+      updateProgress.value = 0;
+      updateProgress.style.display = 'none';
+      try {
+        await window.api.checkForUpdates();
+      } catch (err) {
+        console.error('Error checking for updates:', err);
+        showErrorModal(`Error checking for updates: ${err.message}`);
+      }
+    });
+
+    installUpdateButton.addEventListener('click', async () => {
+      // This will quit and install the new version if available
+      try {
+        await window.api.installUpdateNow();
+      } catch (err) {
+        console.error('Error installing update:', err);
+        showErrorModal(`Error installing update: ${err.message}`);
+      }
+    });
+  </script>
+</body>
+</html>
+```
+
+### src\frontend\premiere.html
+
+``` 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CamStem - Premiere Integration</title>
+  <!-- Include Tailwind + Custom Index CSS -->
+  <link rel="stylesheet" href="tailwind-output.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="container" style="max-width: 600px;">
+    <h1>Premiere Pro Integration</h1>
+    <p>Premiere automation will be set up here. Feature coming soon!</p>
+
+    <!-- Back to Menu button -->
+    <button
+      class="button"
+      onclick="window.location.href='dashboard.html'"
+    >
+      Back to Menu
+    </button>
+  </div>
 </body>
 </html>
 ```
@@ -2440,7 +2527,6 @@ app.on('window-all-closed', () => {
     "build:all": "electron-builder --mac --win --publish=always",
     "build": "npm run build:all",
     "build:css": "npx tailwindcss -i ./src/frontend/index.css -o ./src/frontend/tailwind-output.css"
-
   },
   "author": "David Camick",
   "license": "MIT",
@@ -2481,6 +2567,7 @@ app.on('window-all-closed', () => {
       }
     ],
     "win": {
+      "icon": "assets/icon.ico",
       "forceCodeSigning": false,
       "target": [
         {
@@ -2510,6 +2597,7 @@ app.on('window-all-closed', () => {
       "differentialPackage": false
     },
     "mac": {
+      "icon": "assets/icon.icns",
       "target": [
         "zip"
       ],

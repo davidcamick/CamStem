@@ -4,83 +4,36 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CamStem - Settings</title>
-  <style>
-    body {
-      background: linear-gradient(135deg, #006494, #051923);
-      min-height: 100vh;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: Arial, sans-serif;
-      color: white;
-      text-align: center;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 400px;
-      padding: 2rem;
-      background-color: rgba(5, 130, 202, 0.95); /* Slight transparency */
-      border-radius: 12px;
-      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-    }
-
-    h1 {
-      font-size: 2rem;
-      font-weight: bold;
-      margin-bottom: 1.5rem;
-    }
-
-    .button {
-      background-color: #003554;
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      transition: transform 0.3s ease, background-color 0.3s ease;
-      display: block;
-      width: 100%;
-      margin: 0.5rem 0;
-    }
-
-    .button:hover {
-      background-color: #002940;
-      transform: translateY(-4px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .danger-button {
-      background-color: #8B0000;
-    }
-    .danger-button:hover {
-      background-color: #690000;
-    }
-  </style>
+  <!-- Include Tailwind + Custom Index CSS -->
+  <link rel="stylesheet" href="tailwind-output.css">
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Settings</h1>
+  <div class="container" style="max-width: 480px;">
+    <!-- Title -->
+    <h1 class="page-title">Settings</h1>
 
-    <!-- Button to remove saved keys -->
-    <button id="removeKeysButton" class="button danger-button">
-      Remove All Saved Keys
-    </button>
+    <!-- 2x1 Grid for the first two buttons -->
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+      <button 
+        id="removeKeysButton" 
+        class="actionButton danger-button"
+      >
+        Remove All Saved Keys
+      </button>
+      <button
+        class="actionButton"
+        onclick="window.location.href='update.html'"
+      >
+        Go to Update Page
+      </button>
+    </div>
 
-    <!-- Button to go to update page -->
+    <!-- "Back to Menu" alone at the bottom -->
     <button
-      class="button"
-      onclick="window.location.href='update.html'"
-    >
-      Go to Update Page
-    </button>
-
-    <!-- Back to Menu button -->
-    <button
-      class="button"
+      class="actionButton"
       onclick="window.location.href='dashboard.html'"
+      style="width: 100%;"
     >
       Back to Menu
     </button>
