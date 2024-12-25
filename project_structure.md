@@ -1,4 +1,4 @@
-here is what my entire project looks like right now, so you can understand the updates and work with this version now
+this is my project, please read the contents and understand its functionality. once done, let me know and await my requests.
 
 `.` (Root)
 ==============
@@ -99,6 +99,11 @@ module.exports = {
 ### src\frontend\tailwind-output.css
 
 ``` 
+/* =======================
+   Tailwind Directives
+   (Already present in your file)
+   ======================= */
+
 *, ::before, ::after {
   --tw-border-spacing-x: 0;
   --tw-border-spacing-y: 0;
@@ -207,9 +212,7 @@ module.exports = {
   --tw-contain-style:  ;
 }
 
-/*
-! tailwindcss v3.4.16 | MIT License | https://tailwindcss.com
-*/
+/* ! tailwindcss v3.4.16 | MIT License | https://tailwindcss.com */
 
 /*
 1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)
@@ -689,14 +692,6 @@ video {
   }
 }
 
-.fixed {
-  position: fixed;
-}
-
-.relative {
-  position: relative;
-}
-
 .mb-4 {
   margin-bottom: 1rem;
 }
@@ -713,16 +708,12 @@ video {
   display: flex;
 }
 
+.grid {
+  display: grid;
+}
+
 .hidden {
   display: none;
-}
-
-.transform {
-  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-}
-
-.flex-wrap {
-  flex-wrap: wrap;
 }
 
 .border {
@@ -756,18 +747,428 @@ video {
   text-decoration-line: underline;
 }
 
-.shadow {
-  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+/* =======================
+      Global Body Styles
+      ======================= */
+
+body {
+  background: linear-gradient(135deg, #006494, #051923);
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, sans-serif;
+  color: white;
+  text-align: center;
 }
 
-.transition {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-backdrop-filter;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-backdrop-filter;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+/* =======================
+      Container Class
+      (Used by about.html, dashboard.html, auth.html, etc.)
+      ======================= */
+
+.container {
+  width: 100%;
+  max-width: 400px;
+  /* Some pages override this via inline style or a special class */
+  padding: 2rem;
+  background-color: rgba(5, 130, 202, 0.95);
+  border-radius: 12px;
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* =======================
+      Buttons (Shared .btn)
+      ======================= */
+
+/* A generic .btn baseline */
+
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  background-color: #003554;
+  /* default color if needed */
+  color: white;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+  margin-bottom: 1rem;
+  /* in some pages, all buttons are spaced out */
+}
+
+.btn:hover {
+  background-color: #002940;
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Variation: .btn-primary */
+
+.btn-primary {
+  background-color: #28a745;
+}
+
+.btn-primary:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+}
+
+/* Variation: .btn-secondary */
+
+.btn-secondary {
+  background-color: #17a2b8;
+}
+
+.btn-secondary:hover {
+  background-color: #138496;
+  transform: translateY(-2px);
+}
+
+/* Variation: .btn-danger */
+
+.btn-danger {
+  background-color: #dc3545;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
+}
+
+/* =======================
+      Additional button classes from various pages
+      ======================= */
+
+/* The `.actionButton` used on landing.html */
+
+.actionButton {
+  background-color: #003554;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.125rem;
+  border-radius: 0.375rem;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+  margin-bottom: 1rem;
+  display: inline-block;
+  border: none;
+  cursor: pointer;
+}
+
+.actionButton:hover {
+  background-color: #002940;
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* The `.danger-button` from settings.html (same as .btn-danger but included for references). */
+
+.danger-button {
+  background-color: #8B0000;
+}
+
+.danger-button:hover {
+  background-color: #690000;
+}
+
+/* Pill-shaped version button from dashboard.html */
+
+.version-button {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  text-decoration: none;
+}
+
+.version-button:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+/* The ".back-btn" link from update.html */
+
+.back-btn {
+  margin-top: 1rem;
+  background-color: #003554;
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  text-decoration: none;
+  color: white;
+}
+
+.back-btn:hover {
+  background-color: #002940;
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* =======================
+      Modals (Error modal, info modal, sign-up modal, etc.)
+      ======================= */
+
+.modal {
+  display: none;
+  /* Hidden by default */
+  position: fixed;
+  z-index: 99;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.6);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: #003554;
+  margin: auto;
+  padding: 1.5rem;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 400px;
+  color: #fff;
+  text-align: center;
+}
+
+/* The "Close" button inside a modal */
+
+.close-btn {
+  background-color: #8B0000;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.close-btn:hover {
+  background-color: #690000;
+  transform: translateY(-3px);
+}
+
+/* .modal-buttons typically used for two side-by-side buttons in the modal */
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.modal-buttons .btn {
+  max-width: 100px;
+}
+
+/* =======================
+      Landing Page Specific (landing.html)
+      ======================= */
+
+/* The #introVideoWrapper & #introVideo & .hidden from landing.html */
+
+#introVideoWrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  /* no background color behind the video */
+}
+
+#introVideo {
+  width: 100%;
+  height: auto;
+  -o-object-fit: cover;
+     object-fit: cover;
+  /* maintain aspect ratio + fill space */
+}
+
+/* Hide elements (e.g., #mainContent during video) */
+
+.hidden {
+  display: none;
+}
+
+/* =======================
+      About Page Specific (about.html)
+      ======================= */
+
+.credits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* =======================
+      Dashboard Page Specific (dashboard.html)
+      ======================= */
+
+.dashboard-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* =======================
+      Splitter Page Specific (splitter.html)
+      ======================= */
+
+/* Two-column layout for the form */
+
+.form-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.form-column {
+  flex: 1 1 45%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Form group styling */
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+/* Additional select styling used for models/presets if needed */
+
+.mp3-model-select {
+  width: 100%;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #e9ecef;
+  color: #333;
+}
+
+/* Buttons container inside the form */
+
+.buttons-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.buttons-container button {
+  flex: 1;
+  max-width: 33%;
+}
+
+/* Collapsible log section */
+
+.log-section {
+  margin-top: 1.5rem;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background-color: #006494;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+}
+
+.log-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.log-toggle {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* The logs content container (collapsed by default) */
+
+.logs {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  background-color: #ffffff;
+  color: #333;
+  padding: 0 1rem;
+  /* Start collapsed with zero side padding if you prefer */
+  border-radius: 6px;
+  margin-top: 0.5rem;
+}
+
+.logs.open {
+  max-height: 300px;
+  /* or another limit */
+  padding: 1rem;
+  /* show padding once expanded */
+}
+
+.logs p {
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+/* =======================
+      Update Page Specific (update.html)
+      ======================= */
+
+.buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* 
+  A reusable page title style 
+  (similar to text-4xl font-bold mb-4 in Tailwind)
+*/
+
+.page-title {
+  font-size: 2.25rem;
+  /* ~ text-4xl */
+  line-height: 2.5rem;
+  font-weight: 700;
+  /* bold */
+  margin-bottom: 1rem;
+  /* like mb-4 */
 }
 
 .focus\:ring-2:focus {
@@ -1154,7 +1555,18 @@ video {
      gap: 1rem;
      margin-top: 1rem;
    }
-   ```
+   
+   /* 
+  A reusable page title style 
+  (similar to text-4xl font-bold mb-4 in Tailwind)
+*/
+    .page-title {
+      font-size: 2.25rem;   /* ~ text-4xl */
+      line-height: 2.5rem; 
+      font-weight: 700;     /* bold */
+      margin-bottom: 1rem;  /* like mb-4 */
+    }
+```
 
 ### src\frontend\dashboard.html
 
@@ -1170,31 +1582,26 @@ video {
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <!-- .container from index.css (max-width ~400px) -->
-  <div class="container">
-    <h1>CamStem Dashboard</h1>
+  <!-- Container with a max-width so it doesn't stretch too wide -->
+  <div class="container" style="max-width: 480px;">
+    <!-- Use the new .page-title class from index.css -->
+    <h1 class="page-title">CamStem Dashboard</h1>
 
-    <!-- 2×2 grid of new buttons -->
-    <!-- If .dashboard-buttons is unique, define it in index.css -->
+    <!-- 2×2 grid of actionButtons -->
     <div class="dashboard-buttons">
-      <button id="goToSplitterButton">Stem Splitting</button>
-      <button id="goToPremiereButton">Premiere Pro Integration</button>
-      <button id="goToSettingsButton">Settings</button>
-      <button id="goToAboutButton">About</button>
+      <button id="goToSplitterButton" class="actionButton">Stem Splitting</button>
+      <button id="goToPremiereButton" class="actionButton">Premiere Pro Integration</button>
+      <button id="goToSettingsButton" class="actionButton">Settings</button>
+      <button id="goToAboutButton" class="actionButton">About</button>
     </div>
 
-    <!-- Pill-shaped button at bottom that goes to update.html -->
+    <!-- Pill-shaped version button at the bottom -->
     <a id="versionButton" class="version-button">
       v?.?.?
     </a>
-    <!-- 
-      (OPTIONAL) Old logout button was commented out; 
-      if you want it, just add it again here and rely on .btn styles.
-    -->
   </div>
 
   <!-- Error Modal -->
-  <!-- The .modal and .modal-content come from index.css -->
   <div class="modal" id="errorModal">
     <div class="modal-content">
       <h2>Error</h2>
@@ -1223,7 +1630,7 @@ video {
       }
     });
 
-    // Buttons
+    // Dashboard Buttons
     const goToSplitterButton = document.getElementById('goToSplitterButton');
     const goToPremiereButton = document.getElementById('goToPremiereButton');
     const goToSettingsButton = document.getElementById('goToSettingsButton');
@@ -1270,15 +1677,16 @@ video {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CamStem</title>
+  <title>CamStem - Stem Splitting</title>
   <!-- Include Tailwind + Custom Index CSS -->
   <link rel="stylesheet" href="tailwind-output.css">
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <!-- .container from index.css (if you want a wider layout, override with a style or a special class) -->
-  <div class="container" style="max-width: 800px;">
-    <h1>CamStem</h1>
+  <!-- Use the .container from index.css, with a max-width for consistency -->
+  <div class="container" style="max-width: 480px;">
+    <!-- Add the .page-title class for a consistent heading style -->
+    <h1 class="page-title">Stem Splitting</h1>
 
     <form id="demucsForm">
       <div class="form-grid">
@@ -1521,18 +1929,20 @@ video {
     </video>
   </div>
 
-  <!-- Main Landing Content -->
-  <div id="mainContent" class="hidden">
+  <!-- Main Landing Content (placed in a .container) -->
+  <!-- We keep the 'hidden' class for the first 4s while the intro video plays -->
+  <div id="mainContent" class="container hidden" style="max-width: 480px;">
     <h1 class="text-4xl font-bold mb-4">CamStem</h1>
     <p class="text-lg font-medium mb-6">Your Auditory Journey Awaits</p>
-    <!-- Sign In Button -->
+
+    <!-- If you like the bigger 'actionButton' style, keep it -->
+    <!-- Otherwise, switch to <button class="btn btn-primary"> or similar -->
     <button 
       id="signInButton" 
       class="actionButton focus:ring-2 focus:ring-blue-400"
     >
       Sign In
     </button>
-    <!-- Sign Up Button -->
     <button 
       id="signUpButton" 
       class="actionButton focus:ring-2 focus:ring-blue-400"
@@ -1629,20 +2039,33 @@ video {
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <!-- 
-    .container styling is in index.css.
-    If you had unique .auth-container rules, 
-    consolidate them into index.css or unify with .container.
-  -->
-  <div class="container">
-    <h1>Software Key Authentication</h1>
-    <input type="text" id="softwareKey" placeholder="Enter your software key">
+  <!-- Container from index.css (max-width override) -->
+  <div class="container" style="max-width: 480px;">
+    <!-- Same style as landing.html: text-4xl font-bold mb-4 -->
+    <h1 class="text-4xl font-bold mb-4">Software Key Authentication</h1>
 
-    <!-- The same button styles from index.css -->
-    <button id="validateButton">Validate Key</button>
-    <button id="logoutButton">Log Out / Remove Saved Keys</button>
+    <input
+      type="text"
+      id="softwareKey"
+      placeholder="Enter your software key"
+      style="
+        width: 100%;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        color: #333;
+      "
+    />
 
-    <p id="statusMessage" class="message"></p>
+    <!-- Buttons side by side, matching landing page style (.actionButton) -->
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+      <button id="validateButton" class="actionButton">Validate Key</button>
+      <button id="logoutButton" class="actionButton">Remove Saved Keys</button>
+    </div>
+
+    <p id="statusMessage" class="message" style="margin-top: 1rem;"></p>
   </div>
 
   <script>
@@ -1678,7 +2101,7 @@ video {
       validateButton.disabled = true;
 
       try {
-        // Activate the software key
+        // 1) Activate the software key
         const keyResult = await window.api.activateSoftwareKey(softwareKey);
         if (!keyResult.success) {
           statusMessage.textContent = `Key validation failed: ${keyResult.error}`;
@@ -1686,10 +2109,10 @@ video {
           return;
         }
 
-        // Save the software key
+        // 2) Save the software key
         await window.api.saveSoftwareKey(softwareKey);
 
-        // Check subscription status
+        // 3) Check subscription status
         const subscriptionStatus = await window.api.checkSubscriptionStatus();
         if (!subscriptionStatus.active) {
           statusMessage.textContent = `Subscription error: ${subscriptionStatus.reason}`;
@@ -1742,23 +2165,31 @@ video {
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Settings</h1>
-    <!-- Remove All Saved Keys -->
-    <button id="removeKeysButton" class="button danger-button">
-      Remove All Saved Keys
-    </button>
-    <!-- Update Page -->
+  <div class="container" style="max-width: 480px;">
+    <!-- Title -->
+    <h1 class="page-title">Settings</h1>
+
+    <!-- 2x1 Grid for the first two buttons -->
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+      <button 
+        id="removeKeysButton" 
+        class="actionButton danger-button"
+      >
+        Remove All Saved Keys
+      </button>
+      <button
+        class="actionButton"
+        onclick="window.location.href='update.html'"
+      >
+        Go to Update Page
+      </button>
+    </div>
+
+    <!-- "Back to Menu" alone at the bottom -->
     <button
-      class="button"
-      onclick="window.location.href='update.html'"
-    >
-      Go to Update Page
-    </button>
-    <!-- Back to Menu -->
-    <button
-      class="button"
+      class="actionButton"
       onclick="window.location.href='dashboard.html'"
+      style="width: 100%;"
     >
       Back to Menu
     </button>
@@ -1796,23 +2227,18 @@ video {
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <!-- 
-    .container now comes from index.css
-    If you want a wider container (600px) here, 
-    you can add a class or inline style to override the default 400px.
-  -->
-  <div class="container" style="max-width: 600px;">
-    <h1>About</h1>
+  <div class="container" style="max-width: 480px;">
+    <!-- Use the .page-title class -->
+    <h1 class="page-title">About</h1>
+
     <p>
-      Welcome to CamStem. This software empowers you to separate audio stems, integrate with editing workflows, 
-      and more. Below are some of the individuals who have contributed to this project.
+      Welcome to CamStem. This software empowers you to separate audio stems,
+      integrate with editing workflows, and more. Below are some of the individuals
+      who have contributed to this project.
     </p>
 
-    <!-- 
-      If .credits-grid is unique to this page, 
-      place its styling into index.css (or any shared stylesheet)
-    -->
-    <div class="credits-grid">
+    <!-- Credits in 2-column format (like before) -->
+    <div class="credits-grid" style="margin: 1.5rem 0;">
       <!-- 10 placeholders for contributor names -->
       <div>Name 1</div>
       <div>Name 2</div>
@@ -1826,10 +2252,11 @@ video {
       <div>Name 10</div>
     </div>
 
-    <!-- Back to Menu button -->
+    <!-- Back to Menu button (use .actionButton) -->
     <button
-      class="button"
+      class="actionButton"
       onclick="window.location.href='dashboard.html'"
+      style="width: 100%;"
     >
       Back to Menu
     </button>
@@ -1852,8 +2279,10 @@ video {
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Update Page</h1>
+  <!-- Container with a max-width for consistency -->
+  <div class="container" style="max-width: 480px;">
+    <!-- Use your .page-title class to match other pages -->
+    <h1 class="page-title">Update Page</h1>
 
     <p id="updateStatus" class="hidden"></p>
     <progress id="updateProgress" max="100" value="0" style="display:none;"></progress>
@@ -1900,7 +2329,6 @@ video {
     errorModalCloseButton.addEventListener('click', () => {
       errorModal.style.display = 'none';
     });
-
     window.addEventListener('click', (event) => {
       if (event.target === errorModal) {
         errorModal.style.display = 'none';
@@ -1992,14 +2420,19 @@ video {
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <div class="container" style="max-width: 600px;">
-    <h1>Premiere Pro Integration</h1>
-    <p>Premiere automation will be set up here. Feature coming soon!</p>
+  <div class="container" style="max-width: 480px;">
+    <!-- Page title -->
+    <h1 class="page-title">Premiere Pro Integration</h1>
+
+    <p style="margin-bottom: 1.5rem;">
+      Premiere automation will be set up here. Feature coming soon!
+    </p>
 
     <!-- Back to Menu button -->
     <button
-      class="button"
+      class="actionButton"
       onclick="window.location.href='dashboard.html'"
+      style="width: 100%;"
     >
       Back to Menu
     </button>

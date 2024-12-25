@@ -7,6 +7,20 @@
   <!-- Include Tailwind + Custom Index CSS -->
   <link rel="stylesheet" href="tailwind-output.css">
   <link rel="stylesheet" href="index.css">
+  <!-- Only new style for the "glow" effect -->
+  <style>
+    .glow {
+      animation: glowAnimation 1s ease-in-out infinite alternate;
+    }
+    @keyframes glowAnimation {
+      from {
+        box-shadow: 0 0 10px #fff;
+      }
+      to {
+        box-shadow: 0 0 20px #0ff;
+      }
+    }
+  </style>
 </head>
 <body>
   <!-- Container with a max-width so it doesn't stretch too wide -->
@@ -17,7 +31,8 @@
     <!-- 2×2 grid of actionButtons -->
     <div class="dashboard-buttons">
       <button id="goToSplitterButton" class="actionButton">Stem Splitting</button>
-      <button id="goToPremiereButton" class="actionButton">Premiere Pro Integration</button>
+      <!-- Changed "Premiere Pro Integration" to "Premiere Setup" -->
+      <button id="goToPremiereButton" class="actionButton">Premiere Setup</button>
       <button id="goToSettingsButton" class="actionButton">Settings</button>
       <button id="goToAboutButton" class="actionButton">About</button>
     </div>
@@ -34,6 +49,18 @@
       <h2>Error</h2>
       <p id="errorMessage"></p>
       <button id="errorModalCloseButton" class="close-btn">Close</button>
+    </div>
+  </div>
+
+  <!-- New Update Modal -->
+  <div class="modal" id="updateModal" style="display: none;">
+    <div class="modal-content">
+      <h2>Update Available</h2>
+      <p>A new version of CamStem is available! Would you like to update now?</p>
+      <div class="modal-buttons">
+        <button id="goToUpdatePage" class="btn btn-primary">Update</button>
+        <button id="dismissUpdateModal" class="btn btn-danger">No Thanks</button>
+      </div>
     </div>
   </div>
 
@@ -90,6 +117,29 @@
 
     versionButton.addEventListener('click', () => {
       window.location.href = 'update.html';
+    });
+
+    // New Update Modal references
+    const updateModal = document.getElementById('updateModal');
+    const goToUpdatePageButton = document.getElementById('goToUpdatePage');
+    const dismissUpdateModalButton = document.getElementById('dismissUpdateModal');
+
+    goToUpdatePageButton.addEventListener('click', () => {
+      window.location.href = 'update.html';
+    });
+    dismissUpdateModalButton.addEventListener('click', () => {
+      updateModal.style.display = 'none';
+    });
+
+    // Listen for autoUpdater events to handle the glow and show/hide update modal
+    window.api.receive('autoUpdater-event', (data) => {
+      console.log('autoUpdater-event in dashboard:', data);
+      if (data.event === 'update-available') {
+        // Make version button glow
+        versionButton.classList.add('glow');
+        // Show the update modal on launch
+        updateModal.style.display = 'flex';
+      }
     });
   </script>
 </body>
