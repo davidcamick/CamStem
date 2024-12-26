@@ -42,6 +42,7 @@ this is my project, please read the contents and understand its functionality. o
     - `about.html`
     - `update.html`
     - `premiere.html`
+    - `splitter.css`
 
   `backend`
   ==============
@@ -1580,6 +1581,20 @@ body {
   <!-- Include Tailwind + Custom Index CSS -->
   <link rel="stylesheet" href="tailwind-output.css">
   <link rel="stylesheet" href="index.css">
+  <!-- Only new style for the "glow" effect -->
+  <style>
+    .glow {
+      animation: glowAnimation 1s ease-in-out infinite alternate;
+    }
+    @keyframes glowAnimation {
+      from {
+        box-shadow: 0 0 10px #fff;
+      }
+      to {
+        box-shadow: 0 0 20px #0ff;
+      }
+    }
+  </style>
 </head>
 <body>
   <!-- Container with a max-width so it doesn't stretch too wide -->
@@ -1590,7 +1605,8 @@ body {
     <!-- 2×2 grid of actionButtons -->
     <div class="dashboard-buttons">
       <button id="goToSplitterButton" class="actionButton">Stem Splitting</button>
-      <button id="goToPremiereButton" class="actionButton">Premiere Pro Integration</button>
+      <!-- Changed "Premiere Pro Integration" to "Premiere Setup" -->
+      <button id="goToPremiereButton" class="actionButton">Premiere Setup</button>
       <button id="goToSettingsButton" class="actionButton">Settings</button>
       <button id="goToAboutButton" class="actionButton">About</button>
     </div>
@@ -1607,6 +1623,18 @@ body {
       <h2>Error</h2>
       <p id="errorMessage"></p>
       <button id="errorModalCloseButton" class="close-btn">Close</button>
+    </div>
+  </div>
+
+  <!-- New Update Modal -->
+  <div class="modal" id="updateModal" style="display: none;">
+    <div class="modal-content">
+      <h2>Update Available</h2>
+      <p>A new version of CamStem is available! Would you like to update now?</p>
+      <div class="modal-buttons">
+        <button id="goToUpdatePage" class="btn btn-primary">Update</button>
+        <button id="dismissUpdateModal" class="btn btn-danger">No Thanks</button>
+      </div>
     </div>
   </div>
 
@@ -1664,6 +1692,29 @@ body {
     versionButton.addEventListener('click', () => {
       window.location.href = 'update.html';
     });
+
+    // New Update Modal references
+    const updateModal = document.getElementById('updateModal');
+    const goToUpdatePageButton = document.getElementById('goToUpdatePage');
+    const dismissUpdateModalButton = document.getElementById('dismissUpdateModal');
+
+    goToUpdatePageButton.addEventListener('click', () => {
+      window.location.href = 'update.html';
+    });
+    dismissUpdateModalButton.addEventListener('click', () => {
+      updateModal.style.display = 'none';
+    });
+
+    // Listen for autoUpdater events to handle the glow and show/hide update modal
+    window.api.receive('autoUpdater-event', (data) => {
+      console.log('autoUpdater-event in dashboard:', data);
+      if (data.event === 'update-available') {
+        // Make version button glow
+        versionButton.classList.add('glow');
+        // Show the update modal on launch
+        updateModal.style.display = 'flex';
+      }
+    });
   </script>
 </body>
 </html>
@@ -1675,232 +1726,450 @@ body {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CamStem - Stem Splitting</title>
   <!-- Include Tailwind + Custom Index CSS -->
   <link rel="stylesheet" href="tailwind-output.css">
   <link rel="stylesheet" href="index.css">
+  <!-- Link the newly created splitter.css -->
+  <link rel="stylesheet" href="splitter.css">
 </head>
 <body>
-  <!-- Use the .container from index.css, with a max-width for consistency -->
+  <!-- Container with max-width -->
   <div class="container" style="max-width: 480px;">
-    <!-- Add the .page-title class for a consistent heading style -->
-    <h1 class="page-title">Stem Splitting</h1>
 
-    <form id="demucsForm">
-      <div class="form-grid">
-        <!-- Left Column: Input and Output Path Selection -->
-        <div class="form-column">
-          <div class="form-group">
-            <label for="inputPath">Input Path:</label>
-            <button 
-              type="button" 
-              id="selectInput" 
-              class="btn btn-secondary"
-            >
-              Select Input
-            </button>
-          </div>
-          <div class="form-group">
-            <label for="outputPath">Output Path:</label>
-            <button 
-              type="button" 
-              id="selectOutput" 
-              class="btn btn-secondary"
-            >
-              Select Output
-            </button>
-          </div>
-        </div>
+    <!-- =========================== STEP 1 =========================== -->
+    <div id="step1" class="step" style="display: block;">
+      <h1 class="page-title">Select which type of stems you want</h1>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+        <button class="actionButton" id="default4StemBtn">Default 4 Stem</button>
+        <button class="actionButton" id="hq4StemBtn">High Quality 4 Stem</button>
+        <button class="actionButton" id="exp6StemBtn">Experimental 6 Stem</button>
+      </div>
+      <a href="dashboard.html" class="exit-pill">Exit</a>
+    </div>
 
-        <!-- Right Column: Model and Quality Selection -->
-        <div class="form-column">
-          <div class="form-group">
-            <label for="model">Select Model:</label>
-            <select 
-              id="model" 
-              required 
-              class="mp3-model-select"
-            >
-              <option value="htdemucs">Default</option>
-              <option value="htdemucs_ft">Fine Tuned</option>
-              <option value="htdemucs_6s">Six Stem Model</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="mp3Preset">MP3 Quality Preset:</label>
-            <select 
-              id="mp3Preset" 
-              required 
-              class="mp3-model-select"
-            >
-              <option value="2">2 (Highest Quality)</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7 (Fastest Speed)</option>
-            </select>
-          </div>
-        </div>
+    <!-- =========================== STEP 2 =========================== -->
+    <div id="step2" class="step">
+      <h1 class="page-title">Select Your Audio File</h1>
+      <p style="margin-bottom: 1rem;">
+        Drag and Drop your <strong>.mp3</strong> file or click to browse.
+      </p>
+      <div id="dropZone" class="drop-area">
+        <p>Drag & drop MP3 here</p>
+        <p>or click to browse</p>
       </div>
+      <input type="file" id="mp3FileInput" accept=".mp3" style="display: none;" />
 
-      <!-- Buttons Container -->
-      <div class="buttons-container">
-        <button 
-          type="button" 
-          id="splitStemsButton" 
-          class="btn btn-primary"
-        >
-          Split Stems
-        </button>
-        <button 
-          type="button" 
-          id="openLogFile" 
-          class="btn btn-secondary"
-        >
-          Open Log File
-        </button>
-        <button 
-          type="button" 
-          id="backToDashboard" 
-          class="btn btn-danger"
-        >
-          Back to Main Menu
-        </button>
-      </div>
-    </form>
+      <button id="step2ContinueBtn" class="btn btn-primary btn-disabled" style="margin-top: 1.5rem;">
+        Next
+      </button>
+      <a href="dashboard.html" class="exit-pill">Exit</a>
+    </div>
 
-    <!-- Collapsible Log Section -->
-    <div class="log-section">
-      <div class="log-header" id="logHeader">
-        <h2>Logs</h2>
-        <button class="log-toggle" id="toggleLogs">Show Logs</button>
+    <!-- =========================== STEP 3 =========================== -->
+    <div id="step3" class="step">
+      <h1 class="page-title">Select the output directory</h1>
+      <p style="margin-bottom: 1rem;">
+        Where should we place your separated stems?
+      </p>
+      <button id="browseOutputBtn" class="btn btn-secondary" style="margin-bottom: 1.5rem;">
+        Browse for Folder
+      </button>
+      <button id="step3ContinueBtn" class="btn btn-primary btn-disabled">Next</button>
+      <a href="dashboard.html" class="exit-pill">Exit</a>
+    </div>
+
+    <!-- =========================== STEP 4 =========================== -->
+    <div id="step4" class="step">
+      <h1 class="page-title">Select MP3 File Quality</h1>
+      <p style="margin-bottom: 1rem;"><em>Lower Number = Higher Quality</em></p>
+      <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem;">
+        <button class="preset-button" data-newpreset="2">2</button>
+        <button class="preset-button" data-newpreset="3">3</button>
+        <button class="preset-button" data-newpreset="4">4</button>
+        <button class="preset-button" data-newpreset="5">5</button>
+        <button class="preset-button" data-newpreset="6">6</button>
+        <button class="preset-button" data-newpreset="7">7</button>
       </div>
-      <div id="logs" class="logs">
-        <p class="text-gray-600">Logs will appear here...</p>
-      </div>
+      <button id="goSplitBtn" class="btn btn-primary btn-disabled" style="margin-top: 1.5rem;">
+        Split Stems
+      </button>
+      <a href="dashboard.html" class="exit-pill">Exit</a>
+    </div>
+
+    <!-- =========================== STEP 5: Splitting & Progress =========================== -->
+    <div id="step5" class="step">
+      <h1 class="page-title">Splitting Stems</h1>
+      <p style="margin-bottom: 1.5rem;">
+        Please be patient while your stems are split. You can minimize CamStem, and we'll notify you when done.
+      </p>
+
+      <!-- Buttons in Step 5 -->
+      <button id="newSplitBtn" class="btn" style="background-color: #003554; color: white; margin-bottom: 1rem;">
+        Split Another Song
+      </button>
+      <button id="viewLogFileBtn" class="btn btn-secondary" style="margin-bottom: 1rem;">
+        Open Log File
+      </button>
+
+      <!-- Our progress heading & meter -->
+      <p id="progressHeading">Progress: 0%</p>
+      <progress id="progressMeter" value="0" max="100"></progress>
+
+      <!-- Real-time console area for the raw logs -->
+      <div id="demucsConsole" style="display:none;"></div>
+
+      <!-- The single last line from the log file tailing -->
+      <div id="latestLineDiv" class="latest-log-line">(No lines yet)</div>
+
+      <!-- The single "filtered" version of the LATEST line we appended -->
+      <div id="filteredLine"></div>
+
+      <a href="dashboard.html" class="exit-pill">Exit</a>
     </div>
   </div>
 
-  <!-- Modal Popup -->
-  <div id="infoModal" class="modal">
+  <!-- =========================== Warning Modal =========================== -->
+  <div class="modal" id="warningModal">
     <div class="modal-content">
-      <h2>Important Information</h2>
-      <p>A new folder will be created in your output directory where the stems will be stored.</p>
-      <p>If this is your first time splitting, it may take up to 5 minutes to start the splitting process.</p>
-      <p>If you don't see any progress after 10 minutes (including in the logs), please email us at 
-        <a href="mailto:devs@camstem.org" style="color: #FFD700; text-decoration: underline;">devs@camstem.org</a> 
-        and attach the log file by clicking on "Open Log File".
-      </p>
-      <div class="modal-buttons">
-        <button id="proceedButton" class="btn btn-primary">Proceed</button>
-        <button id="cancelButton" class="btn btn-danger">Cancel</button>
-      </div>
+      <h2>Warning</h2>
+      <p id="warningMsg"></p>
+      <button id="warningCloseBtn" class="close-btn">Close</button>
     </div>
   </div>
 
   <script>
-    const selectInputButton = document.getElementById('selectInput');
-    const selectOutputButton = document.getElementById('selectOutput');
-    const splitStemsButton = document.getElementById('splitStemsButton');
-    const openLogFileButton = document.getElementById('openLogFile');
-    const backToDashboardButton = document.getElementById('backToDashboard');
-    const logsDiv = document.getElementById('logs');
-    const toggleLogsButton = document.getElementById('toggleLogs');
+    /**************************************************************************************
+     * GLOBAL / STEP Variables
+     **************************************************************************************/
+    let chosenModel = '';
+    let chosenFilePath = '';
+    let chosenOutputPath = '';
+    let chosenPreset = '';
+    let finalStemsPath = '';
 
-    const infoModal = document.getElementById('infoModal');
-    const proceedButton = document.getElementById('proceedButton');
-    const cancelButton = document.getElementById('cancelButton');
+    // Step references
+    const stepOne = document.getElementById('step1');
+    const stepTwo = document.getElementById('step2');
+    const stepThree = document.getElementById('step3');
+    const stepFour = document.getElementById('step4');
+    const stepFive = document.getElementById('step5');
 
-    let inputPath = '';
-    let outputPath = '';
+    // Step 2
+    const dropZone = document.getElementById('dropZone');
+    const mp3FileInput = document.getElementById('mp3FileInput');
+    const step2ContinueBtn = document.getElementById('step2ContinueBtn');
 
-    selectInputButton.addEventListener('click', () => {
-      window.api.selectPath('file', (path) => {
-        if (path) {
-          inputPath = path;
-          selectInputButton.textContent = 'Input Selected';
-          selectInputButton.disabled = true;
-        }
-      });
-    });
+    // Step 3
+    const browseOutputBtn = document.getElementById('browseOutputBtn');
+    const step3ContinueBtn = document.getElementById('step3ContinueBtn');
 
-    selectOutputButton.addEventListener('click', () => {
-      window.api.selectPath('directory', (path) => {
-        if (path) {
-          outputPath = path;
-          selectOutputButton.textContent = 'Output Selected';
-          selectOutputButton.disabled = true;
-        }
-      });
-    });
+    // Step 4
+    const presetButtons = document.querySelectorAll('.preset-button');
+    const goSplitBtn = document.getElementById('goSplitBtn');
 
-    splitStemsButton.addEventListener('click', () => {
-      if (!inputPath || !outputPath) {
-        alert('Please select both input and output paths before splitting.');
-        return;
-      }
-      // Show the modal
-      infoModal.style.display = 'flex';
-    });
+    // Step 5
+    const newSplitBtn = document.getElementById('newSplitBtn');
+    const viewLogFileBtn = document.getElementById('viewLogFileBtn');
+    const progressHeading = document.getElementById('progressHeading');
+    const progressMeter = document.getElementById('progressMeter');
+    const demucsConsole = document.getElementById('demucsConsole');
+    const latestLineDiv = document.getElementById('latestLineDiv');
+    const filteredLineDiv = document.getElementById('filteredLine');
 
-    proceedButton.addEventListener('click', () => {
-      // Hide the modal
-      infoModal.style.display = 'none';
-      // Proceed with splitting
-      runSplitStems();
-    });
+    // Warnings
+    const warningModal = document.getElementById('warningModal');
+    const warningMsg = document.getElementById('warningMsg');
+    const warningCloseBtn = document.getElementById('warningCloseBtn');
 
-    cancelButton.addEventListener('click', () => {
-      // Hide the modal
-      infoModal.style.display = 'none';
-    });
+    // We use demucsOutputBuffer for progress logic
+    let demucsOutputBuffer = '';
+    const progressRegex = /(\d+(?:\.\d+)?)%/g;
 
-    function runSplitStems() {
-      const model = document.getElementById('model').value;
-      const mp3Preset = document.getElementById('mp3Preset').value;
+    /**************************************************************************************
+     * Navigation
+     **************************************************************************************/
+    function switchToStep(num) {
+      stepOne.style.display = 'none';
+      stepTwo.style.display = 'none';
+      stepThree.style.display = 'none';
+      stepFour.style.display = 'none';
+      stepFive.style.display = 'none';
 
-      console.log('Submitted Input Path:', inputPath);
-      console.log('Submitted Output Path:', outputPath);
-      console.log('Selected Model:', model);
-      console.log('MP3 Preset:', mp3Preset);
-
-      window.api.runDemucs(inputPath, outputPath, model, mp3Preset);
+      if (num === 1) stepOne.style.display = 'block';
+      if (num === 2) stepTwo.style.display = 'block';
+      if (num === 3) stepThree.style.display = 'block';
+      if (num === 4) stepFour.style.display = 'block';
+      if (num === 5) stepFive.style.display = 'block';
     }
 
-    openLogFileButton.addEventListener('click', () => {
+    function showWarning(msg) {
+      warningMsg.textContent = msg;
+      warningModal.style.display = 'flex';
+    }
+    warningCloseBtn.addEventListener('click', () => {
+      warningModal.style.display = 'none';
+    });
+    window.addEventListener('click', (e) => {
+      if (e.target === warningModal) {
+        warningModal.style.display = 'none';
+      }
+    });
+
+    /**************************************************************************************
+     * STEP 1: Model selection
+     **************************************************************************************/
+    document.getElementById('default4StemBtn').addEventListener('click', () => {
+      chosenModel = 'htdemucs';
+      switchToStep(2);
+    });
+    document.getElementById('hq4StemBtn').addEventListener('click', () => {
+      chosenModel = 'htdemucs_ft';
+      switchToStep(2);
+    });
+    document.getElementById('exp6StemBtn').addEventListener('click', () => {
+      chosenModel = 'htdemucs_6s';
+      switchToStep(2);
+    });
+
+    /**************************************************************************************
+     * STEP 2: MP3
+     **************************************************************************************/
+    dropZone.addEventListener('click', () => {
+      mp3FileInput.click();
+    });
+    dropZone.addEventListener('dragenter', (evt) => evt.preventDefault());
+    dropZone.addEventListener('dragover', (evt) => {
+      evt.preventDefault();
+      dropZone.style.backgroundColor = 'rgba(0,255,216,0.2)';
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.style.backgroundColor = 'transparent';
+    });
+    dropZone.addEventListener('drop', (evt) => {
+      evt.preventDefault();
+      dropZone.style.backgroundColor = 'transparent';
+      if (evt.dataTransfer.files.length > 0) {
+        const file = evt.dataTransfer.files[0];
+        if (file.type !== 'audio/mpeg') {
+          alert('Please drop only MP3 files.');
+          return;
+        }
+        chosenFilePath = file.path;
+        step2ContinueBtn.classList.remove('btn-disabled');
+      }
+    });
+    mp3FileInput.addEventListener('change', (evt) => {
+      const f = evt.target.files[0];
+      if (!f) return;
+      if (f.type !== 'audio/mpeg') {
+        alert('Please select an MP3 file.');
+        mp3FileInput.value = '';
+        return;
+      }
+      chosenFilePath = f.path;
+      step2ContinueBtn.classList.remove('btn-disabled');
+    });
+    step2ContinueBtn.addEventListener('click', () => {
+      if (!chosenFilePath) {
+        showWarning('Please pick an MP3 file first!');
+        return;
+      }
+      switchToStep(3);
+    });
+
+    /**************************************************************************************
+     * STEP 3: Output Directory
+     **************************************************************************************/
+    browseOutputBtn.addEventListener('click', () => {
+      window.api.selectPath('directory', (selectedFolder) => {
+        if (selectedFolder) {
+          chosenOutputPath = selectedFolder;
+          browseOutputBtn.textContent = 'Output Selected ✓';
+          step3ContinueBtn.classList.remove('btn-disabled');
+        }
+      });
+    });
+    step3ContinueBtn.addEventListener('click', () => {
+      if (!chosenOutputPath) {
+        showWarning('Please select an output directory first.');
+        return;
+      }
+      switchToStep(4);
+    });
+
+    /**************************************************************************************
+     * STEP 4: MP3 Preset
+     **************************************************************************************/
+    presetButtons.forEach((b) => {
+      b.addEventListener('click', () => {
+        // Clear active states
+        presetButtons.forEach((x) => x.classList.remove('active'));
+        b.classList.add('active');
+        chosenPreset = b.getAttribute('data-newpreset');
+        goSplitBtn.classList.remove('btn-disabled');
+      });
+    });
+    goSplitBtn.addEventListener('click', () => {
+      if (!chosenPreset) {
+        showWarning('Please select a preset first!');
+        return;
+      }
+      switchToStep(5);
+      runDemucsNow();
+    });
+
+    /**************************************************************************************
+     * STEP 5: Splitting
+     **************************************************************************************/
+    newSplitBtn.addEventListener('click', () => {
+      window.location.reload();
+    });
+    viewLogFileBtn.addEventListener('click', () => {
       window.api.openLogFile();
     });
 
-    backToDashboardButton.addEventListener('click', () => {
-      window.location.href = 'dashboard.html';
-    });
+    function runDemucsNow() {
+      // Clear old console
+      demucsOutputBuffer = '';
+      demucsConsole.innerHTML = '';
+      demucsConsole.style.display = 'none';
 
-    window.api.receive('demucs-log', (message) => {
-      const logEntry = document.createElement('p');
-      logEntry.textContent = message;
-      logsDiv.appendChild(logEntry);
-      logsDiv.scrollTop = logsDiv.scrollHeight;
-    });
+      // Clear filtered line
+      filteredLineDiv.textContent = '';
 
-    // Collapsible Logs Functionality
-    toggleLogsButton.addEventListener('click', () => {
-      if (logsDiv.classList.contains('open')) {
-        logsDiv.classList.remove('open');
-        toggleLogsButton.textContent = 'Show Logs';
-      } else {
-        logsDiv.classList.add('open');
-        toggleLogsButton.textContent = 'Hide Logs';
+      progressHeading.style.display = 'none';
+      progressHeading.textContent = 'Progress: 0%';
+
+      progressMeter.style.display = 'none';
+      progressMeter.value = 0;
+
+      window.api.runDemucs(chosenFilePath, chosenOutputPath, chosenModel, chosenPreset);
+      window.api.startTailLog();
+    }
+
+    /**************************************************************************************
+     * This function picks out the first two digits from the line,
+     * then returns something like "7%" or "24%".
+     **************************************************************************************/
+    function detectFirstTwoDigits(line) {
+      const trimmed = line.trim();
+      if (trimmed.length < 1) return null;
+
+      // Grab up to first 2 characters
+      let firstTwo = trimmed.substring(0, 2); 
+      const firstChar = firstTwo.charAt(0);
+      const secondChar = firstTwo.charAt(1) || '';
+
+      // If the firstChar isn't a digit, skip
+      if (!/^\d$/.test(firstChar)) {
+        return null;
       }
+
+      // If secondChar is '%', we do e.g. "7%"
+      if (secondChar === '%') {
+        return `${firstChar}%`;
+      } 
+      // If secondChar is a digit => e.g. "24"
+      else if (/^\d$/.test(secondChar)) {
+        return `${firstChar}${secondChar}%`;
+      } 
+      // else single digit => "2%"
+      return `${firstChar}%`;
+    }
+
+    function parseDemucsOutput() {
+      const lines = demucsOutputBuffer.split(/\r?\n/);
+      demucsOutputBuffer = lines.pop() || '';
+
+      let bestPercent = 0;
+      lines.forEach((line) => {
+        // Show raw line in the console
+        if (!demucsConsole.style.display) {
+          demucsConsole.style.display = 'block';
+        }
+        const p = document.createElement('div');
+        p.textContent = line;
+        demucsConsole.appendChild(p);
+        demucsConsole.scrollTop = demucsConsole.scrollHeight;
+
+        // Then we do "filtered" from the same line
+        const short = detectFirstTwoDigits(line);
+        if (short) {
+          filteredLineDiv.textContent = short;
+        }
+
+        // If line includes "Separated tracks..."
+        if (line.includes('Separated tracks will be stored in')) {
+          const splitted = line.split('Separated tracks will be stored in');
+          if (splitted[1]) {
+            finalStemsPath = splitted[1].trim();
+          }
+        }
+
+        // Attempt "NN%" for the progress
+        let match;
+        while ((match = progressRegex.exec(line)) !== null) {
+          const val = parseFloat(match[1]);
+          if (val > bestPercent) bestPercent = val;
+        }
+      });
+
+      // If we found a new largest percent
+      if (bestPercent > 0) {
+        if (!progressHeading.style.display) {
+          progressHeading.style.display = 'block';
+        }
+        if (!progressMeter.style.display) {
+          progressMeter.style.display = 'block';
+        }
+        if (bestPercent > 100) bestPercent = 100;
+        progressHeading.textContent = `Progress: ${bestPercent.toFixed(1)}%`;
+        progressMeter.value = bestPercent.toFixed(1);
+      }
+    }
+
+    // On each chunk
+    window.api.receive('demucs-log', (chunk) => {
+      demucsOutputBuffer += chunk;
+      parseDemucsOutput();
     });
 
-    // Close modal when clicking outside of it
-    window.addEventListener('click', (event) => {
-      if (event.target == infoModal) {
-        infoModal.style.display = 'none';
+    // success
+    window.api.receive('demucs-success', (msg) => {
+      parseDemucsOutput();
+      if (!progressHeading.style.display) {
+        progressHeading.style.display = 'block';
       }
+      progressHeading.textContent = 'Progress: 100.0%';
+      progressMeter.style.display = 'block';
+      progressMeter.value = 100;
+
+      const successDiv = document.createElement('div');
+      successDiv.style.color = 'green';
+      successDiv.textContent = `SUCCESS: ${msg}`;
+      demucsConsole.appendChild(successDiv);
+      demucsConsole.scrollTop = demucsConsole.scrollHeight;
+
+      // Also show "Splitting Process Completed"
+      filteredLineDiv.textContent = 'Splitting Process Completed';
+    });
+
+    // error
+    window.api.receive('demucs-error', (errMsg) => {
+      parseDemucsOutput();
+      const errDiv = document.createElement('div');
+      errDiv.style.color = 'red';
+      errDiv.textContent = `ERROR: ${errMsg}`;
+      demucsConsole.appendChild(errDiv);
+      demucsConsole.scrollTop = demucsConsole.scrollHeight;
+    });
+
+    // Tailing => last line
+    window.api.onLogFileLine((newLine) => {
+      latestLineDiv.textContent = newLine;
     });
   </script>
 </body>
@@ -2441,31 +2710,184 @@ body {
 </html>
 ```
 
+### src\frontend\splitter.css
+
+``` 
+/* ============================================================
+   Step Container
+============================================================ */
+.step {
+    display: none; /* hidden by default */
+    position: relative; /* for absolutely positioned child (the exit pill) */
+    padding-bottom: 50px; /* enough space at the bottom */
+    min-height: 300px; /* ensures there's a decent vertical area */
+  }
+  
+  /* ============================================================
+     Drop Area for Step 2 (selecting MP3)
+  ============================================================ */
+  .drop-area {
+    border: 2px dashed #00ffd8;
+    border-radius: 8px;
+    padding: 2rem;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s ease;
+  }
+  .drop-area:hover {
+    background-color: rgba(0, 255, 216, 0.1);
+  }
+  
+  /* ============================================================
+     Buttons for MP3 preset (Step 4)
+  ============================================================ */
+  .preset-button {
+    background-color: #003554;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    display: inline-block;
+    border: none;
+    font-size: 1.1rem;
+  }
+  .preset-button:hover {
+    background-color: #002940;
+    transform: translateY(-4px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  .preset-button.active {
+    background-color: #006494 !important;
+  }
+  
+  /* ============================================================
+     Disabled Buttons
+  ============================================================ */
+  .btn-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* ============================================================
+     Modals (Warning, etc.)
+  ============================================================ */
+  .modal {
+    display: none; /* hidden by default */
+    position: fixed;
+    z-index: 999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-content {
+    background-color: #003554;
+    margin: auto;
+    padding: 1.5rem;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 400px;
+    color: #fff;
+    text-align: center;
+  }
+  .close-btn {
+    background-color: #8B0000;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+  }
+  .close-btn:hover {
+    background-color: #690000;
+    transform: translateY(-3px);
+  }
+  
+  /* ============================================================
+     Discrete Exit Pill (Steps 1-5)
+  ============================================================ */
+  .exit-pill {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    text-decoration: none;
+    opacity: 0.8; 
+  }
+  .exit-pill:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    transform: translate(-50%, -2px);
+  }
+  
+  /* 
+     The real-time console area is #demucsConsole
+     The single last line from the tail is #latestLineDiv
+     And the single "filtered" line is #filteredLine
+  */
+  .latest-log-line {
+    margin-top: 1rem;
+    color: #0ff;
+    font-weight: bold;
+  }
+  
+  #filteredLine {
+    margin-top: 1rem;
+    color: #ffa;
+    font-weight: bold;
+    font-size: 0.95rem;
+  }
+  ```
+
 ### src\backend\preload.js
 
 ``` 
 // src/backend/preload.js
+
 const { contextBridge, ipcRenderer, shell } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
+  // 1) Run Demucs
   runDemucs: (inputPath, outputPath, model, mp3Preset) => {
     ipcRenderer.send('run-demucs', { inputPath, outputPath, model, mp3Preset });
   },
+
+  // 2) Generic 'receive' for demucs-log, demucs-success, etc.
   receive: (channel, func) => {
     ipcRenderer.on(channel, (event, ...args) => func(...args));
   },
+
+  // 3) Choose path
   selectPath: async (type, callback) => {
     const path = await ipcRenderer.invoke('select-path', type);
     callback(path);
   },
+
+  // 4) Open log file in Explorer/Finder
   openLogFile: () => {
     ipcRenderer.invoke('open-log-file');
   },
+
+  // 5) External link
   openExternal: (url) => {
     shell.openExternal(url);
   },
 
-  // Key methods
+  // 6) Key management
   saveSoftwareKey: async (key) => ipcRenderer.invoke('save-software-key', key),
   getSavedKey: async () => ipcRenderer.invoke('get-saved-key'),
   removeSavedKey: async () => ipcRenderer.invoke('remove-saved-key'),
@@ -2473,10 +2895,27 @@ contextBridge.exposeInMainWorld('api', {
   activateSoftwareKey: async (encryptedKey) => ipcRenderer.invoke('activate-software-key', encryptedKey),
   checkSubscriptionStatus: async () => ipcRenderer.invoke('check-subscription-status'),
 
-  // Auto-updater methods
+  // 7) Auto-updater methods
   getAppVersion: async () => ipcRenderer.invoke('get-app-version'),
   checkForUpdates: async () => ipcRenderer.invoke('check-for-updates'),
   installUpdateNow: async () => ipcRenderer.invoke('install-update-now'),
+
+  // 8) openFolder
+  openFolder: (folderPath) => {
+    shell.openPath(folderPath);
+  },
+
+  // 9) Start tailing the demucs-log file
+  startTailLog: () => {
+    ipcRenderer.send('start-tail-log');
+  },
+
+  // 10) On every new appended line from demucs-log, callback
+  onLogFileLine: (callback) => {
+    ipcRenderer.on('demucs-logfile-line', (event, line) => {
+      callback(line);
+    });
+  },
 });
 ```
 
@@ -2490,12 +2929,15 @@ require('dotenv').config();
 
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
-const { execFile } = require('child_process');
+// We spawn a process for demucs
+const { spawn } = require('child_process');
 const fs = require('fs');
 const keytar = require('keytar');
 const { webcrypto } = require('crypto');
 const os = require('os');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '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'); // fallback
+const stripe = require('stripe')(
+  process.env.STRIPE_SECRET_KEY || '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'
+);
 
 // 2) Import autoUpdater from electron-updater
 const { autoUpdater } = require('electron-updater');
@@ -2580,7 +3022,6 @@ function setupAutoUpdaterLogs() {
 
   autoUpdater.on('update-downloaded', (info) => {
     logToFile(`autoUpdater: Update downloaded. Release name: ${info.releaseName}`);
-    // Now we let the user choose: we'll notify the renderer
     if (mainWindow) {
       mainWindow.webContents.send('autoUpdater-event', {
         event: 'update-downloaded',
@@ -2603,6 +3044,7 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, '../frontend/landing.html'));
 
   mainWindow.webContents.on('did-finish-load', () => {
+    // Example: if you want to send the assets path
     mainWindow.webContents.send('set-assets-path', assetsPath);
   });
 }
@@ -2631,6 +3073,7 @@ async function processSoftwareKey(encryptedHex) {
   try {
     logToFile(`Encrypted Key Received: ${encryptedHex}`);
 
+    // FIX: rename "b" to "byte" for clarity
     const cipherBytes = new Uint8Array(
       encryptedHex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
     );
@@ -2827,7 +3270,7 @@ ipcMain.handle('get-app-version', () => {
 
 ipcMain.handle('check-for-updates', () => {
   logToFile('Manual check-for-updates triggered');
-  autoUpdater.checkForUpdates(); // no "notify", so user decides
+  autoUpdater.checkForUpdates(); 
 });
 
 ipcMain.handle('install-update-now', () => {
@@ -2845,6 +3288,10 @@ function getResourcePath(relativePath) {
   return resolvedPath;
 }
 
+/**
+ *  We keep 'demucs-log', 'demucs-success', 'demucs-error' exactly the same
+ *  plus the partial approach on stderr if you want it. 
+ */
 ipcMain.on('run-demucs', (event, args) => {
   const platform = os.platform();
 
@@ -2887,17 +3334,24 @@ ipcMain.on('run-demucs', (event, args) => {
 
   logToFile(`Command Args: ${commandArgs.join(' ')}`);
 
-  const demucsProcess = execFile(demucsPath, commandArgs);
-
-  demucsProcess.stdout.on('data', (data) => {
-    logToFile(`Demucs stdout: ${data.toString()}`);
-    event.reply('demucs-log', data.toString());
+  // Instead of execFile, use spawn for real-time line-based output
+  const demucsProcess = spawn(demucsPath, commandArgs, {
+    shell: false,
+    cwd: path.dirname(demucsPath),
   });
 
+  // stdout => forward to 'demucs-log'
+  demucsProcess.stdout.on('data', (data) => {
+    const out = data.toString();
+    logToFile(`Demucs stdout: ${out}`);
+    event.reply('demucs-log', out);
+  });
+
+  // stderr => forward to 'demucs-log'
   demucsProcess.stderr.on('data', (data) => {
-    const stderrLog = `Demucs stderr: ${data.toString()}`;
-    logToFile(stderrLog);
-    event.reply('demucs-log', stderrLog);
+    const errOut = data.toString();
+    logToFile(`Demucs stderr: ${errOut}`);
+    event.reply('demucs-log', errOut);
   });
 
   demucsProcess.on('close', (code) => {
@@ -2922,12 +3376,6 @@ app.whenReady().then(() => {
   createWindow();
   setupAutoUpdaterLogs();
 
-  // (OPTIONAL) If you want an automatic check after 5 seconds:
-  // setTimeout(() => {
-  //   logToFile('Calling autoUpdater.checkForUpdates()');
-  //   autoUpdater.checkForUpdates();
-  // }, 5000);
-
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -2942,6 +3390,61 @@ app.on('window-all-closed', () => {
     logToFile('App closed.');
     app.quit();
   }
+});
+
+/*************************************************************
+ * TAILING THE LOG FILE (Optional)
+ * This is the "new logic" that streams lines from demucs-log.txt
+ * in real time, without removing your existing 'demucs-log' events.
+ *************************************************************/
+
+function tailLogFile(sender) {
+  const logPath = logFilePath; // same userData/demucs-log path
+  let fileOffset = 0;
+  let tailInterval = null;
+
+  fs.open(logPath, 'r', (err, fd) => {
+    if (err) {
+      console.error('Failed to open demucs-log.txt for tailing:', err);
+      return;
+    }
+
+    tailInterval = setInterval(() => {
+      fs.stat(logPath, (statErr, stats) => {
+        if (statErr) {
+          console.error('stat error:', statErr);
+          return;
+        }
+        // If file grew
+        if (stats.size > fileOffset) {
+          const newSize = stats.size - fileOffset;
+          const buffer = Buffer.alloc(newSize);
+
+          fs.read(fd, buffer, 0, newSize, fileOffset, (readErr, bytesRead) => {
+            if (readErr) {
+              console.error('read error:', readErr);
+              return;
+            }
+            fileOffset += bytesRead;
+
+            const chunk = buffer.toString('utf8');
+            const lines = chunk.split(/\r?\n/);
+
+            lines.forEach((line) => {
+              if (line.trim().length > 0) {
+                sender.send('demucs-logfile-line', line);
+              }
+            });
+          });
+        }
+      });
+    }, 16);
+  });
+}
+
+// The renderer can request "startTailLog"
+ipcMain.on('start-tail-log', (evt) => {
+  tailLogFile(evt.sender);
 });
 ```
 

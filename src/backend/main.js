@@ -5,12 +5,15 @@ require('dotenv').config();
 
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
-const { execFile } = require('child_process');
+// We spawn a process for demucs
+const { spawn } = require('child_process');
 const fs = require('fs');
 const keytar = require('keytar');
 const { webcrypto } = require('crypto');
 const os = require('os');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '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'); // fallback
+const stripe = require('stripe')(
+  process.env.STRIPE_SECRET_KEY || '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'
+);
 
 // 2) Import autoUpdater from electron-updater
 const { autoUpdater } = require('electron-updater');
@@ -95,7 +98,6 @@ function setupAutoUpdaterLogs() {
 
   autoUpdater.on('update-downloaded', (info) => {
     logToFile(`autoUpdater: Update downloaded. Release name: ${info.releaseName}`);
-    // Now we let the user choose: we'll notify the renderer
     if (mainWindow) {
       mainWindow.webContents.send('autoUpdater-event', {
         event: 'update-downloaded',
@@ -118,6 +120,7 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, '../frontend/landing.html'));
 
   mainWindow.webContents.on('did-finish-load', () => {
+    // Example: if you want to send the assets path
     mainWindow.webContents.send('set-assets-path', assetsPath);
   });
 }
@@ -146,6 +149,7 @@ async function processSoftwareKey(encryptedHex) {
   try {
     logToFile(`Encrypted Key Received: ${encryptedHex}`);
 
+    // FIX: rename "b" to "byte" for clarity
     const cipherBytes = new Uint8Array(
       encryptedHex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
     );
@@ -342,7 +346,7 @@ ipcMain.handle('get-app-version', () => {
 
 ipcMain.handle('check-for-updates', () => {
   logToFile('Manual check-for-updates triggered');
-  autoUpdater.checkForUpdates(); // no "notify", so user decides
+  autoUpdater.checkForUpdates(); 
 });
 
 ipcMain.handle('install-update-now', () => {
@@ -360,6 +364,10 @@ function getResourcePath(relativePath) {
   return resolvedPath;
 }
 
+/**
+ *  We keep 'demucs-log', 'demucs-success', 'demucs-error' exactly the same
+ *  plus the partial approach on stderr if you want it. 
+ */
 ipcMain.on('run-demucs', (event, args) => {
   const platform = os.platform();
 
@@ -402,17 +410,24 @@ ipcMain.on('run-demucs', (event, args) => {
 
   logToFile(`Command Args: ${commandArgs.join(' ')}`);
 
-  const demucsProcess = execFile(demucsPath, commandArgs);
-
-  demucsProcess.stdout.on('data', (data) => {
-    logToFile(`Demucs stdout: ${data.toString()}`);
-    event.reply('demucs-log', data.toString());
+  // Instead of execFile, use spawn for real-time line-based output
+  const demucsProcess = spawn(demucsPath, commandArgs, {
+    shell: false,
+    cwd: path.dirname(demucsPath),
   });
 
+  // stdout => forward to 'demucs-log'
+  demucsProcess.stdout.on('data', (data) => {
+    const out = data.toString();
+    logToFile(`Demucs stdout: ${out}`);
+    event.reply('demucs-log', out);
+  });
+
+  // stderr => forward to 'demucs-log'
   demucsProcess.stderr.on('data', (data) => {
-    const stderrLog = `Demucs stderr: ${data.toString()}`;
-    logToFile(stderrLog);
-    event.reply('demucs-log', stderrLog);
+    const errOut = data.toString();
+    logToFile(`Demucs stderr: ${errOut}`);
+    event.reply('demucs-log', errOut);
   });
 
   demucsProcess.on('close', (code) => {
@@ -437,12 +452,6 @@ app.whenReady().then(() => {
   createWindow();
   setupAutoUpdaterLogs();
 
-  // (OPTIONAL) If you want an automatic check after 5 seconds:
-  // setTimeout(() => {
-  //   logToFile('Calling autoUpdater.checkForUpdates()');
-  //   autoUpdater.checkForUpdates();
-  // }, 5000);
-
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -457,4 +466,59 @@ app.on('window-all-closed', () => {
     logToFile('App closed.');
     app.quit();
   }
+});
+
+/*************************************************************
+ * TAILING THE LOG FILE (Optional)
+ * This is the "new logic" that streams lines from demucs-log.txt
+ * in real time, without removing your existing 'demucs-log' events.
+ *************************************************************/
+
+function tailLogFile(sender) {
+  const logPath = logFilePath; // same userData/demucs-log path
+  let fileOffset = 0;
+  let tailInterval = null;
+
+  fs.open(logPath, 'r', (err, fd) => {
+    if (err) {
+      console.error('Failed to open demucs-log.txt for tailing:', err);
+      return;
+    }
+
+    tailInterval = setInterval(() => {
+      fs.stat(logPath, (statErr, stats) => {
+        if (statErr) {
+          console.error('stat error:', statErr);
+          return;
+        }
+        // If file grew
+        if (stats.size > fileOffset) {
+          const newSize = stats.size - fileOffset;
+          const buffer = Buffer.alloc(newSize);
+
+          fs.read(fd, buffer, 0, newSize, fileOffset, (readErr, bytesRead) => {
+            if (readErr) {
+              console.error('read error:', readErr);
+              return;
+            }
+            fileOffset += bytesRead;
+
+            const chunk = buffer.toString('utf8');
+            const lines = chunk.split(/\r?\n/);
+
+            lines.forEach((line) => {
+              if (line.trim().length > 0) {
+                sender.send('demucs-logfile-line', line);
+              }
+            });
+          });
+        }
+      });
+    }, 16);
+  });
+}
+
+// The renderer can request "startTailLog"
+ipcMain.on('start-tail-log', (evt) => {
+  tailLogFile(evt.sender);
 });

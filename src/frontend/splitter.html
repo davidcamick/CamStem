@@ -1,232 +1,549 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CamStem - Stem Splitting</title>
   <!-- Include Tailwind + Custom Index CSS -->
   <link rel="stylesheet" href="tailwind-output.css">
   <link rel="stylesheet" href="index.css">
+  <!-- Link the newly created splitter.css -->
+  <link rel="stylesheet" href="splitter.css">
+  <style>
+    .text-green {
+      color: #28a745; /* success color */
+    }
+    .text-red {
+      color: #dc3545; /* error color */
+    }
+    .text-orange {
+      color: #ffa500; /* queued or waiting color */
+    }
+    .text-white {
+      color: white;
+    }
+  </style>
 </head>
 <body>
-  <!-- Use the .container from index.css, with a max-width for consistency -->
+  <!-- Container with max-width -->
   <div class="container" style="max-width: 480px;">
-    <!-- Add the .page-title class for a consistent heading style -->
-    <h1 class="page-title">Stem Splitting</h1>
 
-    <form id="demucsForm">
-      <div class="form-grid">
-        <!-- Left Column: Input and Output Path Selection -->
-        <div class="form-column">
-          <div class="form-group">
-            <label for="inputPath">Input Path:</label>
-            <button 
-              type="button" 
-              id="selectInput" 
-              class="btn btn-secondary"
-            >
-              Select Input
-            </button>
-          </div>
-          <div class="form-group">
-            <label for="outputPath">Output Path:</label>
-            <button 
-              type="button" 
-              id="selectOutput" 
-              class="btn btn-secondary"
-            >
-              Select Output
-            </button>
-          </div>
+    <!-- =========================== STEP 1 =========================== -->
+    <div id="step1" class="step" style="display: block;">
+      <h1 class="page-title">Select which type of stems you want</h1>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+        <button class="actionButton" id="default4StemBtn">Default 4 Stem</button>
+        <button class="actionButton" id="hq4StemBtn">High Quality 4 Stem</button>
+        <button class="actionButton" id="exp6StemBtn">Experimental 6 Stem</button>
+      </div>
+      <a href="dashboard.html" class="exit-pill">Exit</a>
+    </div>
+
+    <!-- =========================== STEP 2 =========================== -->
+    <div id="step2" class="step">
+      <h1 class="page-title">Select Your Audio File</h1>
+      <p style="margin-bottom: 1rem;">
+        Drag and Drop your <strong>.mp3</strong> file or click to browse.
+      </p>
+      <div id="dropZone" class="drop-area">
+        <p>Drag & drop MP3 here</p>
+        <p>or click to browse</p>
+      </div>
+      <input type="file" id="mp3FileInput" accept=".mp3" style="display: none;" />
+
+      <button id="step2ContinueBtn" class="btn btn-primary btn-disabled" style="margin-top: 1.5rem;">
+        Next
+      </button>
+      <a href="dashboard.html" class="exit-pill">Exit</a>
+    </div>
+
+    <!-- =========================== STEP 3 =========================== -->
+    <div id="step3" class="step">
+      <h1 class="page-title">Select the output directory</h1>
+      <p style="margin-bottom: 1rem;">
+        Where should we place your separated stems?
+      </p>
+      <button id="browseOutputBtn" class="btn btn-secondary" style="margin-bottom: 1.5rem;">
+        Browse for Folder
+      </button>
+      <button id="step3ContinueBtn" class="btn btn-primary btn-disabled">Next</button>
+      <a href="dashboard.html" class="exit-pill">Exit</a>
+    </div>
+
+    <!-- =========================== STEP 4 =========================== -->
+    <div id="step4" class="step">
+      <h1 class="page-title">Select MP3 File Quality</h1>
+      <p style="margin-bottom: 1rem;"><em>Lower Number = Higher Quality</em></p>
+      <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem;">
+        <button class="preset-button" data-newpreset="2">2</button>
+        <button class="preset-button" data-newpreset="3">3</button>
+        <button class="preset-button" data-newpreset="4">4</button>
+        <button class="preset-button" data-newpreset="5">5</button>
+        <button class="preset-button" data-newpreset="6">6</button>
+        <button class="preset-button" data-newpreset="7">7</button>
+      </div>
+      <button id="goSplitBtn" class="btn btn-primary btn-disabled" style="margin-top: 1.5rem;">
+        Split Stems
+      </button>
+      <a href="dashboard.html" class="exit-pill">Exit</a>
+    </div>
+
+    <!-- =========================== STEP 5: Splitting =========================== -->
+    <div id="step5" class="step" style="text-align:center;">
+      <h1 class="page-title">Splitting Stems</h1>
+      <p style="margin-bottom: 1.5rem;">
+        Please be patient while your stems are split. You can minimize CamStem, and we'll notify you when done.
+      </p>
+
+      <!-- Buttons in Step 5 -->
+      <button id="newSplitBtn" class="btn" style="background-color: #003554; color: white; margin-bottom: 1rem;">
+        Split Another Song
+      </button>
+      <button id="viewLogFileBtn" class="btn btn-secondary" style="margin-bottom: 1rem;">
+        Open Log File
+      </button>
+
+      <!-- For normal models, we show filteredLine. For htdemucs_ft, we only show it on final error or success. -->
+      <div id="filteredLine" class="text-white"></div>
+
+      <!-- For fine-tuned model: 4 lines, each either "Queued" or a percentage, turning green at 100% -->
+      <div id="fineTunedStages" style="display:none; margin-top:1rem;">
+        <!-- We'll use this label for final messages such as "Creating Files..." or "Splitting Process Completed" -->
+        <p id="refinementLabel" class="text-white" style="font-weight:bold; margin-bottom:0.5rem;">
+          <!-- No "Split Process Initializing" here for fine-tuned. We'll skip that. -->
+        </p>
+        <div>
+          <strong class="text-white">Refinement #1:</strong>
+          <span id="stage1progress" class="text-white">Starting…</span>
         </div>
-
-        <!-- Right Column: Model and Quality Selection -->
-        <div class="form-column">
-          <div class="form-group">
-            <label for="model">Select Model:</label>
-            <select 
-              id="model" 
-              required 
-              class="mp3-model-select"
-            >
-              <option value="htdemucs">Default</option>
-              <option value="htdemucs_ft">Fine Tuned</option>
-              <option value="htdemucs_6s">Six Stem Model</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="mp3Preset">MP3 Quality Preset:</label>
-            <select 
-              id="mp3Preset" 
-              required 
-              class="mp3-model-select"
-            >
-              <option value="2">2 (Highest Quality)</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7 (Fastest Speed)</option>
-            </select>
-          </div>
+        <div>
+          <strong class="text-white">Refinement #2:</strong>
+          <span id="stage2progress" class="text-orange">Queued</span>
+        </div>
+        <div>
+          <strong class="text-white">Refinement #3:</strong>
+          <span id="stage3progress" class="text-orange">Queued</span>
+        </div>
+        <div>
+          <strong class="text-white">Refinement #4:</strong>
+          <span id="stage4progress" class="text-orange">Queued</span>
         </div>
       </div>
 
-      <!-- Buttons Container -->
-      <div class="buttons-container">
-        <button 
-          type="button" 
-          id="splitStemsButton" 
-          class="btn btn-primary"
-        >
-          Split Stems
-        </button>
-        <button 
-          type="button" 
-          id="openLogFile" 
-          class="btn btn-secondary"
-        >
-          Open Log File
-        </button>
-        <button 
-          type="button" 
-          id="backToDashboard" 
-          class="btn btn-danger"
-        >
-          Back to Main Menu
-        </button>
-      </div>
-    </form>
-
-    <!-- Collapsible Log Section -->
-    <div class="log-section">
-      <div class="log-header" id="logHeader">
-        <h2>Logs</h2>
-        <button class="log-toggle" id="toggleLogs">Show Logs</button>
-      </div>
-      <div id="logs" class="logs">
-        <p class="text-gray-600">Logs will appear here...</p>
-      </div>
+      <a href="dashboard.html" class="exit-pill">Exit</a>
     </div>
   </div>
 
-  <!-- Modal Popup -->
-  <div id="infoModal" class="modal">
+  <!-- Hidden console for logs, outside the container -->
+  <div
+    id="demucsConsole"
+    style="
+      position: absolute;
+      transform: scale(0.01);
+      opacity: 0;
+      pointer-events: none;
+    "
+  ></div>
+
+  <!-- Hidden last line div as well, so it never appears in UI -->
+  <div
+    id="latestLineDiv"
+    style="
+      position: absolute;
+      transform: scale(0.01);
+      opacity: 0;
+      pointer-events: none;
+    "
+  ></div>
+
+  <!-- =========================== Warning Modal =========================== -->
+  <div class="modal" id="warningModal">
     <div class="modal-content">
-      <h2>Important Information</h2>
-      <p>A new folder will be created in your output directory where the stems will be stored.</p>
-      <p>If this is your first time splitting, it may take up to 5 minutes to start the splitting process.</p>
-      <p>If you don't see any progress after 10 minutes (including in the logs), please email us at 
-        <a href="mailto:devs@camstem.org" style="color: #FFD700; text-decoration: underline;">devs@camstem.org</a> 
-        and attach the log file by clicking on "Open Log File".
-      </p>
-      <div class="modal-buttons">
-        <button id="proceedButton" class="btn btn-primary">Proceed</button>
-        <button id="cancelButton" class="btn btn-danger">Cancel</button>
-      </div>
+      <h2>Warning</h2>
+      <p id="warningMsg"></p>
+      <button id="warningCloseBtn" class="close-btn">Close</button>
     </div>
   </div>
 
   <script>
-    const selectInputButton = document.getElementById('selectInput');
-    const selectOutputButton = document.getElementById('selectOutput');
-    const splitStemsButton = document.getElementById('splitStemsButton');
-    const openLogFileButton = document.getElementById('openLogFile');
-    const backToDashboardButton = document.getElementById('backToDashboard');
-    const logsDiv = document.getElementById('logs');
-    const toggleLogsButton = document.getElementById('toggleLogs');
+    /**************************************************************************************
+     * GLOBAL / STEP Variables
+     **************************************************************************************/
+    let chosenModel = '';
+    let chosenFilePath = '';
+    let chosenOutputPath = '';
+    let chosenPreset = '';
+    let finalStemsPath = '';
 
-    const infoModal = document.getElementById('infoModal');
-    const proceedButton = document.getElementById('proceedButton');
-    const cancelButton = document.getElementById('cancelButton');
+    // Step references
+    const stepOne = document.getElementById('step1');
+    const stepTwo = document.getElementById('step2');
+    const stepThree = document.getElementById('step3');
+    const stepFour = document.getElementById('step4');
+    const stepFive = document.getElementById('step5');
 
-    let inputPath = '';
-    let outputPath = '';
+    // Step 2
+    const dropZone = document.getElementById('dropZone');
+    const mp3FileInput = document.getElementById('mp3FileInput');
+    const step2ContinueBtn = document.getElementById('step2ContinueBtn');
 
-    selectInputButton.addEventListener('click', () => {
-      window.api.selectPath('file', (path) => {
-        if (path) {
-          inputPath = path;
-          selectInputButton.textContent = 'Input Selected';
-          selectInputButton.disabled = true;
-        }
-      });
-    });
+    // Step 3
+    const browseOutputBtn = document.getElementById('browseOutputBtn');
+    const step3ContinueBtn = document.getElementById('step3ContinueBtn');
 
-    selectOutputButton.addEventListener('click', () => {
-      window.api.selectPath('directory', (path) => {
-        if (path) {
-          outputPath = path;
-          selectOutputButton.textContent = 'Output Selected';
-          selectOutputButton.disabled = true;
-        }
-      });
-    });
+    // Step 4
+    const presetButtons = document.querySelectorAll('.preset-button');
+    const goSplitBtn = document.getElementById('goSplitBtn');
 
-    splitStemsButton.addEventListener('click', () => {
-      if (!inputPath || !outputPath) {
-        alert('Please select both input and output paths before splitting.');
-        return;
-      }
-      // Show the modal
-      infoModal.style.display = 'flex';
-    });
+    // Step 5
+    const newSplitBtn = document.getElementById('newSplitBtn');
+    const viewLogFileBtn = document.getElementById('viewLogFileBtn');
+    const demucsConsole = document.getElementById('demucsConsole');
+    const latestLineDiv = document.getElementById('latestLineDiv');
+    const filteredLineDiv = document.getElementById('filteredLine');
 
-    proceedButton.addEventListener('click', () => {
-      // Hide the modal
-      infoModal.style.display = 'none';
-      // Proceed with splitting
-      runSplitStems();
-    });
+    // Fine-Tuned references
+    const fineTunedStages = document.getElementById('fineTunedStages');
+    const refinementLabel = document.getElementById('refinementLabel');
+    const stage1progress = document.getElementById('stage1progress');
+    const stage2progress = document.getElementById('stage2progress');
+    const stage3progress = document.getElementById('stage3progress');
+    const stage4progress = document.getElementById('stage4progress');
 
-    cancelButton.addEventListener('click', () => {
-      // Hide the modal
-      infoModal.style.display = 'none';
-    });
+    // Warnings
+    const warningModal = document.getElementById('warningModal');
+    const warningMsg = document.getElementById('warningMsg');
+    const warningCloseBtn = document.getElementById('warningCloseBtn');
 
-    function runSplitStems() {
-      const model = document.getElementById('model').value;
-      const mp3Preset = document.getElementById('mp3Preset').value;
+    // We'll accumulate log data here
+    let demucsOutputBuffer = '';
 
-      console.log('Submitted Input Path:', inputPath);
-      console.log('Submitted Output Path:', outputPath);
-      console.log('Selected Model:', model);
-      console.log('MP3 Preset:', mp3Preset);
+    /**************************************************************************************
+     * Multi-Stage Tracking (for htdemucs_ft)
+     **************************************************************************************/
+    let currentStage = 1;           // 1..4
+    let stageComplete = [false, false, false, false];
+    let allStagesDone = false;
 
-      window.api.runDemucs(inputPath, outputPath, model, mp3Preset);
+    /**************************************************************************************
+     * Navigation
+     **************************************************************************************/
+    function switchToStep(num) {
+      stepOne.style.display = 'none';
+      stepTwo.style.display = 'none';
+      stepThree.style.display = 'none';
+      stepFour.style.display = 'none';
+      stepFive.style.display = 'none';
+
+      if (num === 1) stepOne.style.display = 'block';
+      if (num === 2) stepTwo.style.display = 'block';
+      if (num === 3) stepThree.style.display = 'block';
+      if (num === 4) stepFour.style.display = 'block';
+      if (num === 5) stepFive.style.display = 'block';
     }
 
-    openLogFileButton.addEventListener('click', () => {
+    function showWarning(msg) {
+      warningMsg.textContent = msg;
+      warningModal.style.display = 'flex';
+    }
+    warningCloseBtn.addEventListener('click', () => {
+      warningModal.style.display = 'none';
+    });
+    window.addEventListener('click', (e) => {
+      if (e.target === warningModal) {
+        warningModal.style.display = 'none';
+      }
+    });
+
+    /**************************************************************************************
+     * STEP 1: Model selection
+     **************************************************************************************/
+    document.getElementById('default4StemBtn').addEventListener('click', () => {
+      chosenModel = 'htdemucs';
+      switchToStep(2);
+    });
+    document.getElementById('hq4StemBtn').addEventListener('click', () => {
+      chosenModel = 'htdemucs_ft'; // Fine-tuned
+      switchToStep(2);
+    });
+    document.getElementById('exp6StemBtn').addEventListener('click', () => {
+      chosenModel = 'htdemucs_6s';
+      switchToStep(2);
+    });
+
+    /**************************************************************************************
+     * STEP 2: MP3
+     **************************************************************************************/
+    dropZone.addEventListener('click', () => {
+      mp3FileInput.click();
+    });
+    dropZone.addEventListener('dragenter', (evt) => evt.preventDefault());
+    dropZone.addEventListener('dragover', (evt) => {
+      evt.preventDefault();
+      dropZone.style.backgroundColor = 'rgba(0,255,216,0.2)';
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.style.backgroundColor = 'transparent';
+    });
+    dropZone.addEventListener('drop', (evt) => {
+      evt.preventDefault();
+      dropZone.style.backgroundColor = 'transparent';
+      if (evt.dataTransfer.files.length > 0) {
+        const file = evt.dataTransfer.files[0];
+        if (file.type !== 'audio/mpeg') {
+          alert('Please drop only MP3 files.');
+          return;
+        }
+        chosenFilePath = file.path;
+        step2ContinueBtn.classList.remove('btn-disabled');
+      }
+    });
+    mp3FileInput.addEventListener('change', (evt) => {
+      const f = evt.target.files[0];
+      if (!f) return;
+      if (f.type !== 'audio/mpeg') {
+        alert('Please select an MP3 file.');
+        mp3FileInput.value = '';
+        return;
+      }
+      chosenFilePath = f.path;
+      step2ContinueBtn.classList.remove('btn-disabled');
+    });
+    step2ContinueBtn.addEventListener('click', () => {
+      if (!chosenFilePath) {
+        showWarning('Please pick an MP3 file first!');
+        return;
+      }
+      switchToStep(3);
+    });
+
+    /**************************************************************************************
+     * STEP 3: Output Directory
+     **************************************************************************************/
+    browseOutputBtn.addEventListener('click', () => {
+      window.api.selectPath('directory', (selectedFolder) => {
+        if (selectedFolder) {
+          chosenOutputPath = selectedFolder;
+          browseOutputBtn.textContent = 'Output Selected ✓';
+          step3ContinueBtn.classList.remove('btn-disabled');
+        }
+      });
+    });
+    step3ContinueBtn.addEventListener('click', () => {
+      if (!chosenOutputPath) {
+        showWarning('Please select an output directory first.');
+        return;
+      }
+      switchToStep(4);
+    });
+
+    /**************************************************************************************
+     * STEP 4: MP3 Preset
+     **************************************************************************************/
+    presetButtons.forEach((b) => {
+      b.addEventListener('click', () => {
+        // Clear active states
+        presetButtons.forEach((x) => x.classList.remove('active'));
+        b.classList.add('active');
+        chosenPreset = b.getAttribute('data-newpreset');
+        goSplitBtn.classList.remove('btn-disabled');
+      });
+    });
+    goSplitBtn.addEventListener('click', () => {
+      if (!chosenPreset) {
+        showWarning('Please select a preset first!');
+        return;
+      }
+      switchToStep(5);
+      runDemucsNow();
+    });
+
+    /**************************************************************************************
+     * STEP 5: Splitting
+     **************************************************************************************/
+    newSplitBtn.addEventListener('click', () => {
+      window.location.reload();
+    });
+    viewLogFileBtn.addEventListener('click', () => {
       window.api.openLogFile();
     });
 
-    backToDashboardButton.addEventListener('click', () => {
-      window.location.href = 'dashboard.html';
-    });
+    function runDemucsNow() {
+      demucsOutputBuffer = '';
+      demucsConsole.innerHTML = '';
 
-    window.api.receive('demucs-log', (message) => {
-      const logEntry = document.createElement('p');
-      logEntry.textContent = message;
-      logsDiv.appendChild(logEntry);
-      logsDiv.scrollTop = logsDiv.scrollHeight;
-    });
+      if (chosenModel === 'htdemucs_ft') {
+        // Show multi-stage, no "Split Process Initializing"
+        fineTunedStages.style.display = 'block';
+        filteredLineDiv.style.display = 'none';
 
-    // Collapsible Logs Functionality
-    toggleLogsButton.addEventListener('click', () => {
-      if (logsDiv.classList.contains('open')) {
-        logsDiv.classList.remove('open');
-        toggleLogsButton.textContent = 'Show Logs';
+        // Reset stages
+        currentStage = 1;
+        allStagesDone = false;
+        stageComplete = [false, false, false, false];
+
+        // refinementLabel is blank initially (no "Split Process Initializing")
+        refinementLabel.textContent = '';
+        refinementLabel.className = 'text-white';
+
+        stage1progress.textContent = 'Starting…';
+        stage1progress.className = 'text-white';
+
+        stage2progress.textContent = 'Queued';
+        stage2progress.className = 'text-orange';
+
+        stage3progress.textContent = 'Queued';
+        stage3progress.className = 'text-orange';
+
+        stage4progress.textContent = 'Queued';
+        stage4progress.className = 'text-orange';
+
       } else {
-        logsDiv.classList.add('open');
-        toggleLogsButton.textContent = 'Hide Logs';
+        // Normal approach
+        fineTunedStages.style.display = 'none';
+        filteredLineDiv.style.display = 'block';
+        filteredLineDiv.className = 'text-white';
+        filteredLineDiv.textContent = 'Split Process Initializing';
+      }
+
+      window.api.runDemucs(chosenFilePath, chosenOutputPath, chosenModel, chosenPreset);
+      window.api.startTailLog();
+    }
+
+    function setStagePercent(stageIndex, percent) {
+      const elements = [stage1progress, stage2progress, stage3progress, stage4progress];
+      const el = elements[stageIndex];
+      if (percent === 100) {
+        el.textContent = '100%';
+        el.className = 'text-green';
+      } else {
+        el.textContent = `${percent}%`;
+        el.className = 'text-white';
+      }
+    }
+
+    function updateFineTunedProgress(percentVal) {
+      if (currentStage > 4) return;
+
+      // If current stage is done, but we see "0%" => next stage
+      if (percentVal === 0 && stageComplete[currentStage - 1]) {
+        currentStage++;
+        if (currentStage > 4) return;
+      }
+
+      if (!stageComplete[currentStage - 1]) {
+        setStagePercent(currentStage - 1, percentVal);
+      }
+
+      if (percentVal === 100 && !stageComplete[currentStage - 1]) {
+        stageComplete[currentStage - 1] = true;
+        // If stage #4 => "Creating Files" in the label
+        if (currentStage === 4) {
+          refinementLabel.textContent = 'Creating Files - This May Take a Moment';
+        }
+      }
+    }
+
+    function simpleFilterLine(line) {
+      if (line.includes('100%')) {
+        return 'Creating Files - This May Take a Moment';
+      }
+      const trimmed = line.trim();
+      if (!trimmed) return null;
+      const match = trimmed.match(/^(\d{1,2})/);
+      if (match) {
+        return `Splitting - (${match[1]})%`;
+      }
+      return null;
+    }
+
+    function parseDemucsOutput() {
+      const lines = demucsOutputBuffer.split(/\r?\n/);
+      demucsOutputBuffer = '';
+
+      lines.forEach((line) => {
+        if (!line) return;
+
+        if (chosenModel === 'htdemucs_ft') {
+          const progressMatch = line.match(/^\s*(\d{1,3})%\|/);
+          if (progressMatch) {
+            const pctVal = parseInt(progressMatch[1], 10);
+            if (pctVal >= 0 && pctVal <= 100) {
+              updateFineTunedProgress(pctVal);
+            }
+          }
+          if (line.includes('Separated tracks will be stored in')) {
+            const splitted = line.split('Separated tracks will be stored in');
+            if (splitted[1]) {
+              finalStemsPath = splitted[1].trim();
+            }
+          }
+        } else {
+          const filterResult = simpleFilterLine(line);
+          if (filterResult) {
+            filteredLineDiv.classList.remove('text-green', 'text-red');
+            filteredLineDiv.classList.add('text-white');
+            filteredLineDiv.textContent = filterResult;
+          }
+          if (line.includes('Separated tracks will be stored in')) {
+            const splitted = line.split('Separated tracks will be stored in');
+            if (splitted[1]) {
+              finalStemsPath = splitted[1].trim();
+            }
+          }
+        }
+      });
+    }
+
+    // On each chunk
+    window.api.receive('demucs-log', (chunk) => {
+      demucsOutputBuffer += chunk;
+      parseDemucsOutput();
+    });
+
+    // success
+    window.api.receive('demucs-success', (msg) => {
+      parseDemucsOutput();
+
+      if (chosenModel === 'htdemucs_ft') {
+        // If stage4 isn't done, force it to 100
+        if (!stageComplete[3]) {
+          stageComplete[3] = true;
+          setStagePercent(3, 100);
+        }
+        // Show final success in the label only
+        refinementLabel.textContent = 'Splitting Process Completed';
+        refinementLabel.classList.remove('text-white', 'text-red');
+        refinementLabel.classList.add('text-green');
+
+      } else {
+        filteredLineDiv.classList.remove('text-white', 'text-red');
+        filteredLineDiv.classList.add('text-green');
+        filteredLineDiv.textContent = 'Splitting Process Completed';
       }
     });
 
-    // Close modal when clicking outside of it
-    window.addEventListener('click', (event) => {
-      if (event.target == infoModal) {
-        infoModal.style.display = 'none';
+    // error
+    window.api.receive('demucs-error', (errMsg) => {
+      parseDemucsOutput();
+      if (chosenModel === 'htdemucs_ft') {
+        refinementLabel.classList.remove('text-white', 'text-green');
+        refinementLabel.classList.add('text-red');
+        refinementLabel.textContent = 'Refinement encountered an ERROR. Check logs.';
+
+        stage4progress.classList.remove('text-white', 'text-orange', 'text-green');
+        stage4progress.classList.add('text-red');
+        stage4progress.textContent = `ERROR: ${errMsg}`;
+      } else {
+        filteredLineDiv.textContent = `ERROR: ${errMsg}`;
+        filteredLineDiv.classList.remove('text-white', 'text-green');
+        filteredLineDiv.classList.add('text-red');
       }
+    });
+
+    // Tailing => last line
+    window.api.onLogFileLine((newLine) => {
+      latestLineDiv.textContent = newLine;
     });
   </script>
 </body>
