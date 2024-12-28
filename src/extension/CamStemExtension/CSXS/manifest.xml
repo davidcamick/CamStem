@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExtensionManifest
+  ExtensionBundleId="CamStemExtension"
+  ExtensionBundleName="CamStemExtension"
+  ExtensionBundleVersion="6.0.0"
+  Version="11.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+>
+  <ExtensionList>
+    <Extension Id="CamStemExtension.panel" Version="6.0.0"/>
+  </ExtensionList>
+
+  <ExecutionEnvironment>
+    <HostList>
+      <Host Name="PPRO" Version="[0.0,99.9]"/>
+    </HostList>
+    <LocaleList>
+      <Locale Code="All"/>
+    </LocaleList>
+    <RequiredRuntimeList>
+      <RequiredRuntime Name="CSXS" Version="11.0"/>
+    </RequiredRuntimeList>
+  </ExecutionEnvironment>
+
+  <DispatchInfoList>
+    <Extension Id="CamStemExtension.panel">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./index.html</MainPath>
+          <ScriptPath>./index.jsx</ScriptPath>
+          <CEFCommandLine>
+            <!-- Must enable Node to spawn demucs -->
+            <Parameter>--enable-nodejs</Parameter>
+          </CEFCommandLine>
+        </Resources>
+        <Lifecycle>
+          <AutoVisible>true</AutoVisible>
+        </Lifecycle>
+        <UI>
+          <Type>Panel</Type>
+          <Menu>CamStem Audio Check</Menu>
+          <Geometry>
+            <Size>
+              <Height>600</Height>
+              <Width>500</Width>
+            </Size>
+          </Geometry>
+        </UI>
+      </DispatchInfo>
+    </Extension>
+  </DispatchInfoList>
+</ExtensionManifest>

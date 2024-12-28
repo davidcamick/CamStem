@@ -67,6 +67,20 @@ this is my project, please read the contents and understand its functionality. o
     - `installerSidebar.bmp`
     - `icon.icns`
 
+  `extension`
+  ==============
+
+    `CamStemExtension`
+    ==============
+      - `index.html`
+      - `CSInterface.js`
+      - `index.js`
+      - `index.jsx`
+
+      `CSXS`
+      ==============
+        - `manifest.xml`
+
 
 ## Included Files with Code
 
@@ -693,6 +707,14 @@ video {
   }
 }
 
+.invisible {
+  visibility: hidden;
+}
+
+.absolute {
+  position: absolute;
+}
+
 .mb-4 {
   margin-bottom: 1rem;
 }
@@ -717,6 +739,14 @@ video {
   display: none;
 }
 
+.transform {
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
 .border {
   border-width: 1px;
 }
@@ -739,13 +769,12 @@ video {
   font-weight: 500;
 }
 
-.text-gray-600 {
-  --tw-text-opacity: 1;
-  color: rgb(75 85 99 / var(--tw-text-opacity, 1));
+.filter {
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
 
-.underline {
-  text-decoration-line: underline;
+.ease-in-out {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* =======================
@@ -1734,6 +1763,20 @@ body {
   <link rel="stylesheet" href="index.css">
   <!-- Link the newly created splitter.css -->
   <link rel="stylesheet" href="splitter.css">
+  <style>
+    .text-green {
+      color: #28a745; /* success color */
+    }
+    .text-red {
+      color: #dc3545; /* error color */
+    }
+    .text-orange {
+      color: #ffa500; /* queued or waiting color */
+    }
+    .text-white {
+      color: white;
+    }
+  </style>
 </head>
 <body>
   <!-- Container with max-width -->
@@ -1799,8 +1842,8 @@ body {
       <a href="dashboard.html" class="exit-pill">Exit</a>
     </div>
 
-    <!-- =========================== STEP 5: Splitting & Progress =========================== -->
-    <div id="step5" class="step">
+    <!-- =========================== STEP 5: Splitting =========================== -->
+    <div id="step5" class="step" style="text-align:center;">
       <h1 class="page-title">Splitting Stems</h1>
       <p style="margin-bottom: 1.5rem;">
         Please be patient while your stems are split. You can minimize CamStem, and we'll notify you when done.
@@ -1814,22 +1857,58 @@ body {
         Open Log File
       </button>
 
-      <!-- Our progress heading & meter -->
-      <p id="progressHeading">Progress: 0%</p>
-      <progress id="progressMeter" value="0" max="100"></progress>
+      <!-- For normal models, we show filteredLine. For htdemucs_ft, we only show it on final error or success. -->
+      <div id="filteredLine" class="text-white"></div>
 
-      <!-- Real-time console area for the raw logs -->
-      <div id="demucsConsole" style="display:none;"></div>
-
-      <!-- The single last line from the log file tailing -->
-      <div id="latestLineDiv" class="latest-log-line">(No lines yet)</div>
-
-      <!-- The single "filtered" version of the LATEST line we appended -->
-      <div id="filteredLine"></div>
+      <!-- For fine-tuned model: 4 lines, each either "Queued" or a percentage, turning green at 100% -->
+      <div id="fineTunedStages" style="display:none; margin-top:1rem;">
+        <!-- We'll use this label for final messages such as "Creating Files..." or "Splitting Process Completed" -->
+        <p id="refinementLabel" class="text-white" style="font-weight:bold; margin-bottom:0.5rem;">
+          <!-- No "Split Process Initializing" here for fine-tuned. We'll skip that. -->
+        </p>
+        <div>
+          <strong class="text-white">Refinement #1:</strong>
+          <span id="stage1progress" class="text-white">Starting…</span>
+        </div>
+        <div>
+          <strong class="text-white">Refinement #2:</strong>
+          <span id="stage2progress" class="text-orange">Queued</span>
+        </div>
+        <div>
+          <strong class="text-white">Refinement #3:</strong>
+          <span id="stage3progress" class="text-orange">Queued</span>
+        </div>
+        <div>
+          <strong class="text-white">Refinement #4:</strong>
+          <span id="stage4progress" class="text-orange">Queued</span>
+        </div>
+      </div>
 
       <a href="dashboard.html" class="exit-pill">Exit</a>
     </div>
   </div>
+
+  <!-- Hidden console for logs, outside the container -->
+  <div
+    id="demucsConsole"
+    style="
+      position: absolute;
+      transform: scale(0.01);
+      opacity: 0;
+      pointer-events: none;
+    "
+  ></div>
+
+  <!-- Hidden last line div as well, so it never appears in UI -->
+  <div
+    id="latestLineDiv"
+    style="
+      position: absolute;
+      transform: scale(0.01);
+      opacity: 0;
+      pointer-events: none;
+    "
+  ></div>
 
   <!-- =========================== Warning Modal =========================== -->
   <div class="modal" id="warningModal">
@@ -1873,20 +1952,32 @@ body {
     // Step 5
     const newSplitBtn = document.getElementById('newSplitBtn');
     const viewLogFileBtn = document.getElementById('viewLogFileBtn');
-    const progressHeading = document.getElementById('progressHeading');
-    const progressMeter = document.getElementById('progressMeter');
     const demucsConsole = document.getElementById('demucsConsole');
     const latestLineDiv = document.getElementById('latestLineDiv');
     const filteredLineDiv = document.getElementById('filteredLine');
+
+    // Fine-Tuned references
+    const fineTunedStages = document.getElementById('fineTunedStages');
+    const refinementLabel = document.getElementById('refinementLabel');
+    const stage1progress = document.getElementById('stage1progress');
+    const stage2progress = document.getElementById('stage2progress');
+    const stage3progress = document.getElementById('stage3progress');
+    const stage4progress = document.getElementById('stage4progress');
 
     // Warnings
     const warningModal = document.getElementById('warningModal');
     const warningMsg = document.getElementById('warningMsg');
     const warningCloseBtn = document.getElementById('warningCloseBtn');
 
-    // We use demucsOutputBuffer for progress logic
+    // We'll accumulate log data here
     let demucsOutputBuffer = '';
-    const progressRegex = /(\d+(?:\.\d+)?)%/g;
+
+    /**************************************************************************************
+     * Multi-Stage Tracking (for htdemucs_ft)
+     **************************************************************************************/
+    let currentStage = 1;           // 1..4
+    let stageComplete = [false, false, false, false];
+    let allStagesDone = false;
 
     /**************************************************************************************
      * Navigation
@@ -1926,7 +2017,7 @@ body {
       switchToStep(2);
     });
     document.getElementById('hq4StemBtn').addEventListener('click', () => {
-      chosenModel = 'htdemucs_ft';
+      chosenModel = 'htdemucs_ft'; // Fine-tuned
       switchToStep(2);
     });
     document.getElementById('exp6StemBtn').addEventListener('click', () => {
@@ -2032,103 +2123,130 @@ body {
     });
 
     function runDemucsNow() {
-      // Clear old console
       demucsOutputBuffer = '';
       demucsConsole.innerHTML = '';
-      demucsConsole.style.display = 'none';
 
-      // Clear filtered line
-      filteredLineDiv.textContent = '';
+      if (chosenModel === 'htdemucs_ft') {
+        // Show multi-stage, no "Split Process Initializing"
+        fineTunedStages.style.display = 'block';
+        filteredLineDiv.style.display = 'none';
 
-      progressHeading.style.display = 'none';
-      progressHeading.textContent = 'Progress: 0%';
+        // Reset stages
+        currentStage = 1;
+        allStagesDone = false;
+        stageComplete = [false, false, false, false];
 
-      progressMeter.style.display = 'none';
-      progressMeter.value = 0;
+        // refinementLabel is blank initially (no "Split Process Initializing")
+        refinementLabel.textContent = '';
+        refinementLabel.className = 'text-white';
+
+        stage1progress.textContent = 'Starting…';
+        stage1progress.className = 'text-white';
+
+        stage2progress.textContent = 'Queued';
+        stage2progress.className = 'text-orange';
+
+        stage3progress.textContent = 'Queued';
+        stage3progress.className = 'text-orange';
+
+        stage4progress.textContent = 'Queued';
+        stage4progress.className = 'text-orange';
+
+      } else {
+        // Normal approach
+        fineTunedStages.style.display = 'none';
+        filteredLineDiv.style.display = 'block';
+        filteredLineDiv.className = 'text-white';
+        filteredLineDiv.textContent = 'Split Process Initializing';
+      }
 
       window.api.runDemucs(chosenFilePath, chosenOutputPath, chosenModel, chosenPreset);
       window.api.startTailLog();
     }
 
-    /**************************************************************************************
-     * This function picks out the first two digits from the line,
-     * then returns something like "7%" or "24%".
-     **************************************************************************************/
-    function detectFirstTwoDigits(line) {
-      const trimmed = line.trim();
-      if (trimmed.length < 1) return null;
+    function setStagePercent(stageIndex, percent) {
+      const elements = [stage1progress, stage2progress, stage3progress, stage4progress];
+      const el = elements[stageIndex];
+      if (percent === 100) {
+        el.textContent = '100%';
+        el.className = 'text-green';
+      } else {
+        el.textContent = `${percent}%`;
+        el.className = 'text-white';
+      }
+    }
 
-      // Grab up to first 2 characters
-      let firstTwo = trimmed.substring(0, 2); 
-      const firstChar = firstTwo.charAt(0);
-      const secondChar = firstTwo.charAt(1) || '';
+    function updateFineTunedProgress(percentVal) {
+      if (currentStage > 4) return;
 
-      // If the firstChar isn't a digit, skip
-      if (!/^\d$/.test(firstChar)) {
-        return null;
+      // If current stage is done, but we see "0%" => next stage
+      if (percentVal === 0 && stageComplete[currentStage - 1]) {
+        currentStage++;
+        if (currentStage > 4) return;
       }
 
-      // If secondChar is '%', we do e.g. "7%"
-      if (secondChar === '%') {
-        return `${firstChar}%`;
-      } 
-      // If secondChar is a digit => e.g. "24"
-      else if (/^\d$/.test(secondChar)) {
-        return `${firstChar}${secondChar}%`;
-      } 
-      // else single digit => "2%"
-      return `${firstChar}%`;
+      if (!stageComplete[currentStage - 1]) {
+        setStagePercent(currentStage - 1, percentVal);
+      }
+
+      if (percentVal === 100 && !stageComplete[currentStage - 1]) {
+        stageComplete[currentStage - 1] = true;
+        // If stage #4 => "Creating Files" in the label
+        if (currentStage === 4) {
+          refinementLabel.textContent = 'Creating Files - This May Take a Moment';
+        }
+      }
+    }
+
+    function simpleFilterLine(line) {
+      if (line.includes('100%')) {
+        return 'Creating Files - This May Take a Moment';
+      }
+      const trimmed = line.trim();
+      if (!trimmed) return null;
+      const match = trimmed.match(/^(\d{1,2})/);
+      if (match) {
+        return `Splitting - (${match[1]})%`;
+      }
+      return null;
     }
 
     function parseDemucsOutput() {
       const lines = demucsOutputBuffer.split(/\r?\n/);
-      demucsOutputBuffer = lines.pop() || '';
+      demucsOutputBuffer = '';
 
-      let bestPercent = 0;
       lines.forEach((line) => {
-        // Show raw line in the console
-        if (!demucsConsole.style.display) {
-          demucsConsole.style.display = 'block';
-        }
-        const p = document.createElement('div');
-        p.textContent = line;
-        demucsConsole.appendChild(p);
-        demucsConsole.scrollTop = demucsConsole.scrollHeight;
+        if (!line) return;
 
-        // Then we do "filtered" from the same line
-        const short = detectFirstTwoDigits(line);
-        if (short) {
-          filteredLineDiv.textContent = short;
-        }
-
-        // If line includes "Separated tracks..."
-        if (line.includes('Separated tracks will be stored in')) {
-          const splitted = line.split('Separated tracks will be stored in');
-          if (splitted[1]) {
-            finalStemsPath = splitted[1].trim();
+        if (chosenModel === 'htdemucs_ft') {
+          const progressMatch = line.match(/^\s*(\d{1,3})%\|/);
+          if (progressMatch) {
+            const pctVal = parseInt(progressMatch[1], 10);
+            if (pctVal >= 0 && pctVal <= 100) {
+              updateFineTunedProgress(pctVal);
+            }
+          }
+          if (line.includes('Separated tracks will be stored in')) {
+            const splitted = line.split('Separated tracks will be stored in');
+            if (splitted[1]) {
+              finalStemsPath = splitted[1].trim();
+            }
+          }
+        } else {
+          const filterResult = simpleFilterLine(line);
+          if (filterResult) {
+            filteredLineDiv.classList.remove('text-green', 'text-red');
+            filteredLineDiv.classList.add('text-white');
+            filteredLineDiv.textContent = filterResult;
+          }
+          if (line.includes('Separated tracks will be stored in')) {
+            const splitted = line.split('Separated tracks will be stored in');
+            if (splitted[1]) {
+              finalStemsPath = splitted[1].trim();
+            }
           }
         }
-
-        // Attempt "NN%" for the progress
-        let match;
-        while ((match = progressRegex.exec(line)) !== null) {
-          const val = parseFloat(match[1]);
-          if (val > bestPercent) bestPercent = val;
-        }
       });
-
-      // If we found a new largest percent
-      if (bestPercent > 0) {
-        if (!progressHeading.style.display) {
-          progressHeading.style.display = 'block';
-        }
-        if (!progressMeter.style.display) {
-          progressMeter.style.display = 'block';
-        }
-        if (bestPercent > 100) bestPercent = 100;
-        progressHeading.textContent = `Progress: ${bestPercent.toFixed(1)}%`;
-        progressMeter.value = bestPercent.toFixed(1);
-      }
     }
 
     // On each chunk
@@ -2140,31 +2258,41 @@ body {
     // success
     window.api.receive('demucs-success', (msg) => {
       parseDemucsOutput();
-      if (!progressHeading.style.display) {
-        progressHeading.style.display = 'block';
+
+      if (chosenModel === 'htdemucs_ft') {
+        // If stage4 isn't done, force it to 100
+        if (!stageComplete[3]) {
+          stageComplete[3] = true;
+          setStagePercent(3, 100);
+        }
+        // Show final success in the label only
+        refinementLabel.textContent = 'Splitting Process Completed';
+        refinementLabel.classList.remove('text-white', 'text-red');
+        refinementLabel.classList.add('text-green');
+
+      } else {
+        filteredLineDiv.classList.remove('text-white', 'text-red');
+        filteredLineDiv.classList.add('text-green');
+        filteredLineDiv.textContent = 'Splitting Process Completed';
       }
-      progressHeading.textContent = 'Progress: 100.0%';
-      progressMeter.style.display = 'block';
-      progressMeter.value = 100;
-
-      const successDiv = document.createElement('div');
-      successDiv.style.color = 'green';
-      successDiv.textContent = `SUCCESS: ${msg}`;
-      demucsConsole.appendChild(successDiv);
-      demucsConsole.scrollTop = demucsConsole.scrollHeight;
-
-      // Also show "Splitting Process Completed"
-      filteredLineDiv.textContent = 'Splitting Process Completed';
     });
 
     // error
     window.api.receive('demucs-error', (errMsg) => {
       parseDemucsOutput();
-      const errDiv = document.createElement('div');
-      errDiv.style.color = 'red';
-      errDiv.textContent = `ERROR: ${errMsg}`;
-      demucsConsole.appendChild(errDiv);
-      demucsConsole.scrollTop = demucsConsole.scrollHeight;
+      if (chosenModel === 'htdemucs_ft') {
+        refinementLabel.classList.remove('text-white', 'text-green');
+        refinementLabel.classList.add('text-red');
+        refinementLabel.textContent = 'Refinement encountered an ERROR. Check logs.';
+
+        stage4progress.classList.remove('text-white', 'text-orange', 'text-green');
+        stage4progress.classList.add('text-red');
+        stage4progress.textContent = `ERROR: ${errMsg}`;
+      } else {
+        filteredLineDiv.textContent = `ERROR: ${errMsg}`;
+        filteredLineDiv.classList.remove('text-white', 'text-green');
+        filteredLineDiv.classList.add('text-red');
+      }
     });
 
     // Tailing => last line
@@ -3448,12 +3576,1849 @@ ipcMain.on('start-tail-log', (evt) => {
 });
 ```
 
+### src\extension\CamStemExtension\index.html
+
+``` 
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CamStem Audio Check</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      padding: 10px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input[type="text"], select {
+      width: 100%;
+      padding: 6px;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto; /* so we can scroll if logs are huge */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>CamStem Audio Check</h1>
+
+    <label for="demucsPath">Path to demucs-cxfreeze:</label>
+    <input
+      type="text"
+      id="demucsPath"
+      placeholder="e.g. C:\Program Files\CamStem\demucs-cxfreeze.exe"
+    />
+
+    <label for="modelDir">Path to Models Folder:</label>
+    <input
+      type="text"
+      id="modelDir"
+      placeholder="e.g. F:\Project-CamStem\Models"
+    />
+
+    <label for="modelSelect">Model:</label>
+    <select id="modelSelect">
+      <option value="htdemucs">Default 4-Stem (htdemucs)</option>
+      <option value="htdemucs_ft">High Quality 4-Stem (htdemucs_ft)</option>
+      <option value="htdemucs_6s">Experimental 6-Stem (htdemucs_6s)</option>
+    </select>
+
+    <label for="qualitySelect">MP3 Quality (2=highest, 7=lowest):</label>
+    <select id="qualitySelect">
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4" selected>4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+    </select>
+
+    <button id="savePathBtn">Save Paths</button>
+    <button id="checkAudioBtn">Check Audio</button>
+    <button id="splitAudioBtn">Split Audio + Import</button>
+
+    <!-- NEW BUTTON -->
+    <button id="placeStemsBtn">Place Stems on Timeline</button>
+
+    <div id="status"></div>
+  </div>
+
+  <!-- Adobe CEP + Our Scripts -->
+  <script src="CSInterface.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>
+```
+
+### src\extension\CamStemExtension\CSInterface.js
+
+``` 
+/**************************************************************************************************
+*
+* ADOBE SYSTEMS INCORPORATED
+* Copyright 2013 Adobe Systems Incorporated
+* All Rights Reserved.
+*
+* NOTICE:  Adobe permits you to use, modify, and distribute this file in accordance with the
+* terms of the Adobe license agreement accompanying it.  If you have received this file from a
+* source other than Adobe, then your use, modification, or distribution of it requires the prior
+* written permission of Adobe.
+*
+**************************************************************************************************/
+
+/** CSInterface - v8.0.0 */
+
+/**
+ * Stores constants for the window types supported by the CSXS infrastructure.
+ */
+function CSXSWindowType()
+{
+}
+
+/** Constant for the CSXS window type Panel. */
+CSXSWindowType._PANEL = "Panel";
+
+/** Constant for the CSXS window type Modeless. */
+CSXSWindowType._MODELESS = "Modeless";
+
+/** Constant for the CSXS window type ModalDialog. */
+CSXSWindowType._MODAL_DIALOG = "ModalDialog";
+
+/** EvalScript error message */
+EvalScript_ErrMessage = "EvalScript error.";
+
+/**
+ * @class Version
+ * Defines a version number with major, minor, micro, and special
+ * components. The major, minor and micro values are numeric; the special
+ * value can be any string.
+ *
+ * @param major   The major version component, a positive integer up to nine digits long.
+ * @param minor   The minor version component, a positive integer up to nine digits long.
+ * @param micro   The micro version component, a positive integer up to nine digits long.
+ * @param special The special version component, an arbitrary string.
+ *
+ * @return A new \c Version object.
+ */
+function Version(major, minor, micro, special)
+{
+    this.major = major;
+    this.minor = minor;
+    this.micro = micro;
+    this.special = special;
+}
+
+/**
+ * The maximum value allowed for a numeric version component.
+ * This reflects the maximum value allowed in PlugPlug and the manifest schema.
+ */
+Version.MAX_NUM = 999999999;
+
+/**
+ * @class VersionBound
+ * Defines a boundary for a version range, which associates a \c Version object
+ * with a flag for whether it is an inclusive or exclusive boundary.
+ *
+ * @param version   The \c #Version object.
+ * @param inclusive True if this boundary is inclusive, false if it is exclusive.
+ *
+ * @return A new \c VersionBound object.
+ */
+function VersionBound(version, inclusive)
+{
+    this.version = version;
+    this.inclusive = inclusive;
+}
+
+/**
+ * @class VersionRange
+ * Defines a range of versions using a lower boundary and optional upper boundary.
+ *
+ * @param lowerBound The \c #VersionBound object.
+ * @param upperBound The \c #VersionBound object, or null for a range with no upper boundary.
+ *
+ * @return A new \c VersionRange object.
+ */
+function VersionRange(lowerBound, upperBound)
+{
+    this.lowerBound = lowerBound;
+    this.upperBound = upperBound;
+}
+
+/**
+ * @class Runtime
+ * Represents a runtime related to the CEP infrastructure.
+ * Extensions can declare dependencies on particular
+ * CEP runtime versions in the extension manifest.
+ *
+ * @param name    The runtime name.
+ * @param version A \c #VersionRange object that defines a range of valid versions.
+ *
+ * @return A new \c Runtime object.
+ */
+function Runtime(name, versionRange)
+{
+    this.name = name;
+    this.versionRange = versionRange;
+}
+
+/**
+* @class Extension
+* Encapsulates a CEP-based extension to an Adobe application.
+*
+* @param id              The unique identifier of this extension.
+* @param name            The localizable display name of this extension.
+* @param mainPath        The path of the "index.html" file.
+* @param basePath        The base path of this extension.
+* @param windowType          The window type of the main window of this extension.
+                 Valid values are defined by \c #CSXSWindowType.
+* @param width           The default width in pixels of the main window of this extension.
+* @param height          The default height in pixels of the main window of this extension.
+* @param minWidth        The minimum width in pixels of the main window of this extension.
+* @param minHeight       The minimum height in pixels of the main window of this extension.
+* @param maxWidth        The maximum width in pixels of the main window of this extension.
+* @param maxHeight       The maximum height in pixels of the main window of this extension.
+* @param defaultExtensionDataXml The extension data contained in the default \c ExtensionDispatchInfo section of the extension manifest.
+* @param specialExtensionDataXml The extension data contained in the application-specific \c ExtensionDispatchInfo section of the extension manifest.
+* @param requiredRuntimeList     An array of \c Runtime objects for runtimes required by this extension.
+* @param isAutoVisible       True if this extension is visible on loading.
+* @param isPluginExtension   True if this extension has been deployed in the Plugins folder of the host application.
+*
+* @return A new \c Extension object.
+*/
+function Extension(id, name, mainPath, basePath, windowType, width, height, minWidth, minHeight, maxWidth, maxHeight,
+                   defaultExtensionDataXml, specialExtensionDataXml, requiredRuntimeList, isAutoVisible, isPluginExtension)
+{
+    this.id = id;
+    this.name = name;
+    this.mainPath = mainPath;
+    this.basePath = basePath;
+    this.windowType = windowType;
+    this.width = width;
+    this.height = height;
+    this.minWidth = minWidth;
+    this.minHeight = minHeight;
+    this.maxWidth = maxWidth;
+    this.maxHeight = maxHeight;
+    this.defaultExtensionDataXml = defaultExtensionDataXml;
+    this.specialExtensionDataXml = specialExtensionDataXml;
+    this.requiredRuntimeList = requiredRuntimeList;
+    this.isAutoVisible = isAutoVisible;
+    this.isPluginExtension = isPluginExtension;
+}
+
+/**
+ * @class CSEvent
+ * A standard JavaScript event, the base class for CEP events.
+ *
+ * @param type        The name of the event type.
+ * @param scope       The scope of event, can be "GLOBAL" or "APPLICATION".
+ * @param appId       The unique identifier of the application that generated the event.
+ * @param extensionId     The unique identifier of the extension that generated the event.
+ *
+ * @return A new \c CSEvent object
+ */
+function CSEvent(type, scope, appId, extensionId)
+{
+    this.type = type;
+    this.scope = scope;
+    this.appId = appId;
+    this.extensionId = extensionId;
+}
+
+/** Event-specific data. */
+CSEvent.prototype.data = "";
+
+/**
+ * @class SystemPath
+ * Stores operating-system-specific location constants for use in the
+ * \c #CSInterface.getSystemPath() method.
+ * @return A new \c SystemPath object.
+ */
+function SystemPath()
+{
+}
+
+/** The path to user data.  */
+SystemPath.USER_DATA = "userData";
+
+/** The path to common files for Adobe applications.  */
+SystemPath.COMMON_FILES = "commonFiles";
+
+/** The path to the user's default document folder.  */
+SystemPath.MY_DOCUMENTS = "myDocuments";
+
+/** @deprecated. Use \c #SystemPath.Extension.  */
+SystemPath.APPLICATION = "application";
+
+/** The path to current extension.  */
+SystemPath.EXTENSION = "extension";
+
+/** The path to hosting application's executable.  */
+SystemPath.HOST_APPLICATION = "hostApplication";
+
+/**
+ * @class ColorType
+ * Stores color-type constants.
+ */
+function ColorType()
+{
+}
+
+/** RGB color type. */
+ColorType.RGB = "rgb";
+
+/** Gradient color type. */
+ColorType.GRADIENT = "gradient";
+
+/** Null color type. */
+ColorType.NONE = "none";
+
+/**
+ * @class RGBColor
+ * Stores an RGB color with red, green, blue, and alpha values.
+ * All values are in the range [0.0 to 255.0]. Invalid numeric values are
+ * converted to numbers within this range.
+ *
+ * @param red   The red value, in the range [0.0 to 255.0].
+ * @param green The green value, in the range [0.0 to 255.0].
+ * @param blue  The blue value, in the range [0.0 to 255.0].
+ * @param alpha The alpha (transparency) value, in the range [0.0 to 255.0].
+ *      The default, 255.0, means that the color is fully opaque.
+ *
+ * @return A new RGBColor object.
+ */
+function RGBColor(red, green, blue, alpha)
+{
+    this.red = red;
+    this.green = green;
+    this.blue = blue;
+    this.alpha = alpha;
+}
+
+/**
+ * @class Direction
+ * A point value  in which the y component is 0 and the x component
+ * is positive or negative for a right or left direction,
+ * or the x component is 0 and the y component is positive or negative for
+ * an up or down direction.
+ *
+ * @param x     The horizontal component of the point.
+ * @param y     The vertical component of the point.
+ *
+ * @return A new \c Direction object.
+ */
+function Direction(x, y)
+{
+    this.x = x;
+    this.y = y;
+}
+
+/**
+ * @class GradientStop
+ * Stores gradient stop information.
+ *
+ * @param offset   The offset of the gradient stop, in the range [0.0 to 1.0].
+ * @param rgbColor The color of the gradient at this point, an \c #RGBColor object.
+ *
+ * @return GradientStop object.
+ */
+function GradientStop(offset, rgbColor)
+{
+    this.offset = offset;
+    this.rgbColor = rgbColor;
+}
+
+/**
+ * @class GradientColor
+ * Stores gradient color information.
+ *
+ * @param type          The gradient type, must be "linear".
+ * @param direction     A \c #Direction object for the direction of the gradient
+                (up, down, right, or left).
+ * @param numStops          The number of stops in the gradient.
+ * @param gradientStopList  An array of \c #GradientStop objects.
+ *
+ * @return A new \c GradientColor object.
+ */
+function GradientColor(type, direction, numStops, arrGradientStop)
+{
+    this.type = type;
+    this.direction = direction;
+    this.numStops = numStops;
+    this.arrGradientStop = arrGradientStop;
+}
+
+/**
+ * @class UIColor
+ * Stores color information, including the type, anti-alias level, and specific color
+ * values in a color object of an appropriate type.
+ *
+ * @param type          The color type, 1 for "rgb" and 2 for "gradient".
+                The supplied color object must correspond to this type.
+ * @param antialiasLevel    The anti-alias level constant.
+ * @param color         A \c #RGBColor or \c #GradientColor object containing specific color information.
+ *
+ * @return A new \c UIColor object.
+ */
+function UIColor(type, antialiasLevel, color)
+{
+    this.type = type;
+    this.antialiasLevel = antialiasLevel;
+    this.color = color;
+}
+
+/**
+ * @class AppSkinInfo
+ * Stores window-skin properties, such as color and font. All color parameter values are \c #UIColor objects except that systemHighlightColor is \c #RGBColor object.
+ *
+ * @param baseFontFamily        The base font family of the application.
+ * @param baseFontSize          The base font size of the application.
+ * @param appBarBackgroundColor     The application bar background color.
+ * @param panelBackgroundColor      The background color of the extension panel.
+ * @param appBarBackgroundColorSRGB     The application bar background color, as sRGB.
+ * @param panelBackgroundColorSRGB      The background color of the extension panel, as sRGB.
+ * @param systemHighlightColor          The highlight color of the extension panel, if provided by the host application. Otherwise, the operating-system highlight color. 
+ *
+ * @return AppSkinInfo object.
+ */
+function AppSkinInfo(baseFontFamily, baseFontSize, appBarBackgroundColor, panelBackgroundColor, appBarBackgroundColorSRGB, panelBackgroundColorSRGB, systemHighlightColor)
+{
+    this.baseFontFamily = baseFontFamily;
+    this.baseFontSize = baseFontSize;
+    this.appBarBackgroundColor = appBarBackgroundColor;
+    this.panelBackgroundColor = panelBackgroundColor;
+    this.appBarBackgroundColorSRGB = appBarBackgroundColorSRGB;
+    this.panelBackgroundColorSRGB = panelBackgroundColorSRGB;
+    this.systemHighlightColor = systemHighlightColor;
+}
+
+/**
+ * @class HostEnvironment
+ * Stores information about the environment in which the extension is loaded.
+ *
+ * @param appName   The application's name.
+ * @param appVersion    The application's version.
+ * @param appLocale The application's current license locale.
+ * @param appUILocale   The application's current UI locale.
+ * @param appId     The application's unique identifier.
+ * @param isAppOnline  True if the application is currently online.
+ * @param appSkinInfo   An \c #AppSkinInfo object containing the application's default color and font styles.
+ *
+ * @return A new \c HostEnvironment object.
+ */
+function HostEnvironment(appName, appVersion, appLocale, appUILocale, appId, isAppOnline, appSkinInfo)
+{
+    this.appName = appName;
+    this.appVersion = appVersion;
+    this.appLocale = appLocale;
+    this.appUILocale = appUILocale;
+    this.appId = appId;
+    this.isAppOnline = isAppOnline;
+    this.appSkinInfo = appSkinInfo;
+}
+
+/**
+ * @class HostCapabilities
+ * Stores information about the host capabilities.
+ *
+ * @param EXTENDED_PANEL_MENU True if the application supports panel menu.
+ * @param EXTENDED_PANEL_ICONS True if the application supports panel icon.
+ * @param DELEGATE_APE_ENGINE True if the application supports delegated APE engine.
+ * @param SUPPORT_HTML_EXTENSIONS True if the application supports HTML extensions.
+ * @param DISABLE_FLASH_EXTENSIONS True if the application disables FLASH extensions.
+ *
+ * @return A new \c HostCapabilities object.
+ */
+function HostCapabilities(EXTENDED_PANEL_MENU, EXTENDED_PANEL_ICONS, DELEGATE_APE_ENGINE, SUPPORT_HTML_EXTENSIONS, DISABLE_FLASH_EXTENSIONS)
+{
+    this.EXTENDED_PANEL_MENU = EXTENDED_PANEL_MENU;
+    this.EXTENDED_PANEL_ICONS = EXTENDED_PANEL_ICONS;
+    this.DELEGATE_APE_ENGINE = DELEGATE_APE_ENGINE;
+    this.SUPPORT_HTML_EXTENSIONS = SUPPORT_HTML_EXTENSIONS;
+	this.DISABLE_FLASH_EXTENSIONS = DISABLE_FLASH_EXTENSIONS; // Since 5.0.0
+}
+
+/**
+ * @class ApiVersion
+ * Stores current api version.
+ *
+ * Since 4.2.0
+ *
+ * @param major  The major version
+ * @param minor  The minor version.
+ * @param micro  The micro version.
+ *
+ * @return ApiVersion object.
+ */
+function ApiVersion(major, minor, micro)
+{
+    this.major = major;
+    this.minor = minor;
+    this.micro = micro;
+}
+
+/**
+ * @class MenuItemStatus
+ * Stores flyout menu item status
+ *
+ * Since 5.2.0
+ *
+ * @param menuItemLabel  The menu item label.
+ * @param enabled  		 True if user wants to enable the menu item.
+ * @param checked  		 True if user wants to check the menu item.
+ *
+ * @return MenuItemStatus object.
+ */
+function MenuItemStatus(menuItemLabel, enabled, checked)
+{
+	this.menuItemLabel = menuItemLabel;
+	this.enabled = enabled;
+	this.checked = checked;
+}
+
+/**
+ * @class ContextMenuItemStatus
+ * Stores the status of the context menu item.
+ *
+ * Since 5.2.0
+ *
+ * @param menuItemID     The menu item id.
+ * @param enabled  		 True if user wants to enable the menu item.
+ * @param checked  		 True if user wants to check the menu item.
+ *
+ * @return MenuItemStatus object.
+ */
+function ContextMenuItemStatus(menuItemID, enabled, checked)
+{
+	this.menuItemID = menuItemID;
+	this.enabled = enabled;
+	this.checked = checked;
+}
+//------------------------------ CSInterface ----------------------------------
+
+/**
+ * @class CSInterface
+ * This is the entry point to the CEP extensibility infrastructure.
+ * Instantiate this object and use it to:
+ * <ul>
+ * <li>Access information about the host application in which an extension is running</li>
+ * <li>Launch an extension</li>
+ * <li>Register interest in event notifications, and dispatch events</li>
+ * </ul>
+ *
+ * @return A new \c CSInterface object
+ */
+function CSInterface()
+{
+}
+
+/**
+ * User can add this event listener to handle native application theme color changes.
+ * Callback function gives extensions ability to fine-tune their theme color after the
+ * global theme color has been changed.
+ * The callback function should be like below:
+ *
+ * @example
+ * // event is a CSEvent object, but user can ignore it.
+ * function OnAppThemeColorChanged(event)
+ * {
+ *    // Should get a latest HostEnvironment object from application.
+ *    var skinInfo = JSON.parse(window.__adobe_cep__.getHostEnvironment()).appSkinInfo;
+ *    // Gets the style information such as color info from the skinInfo,
+ *    // and redraw all UI controls of your extension according to the style info.
+ * }
+ */
+CSInterface.THEME_COLOR_CHANGED_EVENT = "com.adobe.csxs.events.ThemeColorChanged";
+
+/** The host environment data object. */
+CSInterface.prototype.hostEnvironment = window.__adobe_cep__ ? JSON.parse(window.__adobe_cep__.getHostEnvironment()) : null;
+
+/** Retrieves information about the host environment in which the
+ *  extension is currently running.
+ *
+ *   @return A \c #HostEnvironment object.
+ */
+CSInterface.prototype.getHostEnvironment = function()
+{
+    this.hostEnvironment = JSON.parse(window.__adobe_cep__.getHostEnvironment());
+    return this.hostEnvironment;
+};
+
+/** Closes this extension. */
+CSInterface.prototype.closeExtension = function()
+{
+    window.__adobe_cep__.closeExtension();
+};
+
+/**
+ * Retrieves a path for which a constant is defined in the system.
+ *
+ * @param pathType The path-type constant defined in \c #SystemPath ,
+ *
+ * @return The platform-specific system path string.
+ */
+CSInterface.prototype.getSystemPath = function(pathType)
+{
+    var path = decodeURI(window.__adobe_cep__.getSystemPath(pathType));
+    var OSVersion = this.getOSInformation();
+    if (OSVersion.indexOf("Windows") >= 0)
+    {
+      path = path.replace("file:///", "");
+    }
+    else if (OSVersion.indexOf("Mac") >= 0)
+    {
+      path = path.replace("file://", "");
+    }
+    return path;
+};
+
+/**
+ * Evaluates a JavaScript script, which can use the JavaScript DOM
+ * of the host application.
+ *
+ * @param script    The JavaScript script.
+ * @param callback  Optional. A callback function that receives the result of execution.
+ *          If execution fails, the callback function receives the error message \c EvalScript_ErrMessage.
+ */
+CSInterface.prototype.evalScript = function(script, callback)
+{
+    if(callback === null || callback === undefined)
+    {
+        callback = function(result){};
+    }
+    window.__adobe_cep__.evalScript(script, callback);
+};
+
+/**
+ * Retrieves the unique identifier of the application.
+ * in which the extension is currently running.
+ *
+ * @return The unique ID string.
+ */
+CSInterface.prototype.getApplicationID = function()
+{
+    var appId = this.hostEnvironment.appId;
+    return appId;
+};
+
+/**
+ * Retrieves host capability information for the application
+ * in which the extension is currently running.
+ *
+ * @return A \c #HostCapabilities object.
+ */
+CSInterface.prototype.getHostCapabilities = function()
+{
+    var hostCapabilities = JSON.parse(window.__adobe_cep__.getHostCapabilities() );
+    return hostCapabilities;
+};
+
+/**
+ * Triggers a CEP event programmatically. Yoy can use it to dispatch
+ * an event of a predefined type, or of a type you have defined.
+ *
+ * @param event A \c CSEvent object.
+ */
+CSInterface.prototype.dispatchEvent = function(event)
+{
+    if (typeof event.data == "object")
+    {
+        event.data = JSON.stringify(event.data);
+    }
+
+    window.__adobe_cep__.dispatchEvent(event);
+};
+
+/**
+ * Registers an interest in a CEP event of a particular type, and
+ * assigns an event handler.
+ * The event infrastructure notifies your extension when events of this type occur,
+ * passing the event object to the registered handler function.
+ *
+ * @param type     The name of the event type of interest.
+ * @param listener The JavaScript handler function or method.
+ * @param obj      Optional, the object containing the handler method, if any.
+ *         Default is null.
+ */
+CSInterface.prototype.addEventListener = function(type, listener, obj)
+{
+    window.__adobe_cep__.addEventListener(type, listener, obj);
+};
+
+/**
+ * Removes a registered event listener.
+ *
+ * @param type      The name of the event type of interest.
+ * @param listener  The JavaScript handler function or method that was registered.
+ * @param obj       Optional, the object containing the handler method, if any.
+ *          Default is null.
+ */
+CSInterface.prototype.removeEventListener = function(type, listener, obj)
+{
+    window.__adobe_cep__.removeEventListener(type, listener, obj);
+};
+
+/**
+ * Loads and launches another extension, or activates the extension if it is already loaded.
+ *
+ * @param extensionId       The extension's unique identifier.
+ * @param startupParams     Not currently used, pass "".
+ *
+ * @example
+ * To launch the extension "help" with ID "HLP" from this extension, call:
+ * <code>requestOpenExtension("HLP", ""); </code>
+ *
+ */
+CSInterface.prototype.requestOpenExtension = function(extensionId, params)
+{
+    window.__adobe_cep__.requestOpenExtension(extensionId, params);
+};
+
+/**
+ * Retrieves the list of extensions currently loaded in the current host application.
+ * The extension list is initialized once, and remains the same during the lifetime
+ * of the CEP session.
+ *
+ * @param extensionIds  Optional, an array of unique identifiers for extensions of interest.
+ *          If omitted, retrieves data for all extensions.
+ *
+ * @return Zero or more \c #Extension objects.
+ */
+CSInterface.prototype.getExtensions = function(extensionIds)
+{
+    var extensionIdsStr = JSON.stringify(extensionIds);
+    var extensionsStr = window.__adobe_cep__.getExtensions(extensionIdsStr);
+
+    var extensions = JSON.parse(extensionsStr);
+    return extensions;
+};
+
+/**
+ * Retrieves network-related preferences.
+ *
+ * @return A JavaScript object containing network preferences.
+ */
+CSInterface.prototype.getNetworkPreferences = function()
+{
+    var result = window.__adobe_cep__.getNetworkPreferences();
+    var networkPre = JSON.parse(result);
+
+    return networkPre;
+};
+
+/**
+ * Initializes the resource bundle for this extension with property values
+ * for the current application and locale.
+ * To support multiple locales, you must define a property file for each locale,
+ * containing keyed display-string values for that locale.
+ * See localization documentation for Extension Builder and related products.
+ *
+ * Keys can be in the
+ * form <code>key.value="localized string"</code>, for use in HTML text elements.
+ * For example, in this input element, the localized \c key.value string is displayed
+ * instead of the empty \c value string:
+ *
+ * <code><input type="submit" value="" data-locale="key"/></code>
+ *
+ * @return An object containing the resource bundle information.
+ */
+CSInterface.prototype.initResourceBundle = function()
+{
+    var resourceBundle = JSON.parse(window.__adobe_cep__.initResourceBundle());
+    var resElms = document.querySelectorAll('[data-locale]');
+    for (var n = 0; n < resElms.length; n++)
+    {
+       var resEl = resElms[n];
+       // Get the resource key from the element.
+       var resKey = resEl.getAttribute('data-locale');
+       if (resKey)
+       {
+           // Get all the resources that start with the key.
+           for (var key in resourceBundle)
+           {
+               if (key.indexOf(resKey) === 0)
+               {
+                   var resValue = resourceBundle[key];
+                   if (key.length == resKey.length)
+                   {
+                        resEl.innerHTML = resValue;
+                   }
+                   else if ('.' == key.charAt(resKey.length))
+                   {
+                        var attrKey = key.substring(resKey.length + 1);
+                        resEl[attrKey] = resValue;
+                   }
+               }
+           }
+       }
+    }
+    return resourceBundle;
+};
+
+/**
+ * Writes installation information to a file.
+ *
+ * @return The file path.
+ */
+CSInterface.prototype.dumpInstallationInfo = function()
+{
+    return window.__adobe_cep__.dumpInstallationInfo();
+};
+
+/**
+ * Retrieves version information for the current Operating System,
+ * See http://www.useragentstring.com/pages/Chrome/ for Chrome \c navigator.userAgent values.
+ *
+ * @return A string containing the OS version, or "unknown Operation System".
+ * If user customizes the User Agent by setting CEF command parameter "--user-agent", only
+ * "Mac OS X" or "Windows" will be returned. 
+ */
+CSInterface.prototype.getOSInformation = function()
+{
+    var userAgent = navigator.userAgent;
+
+    if ((navigator.platform == "Win32") || (navigator.platform == "Windows"))
+    {
+        var winVersion = "Windows";
+        var winBit = "";
+        if (userAgent.indexOf("Windows") > -1)
+        {
+            if (userAgent.indexOf("Windows NT 5.0") > -1)
+            {
+                winVersion = "Windows 2000";
+            }
+            else if (userAgent.indexOf("Windows NT 5.1") > -1)
+            {
+                winVersion = "Windows XP";
+            }
+            else if (userAgent.indexOf("Windows NT 5.2") > -1)
+            {
+                winVersion = "Windows Server 2003";
+            }
+            else if (userAgent.indexOf("Windows NT 6.0") > -1)
+            {
+                winVersion = "Windows Vista";
+            }
+            else if (userAgent.indexOf("Windows NT 6.1") > -1)
+            {
+                winVersion = "Windows 7";
+            }
+            else if (userAgent.indexOf("Windows NT 6.2") > -1)
+            {
+                winVersion = "Windows 8";
+            }
+            else if (userAgent.indexOf("Windows NT 6.3") > -1)
+            {
+                winVersion = "Windows 8.1";
+            }
+            else if (userAgent.indexOf("Windows NT 10") > -1)
+            {
+                winVersion = "Windows 10";
+            }
+
+            if (userAgent.indexOf("WOW64") > -1 || userAgent.indexOf("Win64") > -1)
+            {
+                winBit = " 64-bit";
+            }
+            else
+            {
+                winBit = " 32-bit";			
+            }
+        }
+
+        return winVersion + winBit;
+    }
+    else if ((navigator.platform == "MacIntel") || (navigator.platform == "Macintosh"))
+    {        
+        var result = "Mac OS X";
+
+        if (userAgent.indexOf("Mac OS X") > -1)
+        {
+            result = userAgent.substring(userAgent.indexOf("Mac OS X"), userAgent.indexOf(")"));
+            result = result.replace(/_/g, ".");
+        }
+
+        return result;        
+    }
+
+    return "Unknown Operation System";
+};
+
+/**
+ * Opens a page in the default system browser.
+ *
+ * Since 4.2.0
+ *
+ * @param url  The URL of the page/file to open, or the email address.
+ * Must use HTTP/HTTPS/file/mailto protocol. For example:
+ *   "http://www.adobe.com"
+ *   "https://github.com"
+ *   "file:///C:/log.txt"
+ *   "mailto:test@adobe.com"
+ *
+ * @return One of these error codes:\n
+ *      <ul>\n
+ *          <li>NO_ERROR - 0</li>\n
+ *          <li>ERR_UNKNOWN - 1</li>\n
+ *          <li>ERR_INVALID_PARAMS - 2</li>\n
+ *          <li>ERR_INVALID_URL - 201</li>\n
+ *      </ul>\n
+ */
+CSInterface.prototype.openURLInDefaultBrowser = function(url)
+{
+    return cep.util.openURLInDefaultBrowser(url);
+};
+
+/**
+ * Retrieves extension ID.
+ *
+ * Since 4.2.0
+ *
+ * @return extension ID.
+ */
+CSInterface.prototype.getExtensionID = function()
+{
+     return window.__adobe_cep__.getExtensionId();
+};
+
+/**
+ * Retrieves the scale factor of screen. 
+ * On Windows platform, the value of scale factor might be different from operating system's scale factor,
+ * since host application may use its self-defined scale factor.
+ *
+ * Since 4.2.0
+ *
+ * @return One of the following float number.
+ *      <ul>\n
+ *          <li> -1.0 when error occurs </li>\n
+ *          <li> 1.0 means normal screen </li>\n
+ *          <li> >1.0 means HiDPI screen </li>\n
+ *      </ul>\n
+ */
+CSInterface.prototype.getScaleFactor = function()
+{
+    return window.__adobe_cep__.getScaleFactor();
+};
+
+/**
+ * Set a handler to detect any changes of scale factor. This only works on Mac.
+ *
+ * Since 4.2.0
+ *
+ * @param handler   The function to be called when scale factor is changed.
+ *
+ */
+CSInterface.prototype.setScaleFactorChangedHandler = function(handler)
+{
+    window.__adobe_cep__.setScaleFactorChangedHandler(handler);
+};
+
+/**
+ * Retrieves current API version.
+ *
+ * Since 4.2.0
+ *
+ * @return ApiVersion object.
+ *
+ */
+CSInterface.prototype.getCurrentApiVersion = function()
+{
+    var apiVersion = JSON.parse(window.__adobe_cep__.getCurrentApiVersion());
+    return apiVersion;
+};
+
+/**
+ * Set panel flyout menu by an XML.
+ *
+ * Since 5.2.0
+ *
+ * Register a callback function for "com.adobe.csxs.events.flyoutMenuClicked" to get notified when a 
+ * menu item is clicked.
+ * The "data" attribute of event is an object which contains "menuId" and "menuName" attributes. 
+ *
+ * Register callback functions for "com.adobe.csxs.events.flyoutMenuOpened" and "com.adobe.csxs.events.flyoutMenuClosed"
+ * respectively to get notified when flyout menu is opened or closed.
+ *
+ * @param menu     A XML string which describes menu structure.
+ * An example menu XML:
+ * <Menu>
+ *   <MenuItem Id="menuItemId1" Label="TestExample1" Enabled="true" Checked="false"/>
+ *   <MenuItem Label="TestExample2">
+ *     <MenuItem Label="TestExample2-1" >
+ *       <MenuItem Label="TestExample2-1-1" Enabled="false" Checked="true"/>
+ *     </MenuItem>
+ *     <MenuItem Label="TestExample2-2" Enabled="true" Checked="true"/>
+ *   </MenuItem>
+ *   <MenuItem Label="---" />
+ *   <MenuItem Label="TestExample3" Enabled="false" Checked="false"/>
+ * </Menu>
+ *
+ */
+CSInterface.prototype.setPanelFlyoutMenu = function(menu)
+{
+    if ("string" != typeof menu)
+    {
+        return;	
+    }
+
+	window.__adobe_cep__.invokeSync("setPanelFlyoutMenu", menu);
+};
+
+/**
+ * Updates a menu item in the extension window's flyout menu, by setting the enabled
+ * and selection status.
+ *  
+ * Since 5.2.0
+ *
+ * @param menuItemLabel	The menu item label. 
+ * @param enabled		True to enable the item, false to disable it (gray it out).
+ * @param checked		True to select the item, false to deselect it.
+ *
+ * @return false when the host application does not support this functionality (HostCapabilities.EXTENDED_PANEL_MENU is false). 
+ *         Fails silently if menu label is invalid.
+ *
+ * @see HostCapabilities.EXTENDED_PANEL_MENU
+ */
+CSInterface.prototype.updatePanelMenuItem = function(menuItemLabel, enabled, checked)
+{
+	var ret = false;
+	if (this.getHostCapabilities().EXTENDED_PANEL_MENU) 
+	{
+		var itemStatus = new MenuItemStatus(menuItemLabel, enabled, checked);
+		ret = window.__adobe_cep__.invokeSync("updatePanelMenuItem", JSON.stringify(itemStatus));
+	}
+	return ret;
+};
+
+
+/**
+ * Set context menu by XML string.
+ *
+ * Since 5.2.0
+ *
+ * There are a number of conventions used to communicate what type of menu item to create and how it should be handled.
+ * - an item without menu ID or menu name is disabled and is not shown.
+ * - if the item name is "---" (three hyphens) then it is treated as a separator. The menu ID in this case will always be NULL.
+ * - Checkable attribute takes precedence over Checked attribute.
+ * - a PNG icon. For optimal display results please supply a 16 x 16px icon as larger dimensions will increase the size of the menu item. 
+     The Chrome extension contextMenus API was taken as a reference. 
+     https://developer.chrome.com/extensions/contextMenus
+ * - the items with icons and checkable items cannot coexist on the same menu level. The former take precedences over the latter.
+ *
+ * @param menu      A XML string which describes menu structure.
+ * @param callback  The callback function which is called when a menu item is clicked. The only parameter is the returned ID of clicked menu item.
+ *
+ * @description An example menu XML:
+ * <Menu>
+ *   <MenuItem Id="menuItemId1" Label="TestExample1" Enabled="true" Checkable="true" Checked="false" Icon="./image/small_16X16.png"/>
+ *   <MenuItem Id="menuItemId2" Label="TestExample2">
+ *     <MenuItem Id="menuItemId2-1" Label="TestExample2-1" >
+ *       <MenuItem Id="menuItemId2-1-1" Label="TestExample2-1-1" Enabled="false" Checkable="true" Checked="true"/>
+ *     </MenuItem>
+ *     <MenuItem Id="menuItemId2-2" Label="TestExample2-2" Enabled="true" Checkable="true" Checked="true"/>
+ *   </MenuItem>
+ *   <MenuItem Label="---" />
+ *   <MenuItem Id="menuItemId3" Label="TestExample3" Enabled="false" Checkable="true" Checked="false"/>
+ * </Menu>
+ */
+CSInterface.prototype.setContextMenu = function(menu, callback)
+{
+    if ("string" != typeof menu)
+    {
+        return;
+    }
+    
+	window.__adobe_cep__.invokeAsync("setContextMenu", menu, callback);
+};
+
+/**
+ * Set context menu by JSON string.
+ *
+ * Since 6.0.0
+ *
+ * There are a number of conventions used to communicate what type of menu item to create and how it should be handled.
+ * - an item without menu ID or menu name is disabled and is not shown.
+ * - if the item label is "---" (three hyphens) then it is treated as a separator. The menu ID in this case will always be NULL.
+ * - Checkable attribute takes precedence over Checked attribute.
+ * - a PNG icon. For optimal display results please supply a 16 x 16px icon as larger dimensions will increase the size of the menu item. 
+     The Chrome extension contextMenus API was taken as a reference.
+ * - the items with icons and checkable items cannot coexist on the same menu level. The former take precedences over the latter.
+     https://developer.chrome.com/extensions/contextMenus
+ *
+ * @param menu      A JSON string which describes menu structure.
+ * @param callback  The callback function which is called when a menu item is clicked. The only parameter is the returned ID of clicked menu item.
+ *
+ * @description An example menu JSON:
+ *
+ * { 
+ *      "menu": [
+ *          {
+ *              "id": "menuItemId1",
+ *              "label": "testExample1",
+ *              "enabled": true,
+ *              "checkable": true,
+ *              "checked": false,
+ *              "icon": "./image/small_16X16.png"
+ *          },
+ *          {
+ *              "id": "menuItemId2",
+ *              "label": "testExample2",
+ *              "menu": [
+ *                  {
+ *                      "id": "menuItemId2-1",
+ *                      "label": "testExample2-1",
+ *                      "menu": [
+ *                          {
+ *                              "id": "menuItemId2-1-1",
+ *                              "label": "testExample2-1-1",
+ *                              "enabled": false,
+ *                              "checkable": true,
+ *                              "checked": true
+ *                          }
+ *                      ]
+ *                  },
+ *                  {
+ *                      "id": "menuItemId2-2",
+ *                      "label": "testExample2-2",
+ *                      "enabled": true,
+ *                      "checkable": true,
+ *                      "checked": true
+ *                  }
+ *              ]
+ *          },
+ *          {
+ *              "label": "---"
+ *          },
+ *          {
+ *              "id": "menuItemId3",
+ *              "label": "testExample3",
+ *              "enabled": false,
+ *              "checkable": true,
+ *              "checked": false
+ *          }
+ *      ]
+ *  }
+ *
+ */
+CSInterface.prototype.setContextMenuByJSON = function(menu, callback)
+{
+    if ("string" != typeof menu)
+    {
+        return;	
+    }
+    
+	window.__adobe_cep__.invokeAsync("setContextMenuByJSON", menu, callback);
+};
+
+/**
+ * Updates a context menu item by setting the enabled and selection status.
+ *  
+ * Since 5.2.0
+ *
+ * @param menuItemID	The menu item ID. 
+ * @param enabled		True to enable the item, false to disable it (gray it out).
+ * @param checked		True to select the item, false to deselect it.
+ */
+CSInterface.prototype.updateContextMenuItem = function(menuItemID, enabled, checked)
+{
+	var itemStatus = new ContextMenuItemStatus(menuItemID, enabled, checked);
+	ret = window.__adobe_cep__.invokeSync("updateContextMenuItem", JSON.stringify(itemStatus));
+};
+
+/**
+ * Get the visibility status of an extension window. 
+ *  
+ * Since 6.0.0
+ *
+ * @return true if the extension window is visible; false if the extension window is hidden.
+ */
+CSInterface.prototype.isWindowVisible = function()
+{
+	return window.__adobe_cep__.invokeSync("isWindowVisible", "");
+};
+
+/**
+ * Resize extension's content to the specified dimensions.
+ * 1. Works with modal and modeless extensions in all Adobe products.
+ * 2. Extension's manifest min/max size constraints apply and take precedence. 
+ * 3. For panel extensions
+ *    3.1 This works in all Adobe products except:
+ *        * Premiere Pro
+ *        * Prelude
+ *        * After Effects
+ *    3.2 When the panel is in certain states (especially when being docked),
+ *        it will not change to the desired dimensions even when the
+ *        specified size satisfies min/max constraints.
+ *
+ * Since 6.0.0
+ *
+ * @param width  The new width
+ * @param height The new height
+ */
+CSInterface.prototype.resizeContent = function(width, height)
+{
+    window.__adobe_cep__.resizeContent(width, height);
+};
+
+/**
+ * Register the invalid certificate callback for an extension. 
+ * This callback will be triggered when the extension tries to access the web site that contains the invalid certificate on the main frame.
+ * But if the extension does not call this function and tries to access the web site containing the invalid certificate, a default error page will be shown.
+ *  
+ * Since 6.1.0
+ *
+ * @param callback the callback function
+ */
+CSInterface.prototype.registerInvalidCertificateCallback = function(callback)
+{
+    return window.__adobe_cep__.registerInvalidCertificateCallback(callback);
+};
+
+/**
+ * Register an interest in some key events to prevent them from being sent to the host application.
+ *
+ * This function works with modeless extensions and panel extensions. 
+ * Generally all the key events will be sent to the host application for these two extensions if the current focused element
+ * is not text input or dropdown,
+ * If you want to intercept some key events and want them to be handled in the extension, please call this function
+ * in advance to prevent them being sent to the host application.
+ *
+ * Since 6.1.0
+ *
+ * @param keyEventsInterest      A JSON string describing those key events you are interested in. A null object or
+                                 an empty string will lead to removing the interest
+ *
+ * This JSON string should be an array, each object has following keys:
+ *
+ * keyCode:  [Required] represents an OS system dependent virtual key code identifying
+ *           the unmodified value of the pressed key.
+ * ctrlKey:  [optional] a Boolean that indicates if the control key was pressed (true) or not (false) when the event occurred.
+ * altKey:   [optional] a Boolean that indicates if the alt key was pressed (true) or not (false) when the event occurred.
+ * shiftKey: [optional] a Boolean that indicates if the shift key was pressed (true) or not (false) when the event occurred.
+ * metaKey:  [optional] (Mac Only) a Boolean that indicates if the Meta key was pressed (true) or not (false) when the event occurred.
+ *                      On Macintosh keyboards, this is the command key. To detect Windows key on Windows, please use keyCode instead.
+ * An example JSON string:
+ *
+ * [
+ *     {
+ *         "keyCode": 48
+ *     },
+ *     {
+ *         "keyCode": 123,
+ *         "ctrlKey": true
+ *     },
+ *     {
+ *         "keyCode": 123,
+ *         "ctrlKey": true,
+ *         "metaKey": true
+ *     }
+ * ]
+ *
+ */
+CSInterface.prototype.registerKeyEventsInterest = function(keyEventsInterest)
+{
+    return window.__adobe_cep__.registerKeyEventsInterest(keyEventsInterest);
+};
+
+/**
+ * Set the title of the extension window. 
+ * This function works with modal and modeless extensions in all Adobe products, and panel extensions in Photoshop, InDesign, InCopy, Illustrator, Flash Pro and Dreamweaver.
+ *
+ * Since 6.1.0
+ *
+ * @param title The window title.
+ */
+CSInterface.prototype.setWindowTitle = function(title)
+{
+    window.__adobe_cep__.invokeSync("setWindowTitle", title);
+};
+
+/**
+ * Get the title of the extension window. 
+ * This function works with modal and modeless extensions in all Adobe products, and panel extensions in Photoshop, InDesign, InCopy, Illustrator, Flash Pro and Dreamweaver.
+ *
+ * Since 6.1.0
+ *
+ * @return The window title.
+ */
+CSInterface.prototype.getWindowTitle = function()
+{
+    return window.__adobe_cep__.invokeSync("getWindowTitle", "");
+};
+```
+
+### src\extension\CamStemExtension\index.js
+
+``` 
+(function() {
+  var csInterface = new CSInterface();
+
+  window.addEventListener("load", function() {
+    var demucsPathInput = document.getElementById("demucsPath");
+    var modelDirInput   = document.getElementById("modelDir");
+    var modelSelect     = document.getElementById("modelSelect");
+    var qualitySelect   = document.getElementById("qualitySelect");
+
+    var saveBtn         = document.getElementById("savePathBtn");
+    var checkAudioBtn   = document.getElementById("checkAudioBtn");
+    var splitAudioBtn   = document.getElementById("splitAudioBtn");
+    // NEW:
+    var placeStemsBtn   = document.getElementById("placeStemsBtn");
+
+    var statusEl        = document.getElementById("status");
+
+    // Restore user paths from localStorage
+    var savedDemucsPath = localStorage.getItem("camstem_demucsPath");
+    if (savedDemucsPath) demucsPathInput.value = savedDemucsPath;
+
+    var savedModelDir   = localStorage.getItem("camstem_modelDir");
+    if (savedModelDir)   modelDirInput.value   = savedModelDir;
+
+    // 1) Save Paths
+    saveBtn.addEventListener("click", function() {
+      var dp = demucsPathInput.value.trim();
+      var md = modelDirInput.value.trim();
+      if (!dp || !md) {
+        statusEl.textContent = "[JS] Please fill in demucs path + model folder.\n";
+        return;
+      }
+      localStorage.setItem("camstem_demucsPath", dp);
+      localStorage.setItem("camstem_modelDir",   md);
+      statusEl.textContent = "[JS] Saved paths:\n" + dp + "\n" + md;
+    });
+
+    // 2) Check Audio
+    checkAudioBtn.addEventListener("click", function() {
+      statusEl.textContent = "[JS] Checking audio selection...\n";
+      csInterface.evalScript("checkAudioSelection()", function(resultStr) {
+        statusEl.textContent += "[JS] => checkAudioSelection returned:\n" + resultStr + "\n";
+      });
+    });
+
+    // 3) Split Audio + Import
+    splitAudioBtn.addEventListener("click", function() {
+      var demucsExe = demucsPathInput.value.trim();
+      var modelDir  = modelDirInput.value.trim();
+
+      if (!demucsExe || !modelDir) {
+        statusEl.textContent = "[JS] Must provide demucs path + model folder.\n";
+        return;
+      }
+
+      // 1) Check audio
+      statusEl.textContent = "[JS] Checking selected audio...\n";
+      csInterface.evalScript("checkAudioSelection()", function(resultStr) {
+        statusEl.textContent += "[JS] => checkAudioSelection returned:\n" + resultStr + "\n";
+
+        // parse out "Selected Audio Path:"
+        var lines = resultStr.split("\n");
+        var inputAudio = null;
+        for (var i = 0; i < lines.length; i++) {
+          if (lines[i].indexOf("Selected Audio Path:") >= 0) {
+            inputAudio = lines[i].replace("Selected Audio Path:", "").trim();
+          }
+        }
+        if (!inputAudio) {
+          statusEl.textContent += "[JS] => No valid selected audio found. Aborting.\n";
+          return;
+        }
+
+        // 2) spawn Demucs
+        var chosenModel = modelSelect.value;
+        var chosenPreset = qualitySelect.value;
+
+        statusEl.textContent += "[JS] => Found inputAudio = " + inputAudio + "\n";
+        spawnDemucs(demucsExe, modelDir, chosenModel, chosenPreset, inputAudio);
+      });
+    });
+
+    // 4) Place Stems on Timeline (MANUAL)
+    placeStemsBtn.addEventListener("click", function() {
+      statusEl.textContent += "\n[JS] => Placing stems on timeline manually...\n";
+      csInterface.evalScript("placeStemsManually()", function(resp) {
+        statusEl.textContent += "[JS] => placeStemsManually returned:\n" + resp + "\n";
+      });
+    });
+
+    /**
+     * spawnDemucs(...) => runs demucs-cxfreeze + final subfolder => importStemsFolder
+     */
+    function spawnDemucs(demucsExe, modelFolder, modelName, mp3Preset, inputPath) {
+      statusEl.textContent += "[JS] spawnDemucs called...\n";
+
+      let childProc;
+      try {
+        childProc = require("child_process");
+      } catch (e) {
+        statusEl.textContent += "[JS] Node not available => " + e + "\n";
+        return;
+      }
+
+      function getDir(fp) {
+        let idx = Math.max(fp.lastIndexOf("\\"), fp.lastIndexOf("/"));
+        if (idx < 0) return fp;
+        return fp.substring(0, idx);
+      }
+      function getBaseName(filePath) {
+        let slash = Math.max(filePath.lastIndexOf("\\"), filePath.lastIndexOf("/"));
+        let justFile = (slash < 0) ? filePath : filePath.substring(slash + 1);
+        let dot = justFile.lastIndexOf(".");
+        if (dot < 0) return justFile;
+        return justFile.substring(0, dot);
+      }
+
+      let outputDir = getDir(inputPath);
+      let args = [
+        "-n", modelName,
+        "--repo", modelFolder,
+        "-o", outputDir,
+        "--mp3",
+        "--mp3-preset", mp3Preset,
+        inputPath
+      ];
+
+      statusEl.textContent += "[JS] DEMUCS CMD:\n" + demucsExe + " " + args.join(" ") + "\n";
+
+      let logBuffer = "";
+      let finalBaseFolder = null;
+      let trackBaseName   = null;
+
+      const proc = childProc.spawn(demucsExe, args, { cwd: outputDir });
+
+      proc.stdout.on("data", (chunk) => {
+        let txt = chunk.toString();
+        statusEl.textContent += txt; // show raw output
+
+        // parse lines
+        logBuffer += txt;
+        let lines = logBuffer.split(/\r?\n/);
+        logBuffer = lines.pop(); // leftover partial
+        for (let ln of lines) {
+          parseDemucsLine(ln);
+        }
+      });
+
+      proc.stderr.on("data", (chunk) => {
+        statusEl.textContent += "\n[ERR] " + chunk.toString();
+      });
+
+      proc.on("close", (code) => {
+        if (logBuffer.trim()) {
+          parseDemucsLine(logBuffer);
+          logBuffer = "";
+        }
+
+        statusEl.textContent += `\n[JS] Demucs exited with code ${code}\n`;
+
+        if (code === 0 && finalBaseFolder && trackBaseName) {
+          let subFolder = finalBaseFolder.replace(/\\/g, "/") + "/" + trackBaseName;
+          statusEl.textContent += `[JS] => subFolder = ${subFolder}\n`;
+
+          let escaped = subFolder
+            .replace(/\\/g, "\\\\")
+            .replace(/"/g, '\\"')
+            .replace(/'/g, "\\'")
+            .replace(/\r/g, "")
+            .replace(/\n/g, "");
+
+          //  => importStemsFolder
+          let jsxCall = `importStemsFolder("${escaped}", "${modelName}")`;
+          statusEl.textContent += "[JS] => evalScript => " + jsxCall + "\n";
+          csInterface.evalScript(jsxCall, function(resp) {
+            statusEl.textContent += "\n[JS] importStemsFolder response:\n" + resp + "\n";
+            statusEl.textContent += "[JS] Now click 'Place Stems on Timeline' if you want to place them.\n";
+          });
+        } else if (code === 0) {
+          statusEl.textContent += "[JS] Demucs finished but we couldn't parse finalBaseFolder or trackBaseName.\n";
+        }
+      });
+
+      proc.on("error", (err) => {
+        statusEl.textContent += "\n[JS] spawn error => " + err.toString() + "\n";
+      });
+
+      function parseDemucsLine(line) {
+        let stIdx = line.indexOf("Separated tracks will be stored in");
+        if (stIdx >= 0) {
+          let partial = line.substring(stIdx);
+          let splitted = partial.split("in");
+          if (splitted.length > 1) {
+            let folder = splitted[1].trim();
+            let dotPos = folder.indexOf(".");
+            if (dotPos >= 0) {
+              folder = folder.substring(0, dotPos);
+            }
+            finalBaseFolder = folder.trim();
+            statusEl.textContent += `\n[JS] => finalBaseFolder: ${finalBaseFolder}\n`;
+          }
+        }
+
+        let sepIdx = line.indexOf("Separating track ");
+        if (sepIdx >= 0) {
+          let partial2 = line.substring(sepIdx + "Separating track ".length).trim();
+          trackBaseName = getBaseName(partial2);
+          statusEl.textContent += `\n[JS] => trackBaseName: ${trackBaseName}\n`;
+        }
+      }
+    }
+  });
+})();
+```
+
+### src\extension\CamStemExtension\index.jsx
+
+``` 
+/**
+ * index.jsx
+ *
+ * 1) checkAudioSelection() - find selected clip in timeline
+ * 2) importStemsFolder(folderPath, modelName) - import only (no timeline)
+ *    - Removes duplicates so "drums.mp3" won't appear multiple times
+ * 3) placeStemsManually() - user calls this manually after import
+ *    - Finds the bin "CamStem - ???"
+ *    - Looks for "drums.mp3", "bass.mp3", etc.
+ *    - Places them on the timeline, removes original clip
+ */
+
+//--------------------------------------
+// A) Utility: arrayContains
+//--------------------------------------
+function arrayContains(arr, val) {
+    if (!arr || !val) return false;
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i] === val) {
+            return true;
+        }
+    }
+    return false;
+}
+
+//--------------------------------------
+// B) Utility: getBaseName(filePath)
+//--------------------------------------
+function getBaseName(filePath) {
+    if (!filePath) return "";
+    var slashPos = Math.max(filePath.lastIndexOf("\\"), filePath.lastIndexOf("/"));
+    var justFile = (slashPos < 0) ? filePath : filePath.substring(slashPos + 1);
+    var dotPos   = justFile.lastIndexOf(".");
+    if (dotPos < 0) return justFile;
+    return justFile.substring(0, dotPos);
+}
+
+//--------------------------------------
+// C) checkAudioSelection()
+//--------------------------------------
+function checkAudioSelection() {
+    var log = [];
+    log.push("=== checkAudioSelection() ===");
+
+    if (!app.project) {
+        return "No app.project? Maybe no project open?";
+    }
+    var seq = app.project.activeSequence;
+    if (!seq) {
+        return "No active sequence found.";
+    }
+
+    log.push("Found an active sequence.");
+    log.push("Checking " + seq.audioTracks.numTracks + " audio tracks for a selected clip...");
+
+    var foundClip = null;
+    for (var t = 0; t < seq.audioTracks.numTracks; t++) {
+        var track = seq.audioTracks[t];
+        log.push("  Track #" + t + " => " + track.clips.numItems + " clip(s)");
+        for (var c = 0; c < track.clips.numItems; c++) {
+            var clip = track.clips[c];
+            if (clip.isSelected()) {
+                foundClip = clip;
+                log.push("    Found SELECTED clip at track " + t + ", clip " + c);
+                break;
+            }
+        }
+        if (foundClip) break;
+    }
+
+    if (!foundClip) {
+        log.push("No audio clip is selected in the timeline. Exiting.");
+        return log.join("\n");
+    }
+    if (!foundClip.projectItem) {
+        log.push("Selected clip has no projectItem? Exiting.");
+        return log.join("\n");
+    }
+    if (!foundClip.projectItem.canChangeMediaPath()) {
+        log.push("Cannot retrieve file path (canChangeMediaPath=false). Exiting.");
+        return log.join("\n");
+    }
+
+    var filePath = foundClip.projectItem.getMediaPath();
+    if (!filePath) {
+        log.push("No file path found for the selected clip. Exiting.");
+        return log.join("\n");
+    }
+
+    log.push("Selected Audio Path: " + filePath);
+    return log.join("\n");
+}
+
+//--------------------------------------
+// D) importStemsFolder(folderPath, modelName)
+//--------------------------------------
+function importStemsFolder(folderPath, modelName) {
+    var logs = [];
+    logs.push("=== importStemsFolder() ===");
+    logs.push("folderPath = " + folderPath);
+    logs.push("modelName = " + modelName);
+
+    try {
+        if (!folderPath) {
+            logs.push("Error: folderPath is empty/null.");
+            return logs.join("\n");
+        }
+
+        logs.push("Recursively gathering .mp3/.wav from => " + folderPath);
+
+        // 1) gather .mp3/.wav
+        var allAudioFiles = [];
+
+        function gatherFilesRecursively(fld) {
+            if (!fld.exists) return;
+            var items = fld.getFiles();
+            if (!items) return;
+            for (var i = 0; i < items.length; i++) {
+                var it = items[i];
+                if (it instanceof File) {
+                    var nm = it.name.toLowerCase();
+                    if (nm.length >= 4) {
+                        var ext = nm.substring(nm.length - 4);
+                        if (ext === ".mp3" || ext === ".wav") {
+                            logs.push("[Audio] " + it.fsName);
+                            allAudioFiles.push(it.fsName);
+                            continue;
+                        }
+                    }
+                    logs.push("[Skip] " + it.fsName);
+                } else if (it instanceof Folder) {
+                    gatherFilesRecursively(it);
+                }
+            }
+        }
+
+        var rootFolder = new Folder(folderPath);
+        if (!rootFolder.exists) {
+            logs.push("Folder doesn't exist => " + rootFolder.fsName);
+            return logs.join("\n");
+        }
+        gatherFilesRecursively(rootFolder);
+
+        if (allAudioFiles.length === 0) {
+            logs.push("No audio files found => done.");
+            return logs.join("\n");
+        }
+
+        logs.push("Found " + allAudioFiles.length + " file(s). Importing at project root...");
+
+        // 2) create new bin
+        var newBinName = "CamStem - " + rootFolder.name;
+        logs.push("Creating bin => " + newBinName);
+        var newBin = app.project.rootItem.createBin(newBinName);
+        if (!newBin) {
+            logs.push("Couldn't create bin => older PPro?");
+            return logs.join("\n");
+        }
+        logs.push("Created bin => " + newBin.name);
+
+        // 3) import them
+        var importRes = app.project.importFiles(allAudioFiles);
+        logs.push("importFiles => type: " + (typeof importRes));
+
+        // 4) move them into new bin
+        var newlyImported = [];
+
+        function moveMatches(folderItem) {
+            for (var c = 0; c < folderItem.children.numItems; c++) {
+                var child = folderItem.children[c];
+                if (child && typeof child.getMediaPath === "function") {
+                    var mp = child.getMediaPath();
+                    // see if mp is in allAudioFiles
+                    for (var i = 0; i < allAudioFiles.length; i++) {
+                        if (allAudioFiles[i] === mp) {
+                            // move child into bin if not already
+                            if (child.parent !== newBin && typeof child.moveBin === "function") {
+                                logs.push("Moving => " + child.name + " => " + newBin.name);
+                                child.moveBin(newBin);
+                            }
+                            newlyImported.push(child);
+
+                            // remove from array so we don't match it again => fix duplicates
+                            allAudioFiles.splice(i, 1);
+                            break; // done with this child
+                        }
+                    }
+                }
+                if (child && child.children && child.children.numItems > 0) {
+                    moveMatches(child);
+                }
+            }
+        }
+
+        logs.push("Scanning entire project for newly imported stems...");
+        moveMatches(app.project.rootItem);
+
+        logs.push("Found " + newlyImported.length + " newly imported item(s).");
+        logs.push("Import completed. No timeline action taken yet.");
+
+    } catch (ex) {
+        logs.push("Exception => " + ex.toString());
+    }
+
+    return logs.join("\n");
+}
+
+//--------------------------------------
+// E) placeStemsManually()
+//--------------------------------------
+function placeStemsManually() {
+    var logs = [];
+    logs.push("=== placeStemsManually() ===");
+
+    var seq = app.project.activeSequence;
+    if (!seq) {
+        logs.push("No active sequence => cannot place stems.");
+        return logs.join("\n");
+    }
+
+    // 1) find the original selected clip
+    var foundClip = null;
+    for (var t = 0; t < seq.audioTracks.numTracks; t++) {
+        var trackObj = seq.audioTracks[t];
+        for (var c = 0; c < trackObj.clips.numItems; c++) {
+            var clip = trackObj.clips[c];
+            if (clip.isSelected()) {
+                foundClip = clip;
+                break;
+            }
+        }
+        if (foundClip) break;
+    }
+    if (!foundClip) {
+        logs.push("No selected clip => won't remove anything, continuing...");
+    }
+
+    // 2) Find the last "CamStem - ..." bin
+    var lastCamStemBin = null;
+    for (var i = app.project.rootItem.children.numItems - 1; i >= 0; i--) {
+        var item = app.project.rootItem.children[i];
+        if (item && item.type === 2 && item.name.indexOf("CamStem - ") === 0) {
+            lastCamStemBin = item;
+            break;
+        }
+    }
+    if (!lastCamStemBin) {
+        logs.push("Did not find a 'CamStem - xxx' bin. Exiting.");
+        return logs.join("\n");
+    }
+
+    logs.push("Using bin => " + lastCamStemBin.name);
+
+    // 3) gather items from that bin
+    var allProjectItems = [];
+    function gatherAllItems(bin) {
+        for (var c = 0; c < bin.children.numItems; c++) {
+            var child = bin.children[c];
+            allProjectItems.push(child);
+            if (child && child.type === 2 && child.children && child.children.numItems > 0) {
+                gatherAllItems(child);
+            }
+        }
+    }
+    gatherAllItems(lastCamStemBin);
+
+    logs.push("Found " + allProjectItems.length + " item(s) in that bin.");
+
+    // 4) place items named exactly "drums.mp3", "bass.mp3", etc.
+    var desiredNames = ["drums.mp3", "bass.mp3", "vocals.mp3", "other.mp3", "piano.mp3", "guitar.mp3"];
+    var matchedItems = [];
+
+    for (var d = 0; d < desiredNames.length; d++) {
+        var wantName = desiredNames[d].toLowerCase();
+        var foundItem = null;
+        for (var c = 0; c < allProjectItems.length; c++) {
+            var pItem = allProjectItems[c];
+            if (!pItem || !pItem.name) continue;
+
+            var pName = pItem.name.toLowerCase();
+            if (pName === wantName) {
+                foundItem = pItem;
+                break;
+            }
+        }
+        if (foundItem) {
+            matchedItems.push(foundItem);
+            logs.push("Matched => " + wantName + " => " + foundItem.name);
+        } else {
+            logs.push("No project item matched => " + wantName);
+        }
+    }
+
+    if (matchedItems.length === 0) {
+        logs.push("No stems matched => done.");
+        return logs.join("\n");
+    }
+
+    // 5) ensure enough tracks
+    while (seq.audioTracks.numTracks < matchedItems.length) {
+        seq.audioTracks.addTrack();
+        logs.push("Created a new audio track => now have " + seq.audioTracks.numTracks);
+    }
+
+    // 6) insert each matched item
+    var insertTime = foundClip ? foundClip.start : 0.0;
+    for (var idx = 0; idx < matchedItems.length; idx++) {
+        var trackObj2 = seq.audioTracks[idx];
+        var pItem2    = matchedItems[idx];
+        logs.push("Placing " + pItem2.name + " on track #" + idx);
+        trackObj2.insertClip(pItem2, insertTime);
+    }
+
+    // 7) remove original
+    if (foundClip && typeof foundClip.remove === "function") {
+        foundClip.remove(false, false);
+        logs.push("Removed the originally selected clip from the timeline.");
+    }
+
+    logs.push("All stems placed on timeline successfully.");
+    return logs.join("\n");
+}
+```
+
 ### package.json
 
 ``` 
 {
   "name": "CamStem",
-  "version": "0.9.9",
+  "version": "1.0.0",
   "description": "CamStem",
   "main": "src/backend/main.js",
   "scripts": {

@@ -1,5 +1,6 @@
 src/assets
 src/frontend
+src/extension
 
 src/backend/main.js
 src/backend/preload.js
@@ -17,3 +18,4 @@ Models
 .env
 
 .github
+
