@@ -109,9 +109,7 @@
       <!-- For fine-tuned model: 4 lines, each either "Queued" or a percentage, turning green at 100% -->
       <div id="fineTunedStages" style="display:none; margin-top:1rem;">
         <!-- We'll use this label for final messages such as "Creating Files..." or "Splitting Process Completed" -->
-        <p id="refinementLabel" class="text-white" style="font-weight:bold; margin-bottom:0.5rem;">
-          <!-- No "Split Process Initializing" here for fine-tuned. We'll skip that. -->
-        </p>
+        <p id="refinementLabel" class="text-white" style="font-weight:bold; margin-bottom:0.5rem;"></p>
         <div>
           <strong class="text-white">Refinement #1:</strong>
           <span id="stage1progress" class="text-white">Starting…</span>
@@ -166,6 +164,26 @@
   </div>
 
   <script>
+    /**************************************************************************************
+     * Function: showDesktopNotification
+     **************************************************************************************/
+    function showDesktopNotification(title, body) {
+      if (!("Notification" in window)) {
+        console.log("This browser does not support desktop notification.");
+        return;
+      }
+      if (Notification.permission === "granted") {
+        new Notification(title, { body });
+      }
+      else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then((perm) => {
+          if (perm === "granted") {
+            new Notification(title, { body });
+          }
+        });
+      }
+    }
+
     /**************************************************************************************
      * GLOBAL / STEP Variables
      **************************************************************************************/
@@ -320,15 +338,20 @@
     /**************************************************************************************
      * STEP 3: Output Directory
      **************************************************************************************/
-    browseOutputBtn.addEventListener('click', () => {
-      window.api.selectPath('directory', (selectedFolder) => {
+    // Reverted logic to original style
+    browseOutputBtn.addEventListener('click', async () => {
+      try {
+        const selectedFolder = await window.api.selectPath('directory');
         if (selectedFolder) {
           chosenOutputPath = selectedFolder;
           browseOutputBtn.textContent = 'Output Selected ✓';
           step3ContinueBtn.classList.remove('btn-disabled');
         }
-      });
+      } catch (err) {
+        console.error('Error selecting folder:', err);
+      }
     });
+
     step3ContinueBtn.addEventListener('click', () => {
       if (!chosenOutputPath) {
         showWarning('Please select an output directory first.');
@@ -382,19 +405,15 @@
         allStagesDone = false;
         stageComplete = [false, false, false, false];
 
-        // refinementLabel is blank initially (no "Split Process Initializing")
         refinementLabel.textContent = '';
         refinementLabel.className = 'text-white';
 
         stage1progress.textContent = 'Starting…';
         stage1progress.className = 'text-white';
-
         stage2progress.textContent = 'Queued';
         stage2progress.className = 'text-orange';
-
         stage3progress.textContent = 'Queued';
         stage3progress.className = 'text-orange';
-
         stage4progress.textContent = 'Queued';
         stage4progress.className = 'text-orange';
 
@@ -425,7 +444,6 @@
     function updateFineTunedProgress(percentVal) {
       if (currentStage > 4) return;
 
-      // If current stage is done, but we see "0%" => next stage
       if (percentVal === 0 && stageComplete[currentStage - 1]) {
         currentStage++;
         if (currentStage > 4) return;
@@ -437,7 +455,6 @@
 
       if (percentVal === 100 && !stageComplete[currentStage - 1]) {
         stageComplete[currentStage - 1] = true;
-        // If stage #4 => "Creating Files" in the label
         if (currentStage === 4) {
           refinementLabel.textContent = 'Creating Files - This May Take a Moment';
         }
@@ -511,16 +528,17 @@
           stageComplete[3] = true;
           setStagePercent(3, 100);
         }
-        // Show final success in the label only
         refinementLabel.textContent = 'Splitting Process Completed';
         refinementLabel.classList.remove('text-white', 'text-red');
         refinementLabel.classList.add('text-green');
-
       } else {
         filteredLineDiv.classList.remove('text-white', 'text-red');
         filteredLineDiv.classList.add('text-green');
         filteredLineDiv.textContent = 'Splitting Process Completed';
       }
+
+      // Desktop notification on success
+      showDesktopNotification("CamStem", "Your stems have finished splitting!");
     });
 
     // error

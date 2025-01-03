@@ -70,7 +70,6 @@ this is my project, please read the contents and understand its functionality. o
 
   `extension`
   ==============
-    - `CamStemExtension.zip`
 
     `CamStemExtension`
     ==============
@@ -4082,14 +4081,14 @@ ipcMain.handle('getDefaultExtensionsFolder', () => {
 
 ``` 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>CamStem</title>
   <style>
     /* 
-      1) Full-screen gradient background, remove scrollbars, 
-         and white text for contrast 
+      1) Full-screen gradient background, remove scrollbars,
+         and white text for contrast.
     */
     html, body {
       margin: 0;
@@ -4099,96 +4098,137 @@ ipcMain.handle('getDefaultExtensionsFolder', () => {
       background: linear-gradient(135deg, #003554, #051923) no-repeat center center fixed;
       background-size: cover;
       color: #ffffff;
-      overflow: hidden; /* remove scrollbars on the entire page */
-    }
 
-    /* Optionally remove scrollbar track in WebKit browsers */
+      /* Allow scrolling but hide scrollbars (all browsers) */
+      overflow: auto; 
+      scrollbar-width: none;            /* Firefox */
+      -ms-overflow-style: none;         /* IE/Edge */
+    }
+    /* Hide scrollbars in WebKit browsers */
     ::-webkit-scrollbar {
       width: 0px;
       background: transparent;
     }
+    ::-webkit-scrollbar-thumb {
+      background: transparent;
+    }
 
     /* 
-      2) A container with a translucent background, 
-         centered horizontally, with rounded corners.
+      2) .container
+         Now uses width: 90%, max-width: 700px so it can scale as the panel is resized.
     */
     .container {
-      max-width: 600px;
-      margin: 2rem auto;
+      width: 90%;
+      max-width: 700px;
+      margin: 1rem auto;
       background-color: rgba(255, 255, 255, 0.07);
       border-radius: 12px;
-      padding: 1.5rem;
+      padding: 1rem;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-
-    /* Title styling */
-    h1 {
-      font-size: 1.3rem;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-
-    /* Progress Bar Container + label */
-    .progress-container {
-      position: relative;
-      background-color: rgba(255, 255, 255, 0.2);
-      border-radius: 6px;
-      width: 100%;
-      height: 20px;
-      overflow: hidden;
-      margin-bottom: 1rem;
-    }
-    .progress-bar {
-      height: 100%;
-      width: 0%;
-      background-color: #28a745; /* green */
-      transition: width 0.4s ease;
-    }
-    .progress-label {
-      position: absolute;
-      left: 50%;
-      top: 0;
-      transform: translateX(-50%);
-      color: #ffffff;
-      font-weight: bold;
-      line-height: 20px;
-      pointer-events: none;
-      font-size: 0.8rem;
-      white-space: nowrap;
-    }
-
-    /* Labels for inputs */
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-
-    /* Inputs & selects with a translucent background, 
-       full width, border radius, etc. */
-    input[type="text"],
-    select {
-      width: 100%;
-      padding: 6px;
-      margin-top: 4px;
+      min-height: 650px; 
       box-sizing: border-box;
+      display: grid;
+      grid-template-rows: auto auto auto auto; /* Title row, main row, logs row, message row */
+      grid-template-columns: 1fr 1fr;    
+      gap: 8px;
+    }
+
+    /* Title row + settings button in row 1, columns 1..2 */
+    .title-row {
+      grid-row: 1;
+      grid-column: 1 / span 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Left column (row2,col1): Model + Quality */
+    .left-column {
+      grid-row: 2;
+      grid-column: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      padding: 0.75rem;
+    }
+
+    /* Right column (row2,col2): 2 small buttons side by side */
+    .right-column {
+      grid-row: 2;
+      grid-column: 2;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      padding: 0.75rem;
+      gap: 0.5rem;
+    }
+    .buttons-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* Row 3 => #status => col 1..2 */
+    .status-area {
+      grid-row: 3;
+      grid-column: 1 / span 2;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      background-color: rgba(255,255,255,0.1);
+      padding: 0.5rem;
+      max-height: 160px;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    #status {
+      white-space: pre-wrap;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    /* Row 4 => #userMessage => col 1..2 */
+    .message-area {
+      grid-row: 4;
+      grid-column: 1 / span 2;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0.5rem;
       border: 1px solid rgba(255,255,255,0.2);
       border-radius: 6px;
       background-color: rgba(255,255,255,0.15);
-      color: #ffffff;
-      outline: none;
+    }
+    #userMessage {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #ffcc00; /* a bright color to stand out */
     }
 
-    /* Buttons with a slight hover effect */
+    /* Basic button styling */
     button {
-      margin-top: 10px;
-      padding: 8px 14px;
+      padding: 10px 14px;
       cursor: pointer;
       border: none;
       border-radius: 6px;
       background-color: #006494;
       color: #ffffff;
       transition: background-color 0.3s, transform 0.3s;
+      font-size: 1rem;
     }
     button:hover {
       background-color: #004a66;
@@ -4196,188 +4236,255 @@ ipcMain.handle('getDefaultExtensionsFolder', () => {
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 
-    /* Scrollable logs area */
-    #status {
-      margin-top: 10px;
-      font-weight: bold;
-      white-space: pre-wrap;
-      max-height: 400px;
-      overflow-y: auto; /* make logs scrollable */
+    /* Basic input + select styling */
+    input[type="text"] {
+      width: 100%;
+      padding: 6px;
+      box-sizing: border-box;
+      margin: 0.25rem 0 0.5rem 0;
       border: 1px solid rgba(255,255,255,0.2);
       border-radius: 6px;
-      padding: 8px;
-      background-color: rgba(255,255,255,0.1);
+      background-color: rgba(0,0,0,0.4);
+      color: #ffffff;
+      outline: none;
+      font-size: 0.9rem;
     }
 
-    /* Hide the "Check Audio" button visually, 
-       but keep it in the DOM for your JS references */
-    #checkAudioBtn {
-      display: none;
+    select {
+      width: 100%;
+      padding: 6px;
+      box-sizing: border-box;
+      margin: 0.25rem 0 0.5rem 0;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      background-color: rgba(0,0,0,0.4); /* So text is visible */
+      color: #ffffff;
+      outline: none;
+      font-size: 0.9rem;
+      appearance: none; /* Hide default arrow if you want a custom arrow or none */
+    }
+
+    label {
+      margin-top: 0.25rem;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+
+    /* The modals all share .modal-overlay style, hidden by default */
+    .modal-overlay {
+      display: none; /* shown via JS */
+      position: fixed;
+      z-index: 999;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0,0,0,0.6);
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* The generic .modal-content style */
+    .modal-content {
+      background-color: #003554;
+      margin: auto;
+      padding: 1.5rem;
+      border-radius: 8px;
+      width: 400px;
+      color: #fff;
+      text-align: left;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .confirm-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    /* The close button style reused for "Cancel" or "Close" */
+    .close-btn,
+    .cancel-btn {
+      background-color: #8B0000;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+    .close-btn:hover,
+    .cancel-btn:hover {
+      background-color: #690000;
+      transform: translateY(-3px);
+    }
+    .proceed-btn {
+      background-color: #006494;
+      color: #fff;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+    .proceed-btn:hover {
+      background-color: #004a66;
+      transform: translateY(-3px);
+    }
+
+    /* A grey-out overlay (for when user is not authenticated) */
+    #greyOutOverlay {
+      display: none; /* toggled on/off via JS */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(128,128,128,0.7);
+      z-index: 1000; /* above everything else */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2rem;
+      color: #ffffff;
+      text-align: center;
+      padding: 1rem;
+      box-sizing: border-box;
+      flex-direction: column;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Title -->
-    <h1>CamStem</h1>
 
-    <!-- Progress Bar -->
-    <div class="progress-container">
-      <div class="progress-bar" id="progressBar"></div>
-      <div class="progress-label" id="progressLabel">0%</div>
+  <!-- Grey-out overlay for unauthenticated users -->
+  <div id="greyOutOverlay">
+    <p style="font-weight: bold;">
+      You must enter and validate an Auth Key in Settings to use this extension.
+    </p>
+    <!-- New button that opens settings modal -->
+    <button id="goToSettingsBtn" style="margin-top: 1rem; background-color: #8B0000;">
+      Open Settings
+    </button>
+  </div>
+
+  <!-- ============== Settings Modal ============== -->
+  <div id="settingsModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 style="margin-top:0;">Settings</h2>
+      <label for="demucsPath">Path to Process:</label>
+      <input
+        type="text"
+        id="demucsPath"
+        placeholder="e.g. C:\\Program Files\\CamStem\\demucs-cxfreeze.exe"
+      />
+      <label for="modelDir">Assets Path:</label>
+      <input
+        type="text"
+        id="modelDir"
+        placeholder="e.g. F:\\Project-CamStem\\Models"
+      />
+
+      <!-- Auth Key -->
+      <label for="authKeyInput">Auth Key:</label>
+      <input
+        type="text"
+        id="authKeyInput"
+        placeholder="Enter your Auth Key"
+      />
+
+      <!-- Buttons: keep 'Save Settings' plus new ones -->
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
+        <button id="savePathBtn">Save Settings</button>
+        <button id="validateKeyBtn">Validate Key</button>
+        <button id="removeKeyBtn">Remove Key</button>
+        <button id="closeSettings" class="close-btn" style="margin-left:auto;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== Split Audio Confirm Modal ============== -->
+  <div id="splitConfirmModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>Split Audio Confirmation</h3>
+      <p>
+        If you ever get a Premiere Pro error when splitting stems, just click "OK" in that error box, 
+        delete the newly created folder in Premiere, and then click "Split Audio" again. 
+        It’s a known Premiere Pro bug that occasionally happens.
+      </p>
+      <div class="confirm-buttons">
+        <button id="splitCancelBtn" class="cancel-btn">Cancel</button>
+        <button id="splitProceedBtn" class="proceed-btn">Proceed</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== Place Stems Confirm Modal ============== -->
+  <div id="placeStemsModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>Place Stems Confirmation</h3>
+      <p id="placeStemsWarning">
+        <!-- We'll fill it dynamically with 4 or 6 track info in index.js -->
+      </p>
+      <div class="confirm-buttons">
+        <button id="placeCancelBtn" class="cancel-btn">Cancel</button>
+        <button id="placeProceedBtn" class="proceed-btn">Proceed</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== Main Container ============== -->
+  <div class="container">
+
+    <!-- Row 1: Title + Settings button -->
+    <div class="title-row">
+      <h1 class="title">CamStem</h1>
+      <button id="openSettingsBtn" style="margin-left: auto;">Settings</button>
     </div>
 
-    <!-- Path to Process -->
-    <label for="demucsPath">Path to Process:</label>
-    <input
-      type="text"
-      id="demucsPath"
-      placeholder="e.g. C:\Program Files\CamStem\demucs-cxfreeze.exe"
-    />
+    <!-- Row 2, col1 => left-column (Model + Quality) -->
+    <div class="left-column">
+      <label for="modelSelect">Select Model:</label>
+      <select id="modelSelect">
+        <option value="htdemucs">Default 4stem</option>
+        <option value="htdemucs_ft">High Quality 4stem</option>
+        <option value="htdemucs_6s">Experimental 6stem</option>
+      </select>
 
-    <!-- Assets Path -->
-    <label for="modelDir">Assets Path:</label>
-    <input
-      type="text"
-      id="modelDir"
-      placeholder="e.g. F:\Project-CamStem\Models"
-    />
+      <label for="qualitySelect">Quality Preset (lower is better)</label>
+      <select id="qualitySelect">
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4" selected>4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+      </select>
+    </div>
 
-    <!-- Select Model -->
-    <label for="modelSelect">Select Model:</label>
-    <select id="modelSelect">
-      <option value="htdemucs">Default 4-Stem (htdemucs)</option>
-      <option value="htdemucs_ft">High Quality 4-Stem (htdemucs_ft)</option>
-      <option value="htdemucs_6s">Experimental 6-Stem (htdemucs_6s)</option>
-    </select>
+    <!-- Row 2, col2 => right-column (2 small buttons) -->
+    <div class="right-column">
+      <div class="buttons-row">
+        <button id="splitAudioBtn">Split Audio</button>
+        <button id="placeStemsBtn">Place Stems</button>
+      </div>
+    </div>
 
-    <!-- Quality Preset -->
-    <label for="qualitySelect">Quality Preset (lower is better quality)</label>
-    <select id="qualitySelect">
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4" selected>4</option>
-      <option value="5">5</option>
-      <option value="6">6</option>
-      <option value="7">7</option>
-    </select>
+    <!-- Row 3 => Logs area -->
+    <div class="status-area">
+      <div id="status"></div>
+    </div>
 
-    <!-- Hidden checkAudioBtn to avoid breaking old logic -->
-    <button id="checkAudioBtn">Check Audio</button>
+    <!-- Row 4 => Message area -->
+    <div class="message-area">
+      <div id="userMessage"></div>
+    </div>
 
-    <!-- Save, Split, Place buttons (IDs unchanged) -->
-    <button id="savePathBtn">Save Settings</button>
-    <button id="splitAudioBtn">Split Audio</button>
-    <button id="placeStemsBtn">Place Stems On Timeline</button>
-
-    <!-- Scrollable status/logs -->
-    <div id="status"></div>
-  </div>
+  </div> <!-- .container -->
 
   <!-- Adobe CEP + Your Scripts -->
   <script src="CSInterface.js"></script>
-
-  <script>
-    /***************************************************************************
-     * Revert to simpler single-stage approach with:
-     *   - handleDemucsLog(newChunk)
-     *   - parse lines for "0%|", "NN%|", "100%|"
-     *   - show messages "Initializing...", "Creating Files...", "Done!"
-     *   - logs appended to #status
-     ***************************************************************************/
-    let demucsOutputBuffer = "";
-    let statusEl, progressBarEl, progressLabelEl;
-
-    window.addEventListener("load", function() {
-      statusEl       = document.getElementById("status");
-      progressBarEl  = document.getElementById("progressBar");
-      progressLabelEl= document.getElementById("progressLabel");
-      
-      // For demonstration, let's simulate logs. 
-      // In real usage, your index.js spawns Demucs, then calls handleDemucsLog(...)
-      const simulatedLogs = [
-        "[JS] Checking selected audio...",
-        "[JS] => Found inputAudio = something.mp3",
-        "Selected model is a bag of 1 models. You will see that many progress bars per track.",
-        "Separated tracks will be stored in C:/some/folder",
-        "Separating track C:/some/folder/something.mp3",
-        "[ERR]  0%|   0.0/193.04 [00:00<?, ?seconds/s]",
-        "[ERR]  25%|###   48.2/193.04 [00:01<00:06, 23.6seconds/s]",
-        "[ERR]  50%|#####  96.5/193.04 [00:02<00:03, 30.0seconds/s]",
-        "[ERR]  100%|#######| 193.04/193.04 [00:04<00:00, 40.0seconds/s]",
-        "[JS] Demucs exited with code 0",
-        "Done!"
-      ];
-      let idx = 0;
-      let demoTimer = setInterval(() => {
-        if (idx < simulatedLogs.length) {
-          handleDemucsLog(simulatedLogs[idx] + "\\n");
-          idx++;
-        } else {
-          clearInterval(demoTimer);
-        }
-      }, 1200);
-    });
-
-    /***************************************************************************
-     * handleDemucsLog(newChunk)
-     *  - Called from your Node child_process stdout & stderr events
-     ***************************************************************************/
-    function handleDemucsLog(newChunk) {
-      demucsOutputBuffer += newChunk;
-      const lines = demucsOutputBuffer.split(/\r?\n/);
-      demucsOutputBuffer = lines.pop(); // leftover partial line
-      lines.forEach(parseDemucsLine);
-    }
-
-    function parseDemucsLine(line) {
-      // 1) Always append raw line to the #status text
-      statusEl.textContent += line + "\\n";
-
-      // 2) Check for 0% => "Initializing..."
-      if (line.match(/\b0%?\|/)) {
-        setProgress(0);
-        progressLabelEl.textContent = "Initializing...";
-      }
-
-      // 3) Check for 100% => "Creating Files..."
-      else if (line.match(/\b100%?\|/)) {
-        setProgress(100);
-        progressLabelEl.textContent = "Creating Files - This May Take a Moment";
-      }
-
-      // 4) Else check for e.g. 17%| or 83%|
-      else {
-        // Could match lines like " 17%|####..."
-        const match = line.match(/\b(\d{1,3})%\|/);
-        if (match) {
-          let pct = parseInt(match[1], 10);
-          if (pct < 0) pct = 0;
-          if (pct > 100) pct = 100;
-          setProgress(pct);
-          progressLabelEl.textContent = pct + "%";
-        }
-      }
-
-      // 5) If line includes "Demucs exited with code 0", we consider it done
-      if (line.includes("Demucs exited with code 0")) {
-        // If we've not seen 100% yet, let's set 100
-        setProgress(100);
-        progressLabelEl.textContent = "Separation Completed";
-      }
-    }
-
-    // Helper to update the bar
-    function setProgress(pct) {
-      progressBarEl.style.width = pct + "%";
-      if (pct === 0) {
-        progressLabelEl.textContent = "0%";
-      } else if (pct === 100) {
-        progressLabelEl.textContent = "100%";
-      }
-    }
-  </script>
-
   <script src="index.js"></script>
 </body>
 </html>
@@ -5587,122 +5694,437 @@ CSInterface.prototype.getWindowTitle = function()
 (function() {
   var csInterface = new CSInterface();
 
+  // We'll store some info for the extension usage:
+  let lastAudioName   = null;   // for "Splitting Stems..." log
+  let lastChosenModel = null;   // for 4 vs. 6-stem usage
+  let hasSplitYet     = false;  // whether we've successfully run a split
+
+  /******************************************************************************
+   * PART A: HARDCODED ITEMS + DECRYPTION + PLATFORM CHECK
+   * (As described in your main.js, but now all local to the extension.)
+   ******************************************************************************/
+  const HARD_CODED_KEY = "DA3K9Y5kdGQ217dhKehCT4Jip0ehJ7rY";  // from your main.js
+  const STRIPE_SECRET_KEY = "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";
+
+  // We'll allow a 14-day validity window for the key's date
+  function isKeyValid(dateStr) {
+    const keyDate = new Date(dateStr);
+    const currentDate = new Date();
+    const diffInDays = (currentDate - keyDate) / (1000 * 60 * 60 * 24);
+    return diffInDays <= 14;
+  }
+
+  // Reverse string, used for clerk + stripe ID
+  function reverseString(str) {
+    return str.split('').reverse().join('');
+  }
+
+  // Decrypt + parse the key:
+  // => date|platformCode|revClerkID|revStripeID
+  // => date check, platform check
+  async function processSoftwareKey(encryptedHex) {
+    const cipherBytes = new Uint8Array(
+      encryptedHex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
+    );
+
+    const enc = new TextEncoder();
+    const dec = new TextDecoder();
+
+    // Import the "HARD_CODED_KEY" as AES-CTR key
+    const keyData = enc.encode(HARD_CODED_KEY);
+    const cryptoKey = await window.crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'AES-CTR', length: 256 },
+      false,
+      ['decrypt']
+    );
+
+    // IV of all zeroes
+    const iv = new Uint8Array(16);
+
+    // Decrypt
+    const decryptedBuffer = await window.crypto.subtle.decrypt(
+      { name: 'AES-CTR', counter: iv, length: 64 },
+      cryptoKey,
+      cipherBytes
+    );
+    const decrypted = dec.decode(decryptedBuffer);
+
+    // Split => 4 parts
+    const parts = decrypted.split('|');
+    if (parts.length !== 4) {
+      throw new Error('Invalid key format. Expected 4 parts.');
+    }
+    const [ dateStr, platformCodeStr, revClerkID, revStripeID ] = parts;
+
+    // 1) Date check
+    if (!isKeyValid(dateStr)) {
+      throw new Error('Software key is expired (older than 14 days).');
+    }
+
+    // 2) Platform check => Mac => 1, Windows => 2
+    let currentPlatformCode = 2;
+    const agent = navigator.userAgent.toLowerCase();
+    if (agent.includes("mac os") || agent.includes("macintosh")) {
+      currentPlatformCode = 1;
+    }
+    const neededPlatform = parseInt(platformCodeStr, 10);
+    if (neededPlatform !== currentPlatformCode) {
+      throw new Error('Software key does not match the current platform.');
+    }
+
+    // 3) Reverse clerk + stripe IDs
+    const clerkID = reverseString(revClerkID);
+    const stripeID = reverseString(revStripeID);
+
+    return { clerkID, stripeID };
+  }
+
+  /******************************************************************************
+   * PART B: STORING + REMOVING KEY + CLERK/STRIPE ID
+   * We'll store them all in localStorage so the user doesn't re-enter each time.
+   ******************************************************************************/
+  async function saveSoftwareKey(encryptedHex) {
+    localStorage.setItem("camstem_softwareKey", encryptedHex);
+  }
+  async function getSavedKey() {
+    return localStorage.getItem("camstem_softwareKey") || null;
+  }
+  async function removeSavedKey() {
+    localStorage.removeItem("camstem_softwareKey");
+  }
+
+  /******************************************************************************
+   * PART C: STRIPE + CLERK CHECK
+   * We'll do a real fetch call to Stripe using your live secret key.
+   * Then we can store clerkID in localStorage if needed.
+   ******************************************************************************/
+  async function checkSubscriptionStatus(stripeID) {
+    try {
+      // Example: call Stripe's subscription list endpoint
+      const url = "https://api.stripe.com/v1/subscriptions?customer=" + encodeURIComponent(stripeID);
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Authorization": "Bearer " + STRIPE_SECRET_KEY
+        }
+      });
+      const data = await res.json();
+      if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
+        return { active: false, reason: "No subscriptions found for that Stripe ID." };
+      }
+      // Check if there's an active or trialing sub
+      const activeFound = data.data.some(
+        (sub) => sub.status === 'active' || sub.status === 'trialing'
+      );
+      if (activeFound) {
+        return { active: true };
+      } else {
+        return { active: false, reason: "Subscription is canceled or not active." };
+      }
+    } catch (err) {
+      return { active: false, reason: err.message };
+    }
+  }
+
+  /******************************************************************************
+   * PART D: ON LOAD => set up DOM, overlay logic, etc.
+   ******************************************************************************/
   window.addEventListener("load", function() {
-    var demucsPathInput = document.getElementById("demucsPath");
-    var modelDirInput   = document.getElementById("modelDir");
-    var modelSelect     = document.getElementById("modelSelect");
-    var qualitySelect   = document.getElementById("qualitySelect");
+    // DOM references
+    const openSettingsBtn    = document.getElementById("openSettingsBtn");
+    const settingsModal      = document.getElementById("settingsModal");
+    const closeSettings      = document.getElementById("closeSettings");
 
-    var saveBtn         = document.getElementById("savePathBtn");
-    var checkAudioBtn   = document.getElementById("checkAudioBtn");
-    var splitAudioBtn   = document.getElementById("splitAudioBtn");
-    // NEW:
-    var placeStemsBtn   = document.getElementById("placeStemsBtn");
+    const demucsPathInput    = document.getElementById("demucsPath");
+    const modelDirInput      = document.getElementById("modelDir");
+    const modelSelect        = document.getElementById("modelSelect");
+    const qualitySelect      = document.getElementById("qualitySelect");
 
-    var statusEl        = document.getElementById("status");
+    const saveBtn            = document.getElementById("savePathBtn");
+    const splitAudioBtn      = document.getElementById("splitAudioBtn");
+    const placeStemsBtn      = document.getElementById("placeStemsBtn");
+    const statusEl           = document.getElementById("status");
+    const userMessageEl      = document.getElementById("userMessage");
 
-    // Restore user paths from localStorage
-    var savedDemucsPath = localStorage.getItem("camstem_demucsPath");
-    if (savedDemucsPath) demucsPathInput.value = savedDemucsPath;
+    // Auth
+    const authKeyInput       = document.getElementById("authKeyInput");
+    const validateKeyBtn     = document.getElementById("validateKeyBtn");
+    const removeKeyBtn       = document.getElementById("removeKeyBtn");
 
-    var savedModelDir   = localStorage.getItem("camstem_modelDir");
-    if (savedModelDir)   modelDirInput.value   = savedModelDir;
+    // Confirm modals
+    const splitConfirmModal  = document.getElementById("splitConfirmModal");
+    const splitCancelBtn     = document.getElementById("splitCancelBtn");
+    const splitProceedBtn    = document.getElementById("splitProceedBtn");
 
-    // 1) Save Paths
+    const placeStemsModal    = document.getElementById("placeStemsModal");
+    const placeCancelBtn     = document.getElementById("placeCancelBtn");
+    const placeProceedBtn    = document.getElementById("placeProceedBtn");
+    const placeStemsWarning  = document.getElementById("placeStemsWarning");
+
+    // Overlay
+    const greyOutOverlay     = document.getElementById("greyOutOverlay");
+    const goToSettingsBtn    = document.getElementById("goToSettingsBtn");
+
+    // Helper
+    function setUserMessage(msg) {
+      userMessageEl.textContent = msg || "";
+    }
+    function showOverlayAndMessage(msg) {
+      greyOutOverlay.style.display = "flex";
+      greyOutOverlay.querySelector("p").textContent = msg || "";
+    }
+    function hideOverlay() {
+      greyOutOverlay.style.display = "none";
+    }
+
+    /******************************************************************************
+     * 1) Re-check auth on load
+     ******************************************************************************/
+    async function recheckAuthAndOverlay() {
+      const existingKey = await getSavedKey();
+      if (!existingKey) {
+        showOverlayAndMessage("You must enter and validate an Auth Key in Settings to use this extension.");
+        return;
+      }
+      try {
+        // Decrypt / parse
+        const { clerkID, stripeID } = await processSoftwareKey(existingKey);
+        // Check subscription with real Stripe
+        const subRes = await checkSubscriptionStatus(stripeID);
+        if (!subRes.active) {
+          showOverlayAndMessage("Subscription error: " + subRes.reason);
+        } else {
+          hideOverlay();
+        }
+      } catch (err) {
+        showOverlayAndMessage("Auth error: " + err.message);
+      }
+    }
+    recheckAuthAndOverlay();
+
+    // 2) Opening + closing settings
+    function openSettingsPanel() {
+      hideOverlay();
+      settingsModal.style.display = "flex";
+      // load existing key
+      getSavedKey().then((k) => {
+        if (k) authKeyInput.value = k;
+      });
+    }
+    goToSettingsBtn.addEventListener("click", openSettingsPanel);
+    openSettingsBtn.addEventListener("click", openSettingsPanel);
+
+    closeSettings.addEventListener("click", async function() {
+      settingsModal.style.display = "none";
+      await recheckAuthAndOverlay();
+    });
+
+    // if user clicks outside modals
+    window.addEventListener("click", function(e) {
+      if (e.target === settingsModal) {
+        settingsModal.style.display = "none";
+        recheckAuthAndOverlay();
+      }
+      if (e.target === splitConfirmModal) {
+        splitConfirmModal.style.display = "none";
+      }
+      if (e.target === placeStemsModal) {
+        placeStemsModal.style.display = "none";
+      }
+    });
+
+    /******************************************************************************
+     * 3) Save demucs + model paths to localStorage
+     ******************************************************************************/
+    const existingDemucs = localStorage.getItem("camstem_demucsPath");
+    const existingModel  = localStorage.getItem("camstem_modelDir");
+    if (existingDemucs) demucsPathInput.value = existingDemucs;
+    if (existingModel)  modelDirInput.value   = existingModel;
+
     saveBtn.addEventListener("click", function() {
-      var dp = demucsPathInput.value.trim();
-      var md = modelDirInput.value.trim();
+      const dp = demucsPathInput.value.trim();
+      const md = modelDirInput.value.trim();
       if (!dp || !md) {
-        statusEl.textContent = "[JS] Please fill in demucs path + model folder.\n";
+        statusEl.textContent += "[JS] Please fill in both paths.\n";
+        setUserMessage("Please fill in both paths before saving.");
         return;
       }
       localStorage.setItem("camstem_demucsPath", dp);
-      localStorage.setItem("camstem_modelDir",   md);
-      statusEl.textContent = "[JS] Saved paths:\n" + dp + "\n" + md;
+      localStorage.setItem("camstem_modelDir", md);
+      statusEl.textContent += "[JS] Saved settings:\n" + dp + "\n" + md + "\n";
+      setUserMessage("Settings saved.");
     });
 
-    // 2) Check Audio
-    checkAudioBtn.addEventListener("click", function() {
-      statusEl.textContent = "[JS] Checking audio selection...\n";
-      csInterface.evalScript("checkAudioSelection()", function(resultStr) {
-        statusEl.textContent += "[JS] => checkAudioSelection returned:\n" + resultStr + "\n";
-      });
+    /******************************************************************************
+     * 4) Validate Key + Remove Key => real clerk + stripe check
+     ******************************************************************************/
+    validateKeyBtn.addEventListener("click", async function() {
+      const softwareKey = authKeyInput.value.trim();
+      if (!softwareKey) {
+        setUserMessage("Please enter a software key.");
+        return;
+      }
+      setUserMessage("");
+      validateKeyBtn.disabled = true;
+      try {
+        // Decrypt
+        const { clerkID, stripeID } = await processSoftwareKey(softwareKey);
+
+        // Save the key
+        await saveSoftwareKey(softwareKey);
+
+        // Now check subscription with Stripe
+        const subRes = await checkSubscriptionStatus(stripeID);
+        if (!subRes.active) {
+          setUserMessage("Subscription error: " + subRes.reason);
+          validateKeyBtn.disabled = false;
+          return;
+        }
+
+        // success
+        setUserMessage("Software key validated and subscription is active!");
+        hideOverlay();
+      } catch (err) {
+        setUserMessage("Key validation failed: " + err.message);
+      } finally {
+        validateKeyBtn.disabled = false;
+      }
     });
 
-    // 3) Split Audio + Import
+    removeKeyBtn.addEventListener("click", async function() {
+      await removeSavedKey();
+      authKeyInput.value = "";
+      setUserMessage("All saved keys have been removed.");
+      showOverlayAndMessage("Please enter and validate an Auth Key in Settings.");
+    });
+
+    /******************************************************************************
+     * 5) "Split Audio" => confirm modal
+     ******************************************************************************/
     splitAudioBtn.addEventListener("click", function() {
-      var demucsExe = demucsPathInput.value.trim();
-      var modelDir  = modelDirInput.value.trim();
+      if (greyOutOverlay.style.display === "flex") {
+        setUserMessage("Please validate an Auth Key first.");
+        return;
+      }
+      splitConfirmModal.style.display = "flex";
+    });
+    splitCancelBtn.addEventListener("click", function() {
+      splitConfirmModal.style.display = "none";
+      setUserMessage("Split audio canceled.");
+    });
+    splitProceedBtn.addEventListener("click", function() {
+      splitConfirmModal.style.display = "none";
+      startSplitProcess();
+    });
 
+    function startSplitProcess() {
+      setUserMessage("Split Process Started. Checking selected audio track...");
+
+      const demucsExe = demucsPathInput.value.trim();
+      const modelDir  = modelDirInput.value.trim();
       if (!demucsExe || !modelDir) {
-        statusEl.textContent = "[JS] Must provide demucs path + model folder.\n";
+        statusEl.textContent += "[JS] Must provide demucs path + model folder.\n";
+        setUserMessage("Cannot split; please fill in paths first.");
         return;
       }
 
-      // 1) Check audio
-      statusEl.textContent = "[JS] Checking selected audio...\n";
+      statusEl.textContent += "[JS] Checking audio selection...\n";
       csInterface.evalScript("checkAudioSelection()", function(resultStr) {
         statusEl.textContent += "[JS] => checkAudioSelection returned:\n" + resultStr + "\n";
 
-        // parse out "Selected Audio Path:"
-        var lines = resultStr.split("\n");
-        var inputAudio = null;
-        for (var i = 0; i < lines.length; i++) {
-          if (lines[i].indexOf("Selected Audio Path:") >= 0) {
-            inputAudio = lines[i].replace("Selected Audio Path:", "").trim();
+        const lines = resultStr.split("\n");
+        let inputAudio = null;
+        for (const line of lines) {
+          if (line.includes("Selected Audio Path:")) {
+            inputAudio = line.replace("Selected Audio Path:", "").trim();
           }
         }
         if (!inputAudio) {
           statusEl.textContent += "[JS] => No valid selected audio found. Aborting.\n";
+          setUserMessage("No valid audio clip selected. Please select a clip in the timeline first.");
           return;
         }
 
-        // 2) spawn Demucs
-        var chosenModel = modelSelect.value;
-        var chosenPreset = qualitySelect.value;
+        lastAudioName   = inputAudio;
+        lastChosenModel = modelSelect.value;
 
-        statusEl.textContent += "[JS] => Found inputAudio = " + inputAudio + "\n";
-        spawnDemucs(demucsExe, modelDir, chosenModel, chosenPreset, inputAudio);
+        setTimeout(() => {
+          statusEl.textContent += "[JS] Splitting Stems of " + lastAudioName + "\n";
+          setUserMessage("Splitting Stems of " + lastAudioName + "...");
+        }, 3000);
+
+        runDemucsProcess(demucsExe, modelDir, lastChosenModel, qualitySelect.value, lastAudioName);
       });
+    }
+
+    /******************************************************************************
+     * 6) "Place Stems" => confirm modal
+     ******************************************************************************/
+    placeStemsBtn.addEventListener("click", function() {
+      if (greyOutOverlay.style.display === "flex") {
+        setUserMessage("Please validate an Auth Key first.");
+        return;
+      }
+      if (!hasSplitYet) {
+        setUserMessage("No stems to place yet! Please split audio first.");
+        return;
+      }
+      if (lastChosenModel === "htdemucs_6s") {
+        placeStemsWarning.textContent = "Please ensure the first 6 audio tracks are empty...";
+      } else {
+        placeStemsWarning.textContent = "Please ensure the first 4 audio tracks are empty...";
+      }
+      placeStemsModal.style.display = "flex";
+    });
+    placeCancelBtn.addEventListener("click", function() {
+      placeStemsModal.style.display = "none";
+      setUserMessage("Place stems canceled.");
+    });
+    placeProceedBtn.addEventListener("click", function() {
+      placeStemsModal.style.display = "none";
+      doPlaceStemsNow();
     });
 
-    // 4) Place Stems on Timeline (MANUAL)
-    placeStemsBtn.addEventListener("click", function() {
-      statusEl.textContent += "\n[JS] => Placing stems on timeline manually...\n";
+    function doPlaceStemsNow() {
+      statusEl.textContent += "\n[JS] => Placing stems on timeline...\n";
+      setUserMessage("Placing stems on timeline...");
+
       csInterface.evalScript("placeStemsManually()", function(resp) {
         statusEl.textContent += "[JS] => placeStemsManually returned:\n" + resp + "\n";
+        setUserMessage("Stems placed on timeline (check your sequence).");
       });
-    });
+    }
 
-    /**
-     * spawnDemucs(...) => runs demucs-cxfreeze + final subfolder => importStemsFolder
-     */
-    function spawnDemucs(demucsExe, modelFolder, modelName, mp3Preset, inputPath) {
-      statusEl.textContent += "[JS] spawnDemucs called...\n";
+    /******************************************************************************
+     * 7) runDemucsProcess => spawn demucs-cxfreeze
+     ******************************************************************************/
+    function runDemucsProcess(demucsExe, modelFolder, modelName, mp3Preset, inputPath) {
+      statusEl.textContent += "[JS] runDemucsProcess called...\n";
 
       let childProc;
       try {
         childProc = require("child_process");
       } catch (e) {
         statusEl.textContent += "[JS] Node not available => " + e + "\n";
+        setUserMessage("Error: Node not available in this environment.");
         return;
       }
 
       function getDir(fp) {
-        let idx = Math.max(fp.lastIndexOf("\\"), fp.lastIndexOf("/"));
-        if (idx < 0) return fp;
-        return fp.substring(0, idx);
+        const idx = Math.max(fp.lastIndexOf("\\"), fp.lastIndexOf("/"));
+        return idx < 0 ? fp : fp.substring(0, idx);
       }
       function getBaseName(filePath) {
-        let slash = Math.max(filePath.lastIndexOf("\\"), filePath.lastIndexOf("/"));
-        let justFile = (slash < 0) ? filePath : filePath.substring(slash + 1);
-        let dot = justFile.lastIndexOf(".");
-        if (dot < 0) return justFile;
-        return justFile.substring(0, dot);
+        const slash = Math.max(filePath.lastIndexOf("\\"), filePath.lastIndexOf("/"));
+        const justFile = (slash < 0) ? filePath : filePath.substring(slash + 1);
+        const dot = justFile.lastIndexOf(".");
+        return dot < 0 ? justFile : justFile.substring(0, dot);
       }
 
-      let outputDir = getDir(inputPath);
-      let args = [
+      const outputDir = getDir(inputPath);
+      const args = [
         "-n", modelName,
         "--repo", modelFolder,
         "-o", outputDir,
@@ -5713,23 +6135,20 @@ CSInterface.prototype.getWindowTitle = function()
 
       statusEl.textContent += "[JS] DEMUCS CMD:\n" + demucsExe + " " + args.join(" ") + "\n";
 
-      let logBuffer = "";
+      let logBuffer       = "";
       let finalBaseFolder = null;
       let trackBaseName   = null;
 
       const proc = childProc.spawn(demucsExe, args, { cwd: outputDir });
 
       proc.stdout.on("data", (chunk) => {
-        let txt = chunk.toString();
-        statusEl.textContent += txt; // show raw output
+        const txt = chunk.toString();
+        statusEl.textContent += txt;
 
-        // parse lines
         logBuffer += txt;
-        let lines = logBuffer.split(/\r?\n/);
-        logBuffer = lines.pop(); // leftover partial
-        for (let ln of lines) {
-          parseDemucsLine(ln);
-        }
+        const lines = logBuffer.split(/\r?\n/);
+        logBuffer = lines.pop();
+        lines.forEach((ln) => parseDemucsLine(ln));
       });
 
       proc.stderr.on("data", (chunk) => {
@@ -5741,44 +6160,49 @@ CSInterface.prototype.getWindowTitle = function()
           parseDemucsLine(logBuffer);
           logBuffer = "";
         }
-
         statusEl.textContent += `\n[JS] Demucs exited with code ${code}\n`;
 
         if (code === 0 && finalBaseFolder && trackBaseName) {
-          let subFolder = finalBaseFolder.replace(/\\/g, "/") + "/" + trackBaseName;
+          const subFolder = finalBaseFolder.replace(/\\/g, "/") + "/" + trackBaseName;
           statusEl.textContent += `[JS] => subFolder = ${subFolder}\n`;
 
-          let escaped = subFolder
+          const escaped = subFolder
             .replace(/\\/g, "\\\\")
             .replace(/"/g, '\\"')
             .replace(/'/g, "\\'")
             .replace(/\r/g, "")
             .replace(/\n/g, "");
 
-          //  => importStemsFolder
-          let jsxCall = `importStemsFolder("${escaped}", "${modelName}")`;
+          const jsxCall = `importStemsFolder("${escaped}", "${modelName}")`;
           statusEl.textContent += "[JS] => evalScript => " + jsxCall + "\n";
+
           csInterface.evalScript(jsxCall, function(resp) {
             statusEl.textContent += "\n[JS] importStemsFolder response:\n" + resp + "\n";
-            statusEl.textContent += "[JS] Now click 'Place Stems on Timeline' if you want to place them.\n";
+            statusEl.textContent += "[JS] Split Process Complete\n";
+            setUserMessage("Split Process Complete! Stems imported into Premiere.");
+            hasSplitYet = true;
           });
         } else if (code === 0) {
-          statusEl.textContent += "[JS] Demucs finished but we couldn't parse finalBaseFolder or trackBaseName.\n";
+          statusEl.textContent += "[JS] Demucs finished but no final folder/base name found.\n";
+          setUserMessage("Demucs finished, but no final stems folder found. Check logs.");
+        } else {
+          setUserMessage("Demucs process ended with an error. Check logs for details.");
         }
       });
 
       proc.on("error", (err) => {
         statusEl.textContent += "\n[JS] spawn error => " + err.toString() + "\n";
+        setUserMessage("Error spawning Demucs process. Check logs.");
       });
 
       function parseDemucsLine(line) {
-        let stIdx = line.indexOf("Separated tracks will be stored in");
+        const stIdx = line.indexOf("Separated tracks will be stored in");
         if (stIdx >= 0) {
           let partial = line.substring(stIdx);
-          let splitted = partial.split("in");
-          if (splitted.length > 1) {
+          const splitted = partial.split("in");
+          if (splitted[1]) {
             let folder = splitted[1].trim();
-            let dotPos = folder.indexOf(".");
+            const dotPos = folder.indexOf(".");
             if (dotPos >= 0) {
               folder = folder.substring(0, dotPos);
             }
@@ -5787,9 +6211,9 @@ CSInterface.prototype.getWindowTitle = function()
           }
         }
 
-        let sepIdx = line.indexOf("Separating track ");
+        const sepIdx = line.indexOf("Separating track ");
         if (sepIdx >= 0) {
-          let partial2 = line.substring(sepIdx + "Separating track ".length).trim();
+          const partial2 = line.substring(sepIdx + "Separating track ".length).trim();
           trackBaseName = getBaseName(partial2);
           statusEl.textContent += `\n[JS] => trackBaseName: ${trackBaseName}\n`;
         }

@@ -6,27 +6,27 @@
     position: relative; /* for absolutely positioned child (the exit pill) */
     padding-bottom: 50px; /* enough space at the bottom */
     min-height: 300px; /* ensures there's a decent vertical area */
-  }
-  
-  /* ============================================================
-     Drop Area for Step 2 (selecting MP3)
-  ============================================================ */
-  .drop-area {
+}
+
+/* ============================================================
+   Drop Area for Step 2 (selecting MP3)
+============================================================ */
+.drop-area {
     border: 2px dashed #00ffd8;
     border-radius: 8px;
     padding: 2rem;
     cursor: pointer;
     text-align: center;
     transition: background-color 0.2s ease;
-  }
-  .drop-area:hover {
+}
+.drop-area:hover {
     background-color: rgba(0, 255, 216, 0.1);
-  }
-  
-  /* ============================================================
-     Buttons for MP3 preset (Step 4)
-  ============================================================ */
-  .preset-button {
+}
+
+/* ============================================================
+   Buttons for MP3 preset (Step 4)
+============================================================ */
+.preset-button {
     background-color: #003554;
     color: white;
     padding: 0.75rem 1.5rem;
@@ -37,28 +37,28 @@
     display: inline-block;
     border: none;
     font-size: 1.1rem;
-  }
-  .preset-button:hover {
+}
+.preset-button:hover {
     background-color: #002940;
     transform: translateY(-4px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  }
-  .preset-button.active {
+}
+.preset-button.active {
     background-color: #006494 !important;
-  }
-  
-  /* ============================================================
-     Disabled Buttons
-  ============================================================ */
-  .btn-disabled {
+}
+
+/* ============================================================
+   Disabled Buttons
+============================================================ */
+.btn-disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-  
-  /* ============================================================
-     Modals (Warning, etc.)
-  ============================================================ */
-  .modal {
+}
+
+/* ============================================================
+   Modals (Warning, etc.)
+============================================================ */
+.modal {
     display: none; /* hidden by default */
     position: fixed;
     z-index: 999;
@@ -69,8 +69,8 @@
     background-color: rgba(0,0,0,0.6);
     align-items: center;
     justify-content: center;
-  }
-  .modal-content {
+}
+.modal-content {
     background-color: #003554;
     margin: auto;
     padding: 1.5rem;
@@ -79,8 +79,8 @@
     max-width: 400px;
     color: #fff;
     text-align: center;
-  }
-  .close-btn {
+}
+.close-btn {
     background-color: #8B0000;
     color: #fff;
     border: none;
@@ -89,16 +89,16 @@
     font-size: 1rem;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.3s ease;
-  }
-  .close-btn:hover {
+}
+.close-btn:hover {
     background-color: #690000;
     transform: translateY(-3px);
-  }
-  
-  /* ============================================================
-     Discrete Exit Pill (Steps 1-5)
-  ============================================================ */
-  .exit-pill {
+}
+
+/* ============================================================
+   Discrete Exit Pill (Steps 1-5)
+============================================================ */
+.exit-pill {
     position: absolute;
     bottom: 20px;
     left: 50%;
@@ -112,28 +112,27 @@
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.3s ease;
     text-decoration: none;
-    opacity: 0.8; 
-  }
-  .exit-pill:hover {
+    opacity: 0.8;
+}
+.exit-pill:hover {
     background-color: rgba(255, 255, 255, 0.25);
     transform: translate(-50%, -2px);
-  }
-  
-  /* 
-     The real-time console area is #demucsConsole
-     The single last line from the tail is #latestLineDiv
-     And the single "filtered" line is #filteredLine
-  */
-  .latest-log-line {
+}
+
+/*
+   The real-time console area is #demucsConsole
+   The single last line from the tail is #latestLineDiv
+   And the single "filtered" line is #filteredLine
+*/
+.latest-log-line {
     margin-top: 1rem;
     color: #0ff;
     font-weight: bold;
-  }
-  
-  #filteredLine {
+}
+
+#filteredLine {
     margin-top: 1rem;
     color: #ffa;
     font-weight: bold;
     font-size: 0.95rem;
-  }
-  
+}

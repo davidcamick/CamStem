@@ -3,38 +3,136 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CamStem - About</title>
+  <title>About CamStem</title>
   <!-- Include Tailwind + Custom Index CSS -->
   <link rel="stylesheet" href="tailwind-output.css">
   <link rel="stylesheet" href="index.css">
+  <style>
+    /* Restore old gradient background, remove scroll bar */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;       /* fill the viewport vertically */
+      overflow: hidden;    /* no scroll bar */
+      background: linear-gradient(135deg, #006494, #051923);
+      color: white;
+      text-align: center;
+      font-family: Arial, sans-serif; /* or default from index.css */
+    }
+
+    /* Container at 576px */
+    .container {
+      max-width: 576px;
+      margin: 0 auto; /* center horizontally */
+      padding: 2rem;  /* some spacing inside */
+    }
+
+    .carouselWrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .carouselSlide {
+      text-align: center;
+      padding: 1rem;
+      background-color: rgba(255,255,255,0.07);
+      border-radius: 8px;
+      width: 320px; /* ensures each name line stays on one line */
+    }
+
+    .carouselNameLine {
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+      white-space: nowrap; /* keep names on one line */
+    }
+
+    .arrowBtn {
+      font-size: 1.8rem;
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .arrowBtn:hover {
+      transform: scale(1.2);
+    }
+
+    /* Title styling, if needed */
+    .page-title {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+  </style>
 </head>
 <body>
-  <div class="container" style="max-width: 480px;">
-    <!-- Use the .page-title class -->
-    <h1 class="page-title">About</h1>
+  <div class="container">
+    <h1 class="page-title">About CamStem</h1>
 
-    <p>
-      Welcome to CamStem. This software empowers you to separate audio stems,
-      integrate with editing workflows, and more. Below are some of the individuals
-      who have contributed to this project.
+    <p style="margin-bottom: 1.5rem;">
+      CamStem is the first stem splitter built for videography, integrated with Adobe Premiere Pro.
+      Developed by David Camick, it uses advanced audio separation to simplify editing so you can quickly
+      isolate and manipulate audio. Below are the people who have contributed to the project:
     </p>
 
-    <!-- Credits in 2-column format (like before) -->
-    <div class="credits-grid" style="margin: 1.5rem 0;">
-      <!-- 10 placeholders for contributor names -->
-      <div>Name 1</div>
-      <div>Name 2</div>
-      <div>Name 3</div>
-      <div>Name 4</div>
-      <div>Name 5</div>
-      <div>Name 6</div>
-      <div>Name 7</div>
-      <div>Name 8</div>
-      <div>Name 9</div>
-      <div>Name 10</div>
+    <!-- Carousel -->
+    <div class="carouselWrapper">
+      <button id="prevSlide" class="arrowBtn">←</button>
+      <div style="position: relative;">
+        <!-- Slide 1 -->
+        <div class="carouselSlide" data-slide="0" style="display: block;">
+          <div class="carouselNameLine">Developer: David Camick</div>
+          <div class="carouselNameLine">Consultant: Kagen Jensen</div>
+          <div class="carouselNameLine">Consultant: Russell Page</div>
+          <div class="carouselNameLine">Consultant: Stevie Maloof</div>
+          <div class="carouselNameLine">Primary Beta Tester: Ben Gladstone</div>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="carouselSlide" data-slide="1" style="display: none;">
+          <div class="carouselNameLine">Beta Tester: Cooper Hill</div>
+          <div class="carouselNameLine">Beta Tester: Tre Production</div>
+          <div class="carouselNameLine">Beta Tester: Physccoo</div>
+          <div class="carouselNameLine">Beta Tester: kv.visuals</div>
+          <div class="carouselNameLine">Beta Tester: Andrew Schwallier</div>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="carouselSlide" data-slide="2" style="display: none;">
+          <div class="carouselNameLine">Beta Tester: A Hero's Vision</div>
+          <div class="carouselNameLine">Beta Tester: Lude Zombo</div>
+          <div class="carouselNameLine">Beta Tester: Taylor Denise</div>
+          <div class="carouselNameLine">Beta Tester: Nasir Butler</div>
+          <div class="carouselNameLine">Beta Tester: Devin Paschall</div>
+        </div>
+
+        <!-- Slide 4 -->
+        <div class="carouselSlide" data-slide="3" style="display: none;">
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+        </div>
+
+        <!-- Slide 5 -->
+        <div class="carouselSlide" data-slide="4" style="display: none;">
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+        </div>
+      </div>
+      <button id="nextSlide" class="arrowBtn">→</button>
     </div>
 
-    <!-- Back to Menu button (use .actionButton) -->
+    <!-- Back to Menu button -->
     <button
       class="actionButton"
       onclick="window.location.href='dashboard.html'"
@@ -43,5 +141,32 @@
       Back to Menu
     </button>
   </div>
+
+  <!-- Basic Carousel JS -->
+  <script>
+    (function() {
+      let currentSlideIndex = 0;
+      const slides = document.querySelectorAll('.carouselSlide');
+      const totalSlides = slides.length;
+      const prevBtn = document.getElementById('prevSlide');
+      const nextBtn = document.getElementById('nextSlide');
+
+      function showSlide(index) {
+        slides.forEach((slide, i) => {
+          slide.style.display = (i === index) ? 'block' : 'none';
+        });
+      }
+
+      prevBtn.addEventListener('click', () => {
+        currentSlideIndex = (currentSlideIndex - 1 + totalSlides) % totalSlides;
+        showSlide(currentSlideIndex);
+      });
+
+      nextBtn.addEventListener('click', () => {
+        currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
+        showSlide(currentSlideIndex);
+      });
+    })();
+  </script>
 </body>
 </html>
