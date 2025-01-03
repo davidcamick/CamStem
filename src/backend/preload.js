@@ -14,9 +14,9 @@ contextBridge.exposeInMainWorld('api', {
   },
 
   // 3) Choose path
-  selectPath: async (type, callback) => {
+  selectPath: async (type) => {
     const path = await ipcRenderer.invoke('select-path', type);
-    callback(path);
+    return path;
   },
 
   // 4) Open log file in Explorer/Finder
@@ -57,5 +57,28 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.on('demucs-logfile-line', (event, line) => {
       callback(line);
     });
+  },
+
+  // 11) Premiere extension installation (existing from previous steps)
+  installPremiereExtension: async (destinationPath) => {
+    const result = await ipcRenderer.invoke('installPremiereExtension', destinationPath);
+    return result;
+  },
+
+  // 12) We want to open an arbitrary folder from front-end
+  openAnyFolder: async (folderPath) => {
+    await ipcRenderer.invoke('openAnyFolder', folderPath);
+  },
+
+  // 13) Get the default OS extension folder
+  getDefaultExtensionsFolder: async () => {
+    const defPath = await ipcRenderer.invoke('getDefaultExtensionsFolder');
+    return defPath;
+  },
+
+  // 14) NEW: Get demucs exec + model folder path
+  getDemucsPaths: async () => {
+    // main.js returns { demucsExec, models }
+    return await ipcRenderer.invoke('getDemucsPaths');
   },
 });

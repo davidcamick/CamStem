@@ -3,28 +3,300 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CamStem - Premiere Integration</title>
+  <title>CamStem - Premiere Integration Setup</title>
   <!-- Include Tailwind + Custom Index CSS -->
   <link rel="stylesheet" href="tailwind-output.css">
   <link rel="stylesheet" href="index.css">
+  <style>
+    /* Global style for steps container */
+    .step {
+      display: none; /* hidden by default */
+      position: relative;
+      padding-bottom: 50px; /* extra space at bottom if needed */
+    }
+
+    .buttons-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+
+    .container {
+      max-width: 480px; /* override if needed */
+    }
+
+    /* 
+      A CSS variable controlling Step 4’s container height.
+      We've set it to 450px as requested.
+    */
+    :root {
+      --step4-container-height: 450px;
+    }
+
+    /* Step 4 uses that variable for height. Removed scrollbar. */
+    #step4 {
+      height: var(--step4-container-height);
+      box-sizing: border-box;
+    }
+  </style>
 </head>
 <body>
-  <div class="container" style="max-width: 480px;">
-    <!-- Page title -->
-    <h1 class="page-title">Premiere Pro Integration</h1>
+  <!-- Main Container -->
+  <div class="container">
 
-    <p style="margin-bottom: 1.5rem;">
-      Premiere automation will be set up here. Feature coming soon!
-    </p>
+    <!-- STEP 1 -->
+    <div id="step1" class="step">
+      <h1 class="page-title">Set Up Premiere Pro Integration</h1>
+      <p style="margin-bottom:1rem;">
+        This extension requires Adobe Premiere Pro 2020 or newer (officially tested with Creative Cloud).
+      </p>
+      <p style="margin-bottom:1.5rem;">
+        Follow these steps to install and configure CamStem for Premiere.
+      </p>
+      <div class="buttons-row">
+        <button id="step1ContinueBtn" class="actionButton">
+          OK, Let's Set It Up
+        </button>
+        <button id="step1CancelBtn" class="actionButton">
+          Nevermind, Back to Main Menu
+        </button>
+      </div>
+    </div>
 
-    <!-- Back to Menu button -->
-    <button
-      class="actionButton"
-      onclick="window.location.href='dashboard.html'"
-      style="width: 100%;"
-    >
-      Back to Menu
-    </button>
+    <!-- STEP 2 -->
+    <div id="step2" class="step">
+      <h1 class="page-title">Install Extension in Extensions Folder</h1>
+      <p style="margin-bottom:1.5rem;">
+        First, install the extension into your Adobe Extensions folder.
+        Use the buttons below to open the default/custom folder, 
+        then drag (or copy) the "CamStemExtension" folder into it.
+      </p>
+      <div class="buttons-row">
+        <button id="openExtensionsFolderBtn" class="actionButton">
+          Open Extensions Folder
+        </button>
+        <button id="chooseExtensionsFolderBtn" class="actionButton">
+          Choose My Own Folder
+        </button>
+        <button id="step2NextBtn" class="actionButton" style="margin-left:1rem;">
+          Next
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div id="step3" class="step">
+      <h1 class="page-title">Add Splitter Path</h1>
+      <p style="margin-bottom:1.5rem;">
+        Copy the Splitter and Model paths into the Premiere extension's fields.
+      </p>
+      <!-- We do not display the actual paths, just the copy buttons. -->
+      <div class="buttons-row">
+        <button id="copySplitterPathBtn" class="actionButton">
+          Copy Splitter Path
+        </button>
+        <button id="copyModelsPathBtn" class="actionButton">
+          Copy Model Path
+        </button>
+        <button id="step3NextBtn" class="actionButton" style="margin-left:1rem;">
+          Next
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 4 => uses the variable-based height, no scrollbar, no "Quick Guidance" -->
+    <div id="step4" class="step">
+      <h1 class="page-title">You Are All Set Up! Here's How to Use It</h1>
+      <ul style="text-align:left; margin-left:1.5rem; margin-bottom:1.5rem;">
+        <li style="margin-bottom:0.5rem;">
+          1) Select the audio clip in Premiere that you want to split.
+        </li>
+        <li style="margin-bottom:0.5rem;">
+          2) In the CamStem extension, click “Split” and wait for the process to finish.
+        </li>
+        <li style="margin-bottom:0.5rem;">
+          3) Make sure the first 4-6 audio tracks are empty; placing stems overwrites them.
+        </li>
+        <li style="margin-bottom:0.5rem;">
+          4) Once placed, you can edit or move the stems as you like.
+        </li>
+      </ul>
+      <div class="buttons-row">
+        <button id="step4CompleteBtn" class="actionButton">
+          Complete Setup
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div id="step5" class="step">
+      <h1 class="page-title">Premiere Integration Completed</h1>
+      <p style="margin-bottom:1.5rem;">
+        Now open Adobe Premiere Pro and find the “CamStem” extension. Follow the steps
+        to split your audio clips. Happy editing!
+      </p>
+      <div class="buttons-row">
+        <button id="restartSetupBtn" class="actionButton">
+          Restart Setup
+        </button>
+        <button id="step5MenuBtn" class="actionButton">
+          Go Back to Main Menu
+        </button>
+      </div>
+    </div>
   </div>
+
+  <script>
+    // Step references
+    const stepOne   = document.getElementById('step1');
+    const stepTwo   = document.getElementById('step2');
+    const stepThree = document.getElementById('step3');
+    const stepFour  = document.getElementById('step4');
+    const stepFive  = document.getElementById('step5');
+
+    // Step 1
+    const step1ContinueBtn = document.getElementById('step1ContinueBtn');
+    const step1CancelBtn   = document.getElementById('step1CancelBtn');
+
+    // Step 2
+    const openExtensionsFolderBtn   = document.getElementById('openExtensionsFolderBtn');
+    const chooseExtensionsFolderBtn = document.getElementById('chooseExtensionsFolderBtn');
+    const step2NextBtn             = document.getElementById('step2NextBtn');
+
+    // Step 3
+    const copySplitterPathBtn = document.getElementById('copySplitterPathBtn');
+    const copyModelsPathBtn   = document.getElementById('copyModelsPathBtn');
+    const step3NextBtn        = document.getElementById('step3NextBtn');
+
+    // Step 4
+    const step4CompleteBtn = document.getElementById('step4CompleteBtn');
+
+    // Step 5
+    const restartSetupBtn = document.getElementById('restartSetupBtn');
+    const step5MenuBtn    = document.getElementById('step5MenuBtn');
+
+    // We'll store the demucs paths in variables (not displayed).
+    let demucsExecPath   = '';
+    let demucsModelsPath = '';
+
+    // Step switcher
+    function switchToStep(num) {
+      stepOne.style.display   = 'none';
+      stepTwo.style.display   = 'none';
+      stepThree.style.display = 'none';
+      stepFour.style.display  = 'none';
+      stepFive.style.display  = 'none';
+
+      if (num === 1) stepOne.style.display   = 'block';
+      if (num === 2) stepTwo.style.display   = 'block';
+      if (num === 3) stepThree.style.display = 'block';
+      if (num === 4) stepFour.style.display  = 'block';
+      if (num === 5) stepFive.style.display  = 'block';
+    }
+
+    // On load => if user has completed setup => step 5, else step 1
+    window.addEventListener('load', async () => {
+      const done = localStorage.getItem('premiereSetupComplete');
+      if (done === 'true') {
+        switchToStep(5);
+      } else {
+        switchToStep(1);
+      }
+
+      // Meanwhile, fetch demucs paths (in memory) for Step 3 copy logic
+      try {
+        const paths = await window.api.getDemucsPaths();
+        demucsExecPath   = paths.demucsExec || '';
+        demucsModelsPath = paths.models    || '';
+      } catch (err) {
+        demucsExecPath   = '';
+        demucsModelsPath = '';
+        console.error('Error retrieving Demucs paths:', err);
+      }
+    });
+
+    // Step 1
+    step1ContinueBtn.addEventListener('click', () => {
+      switchToStep(2);
+    });
+    step1CancelBtn.addEventListener('click', () => {
+      window.location.href = 'dashboard.html';
+    });
+
+    // Step 2
+    openExtensionsFolderBtn.addEventListener('click', async () => {
+      try {
+        let custom = localStorage.getItem('camstem_customExtensionsPath') || '';
+        if (custom) {
+          await window.api.openAnyFolder(custom);
+        } else {
+          const defPath = await window.api.getDefaultExtensionsFolder();
+          await window.api.openAnyFolder(defPath);
+        }
+      } catch (err) {
+        alert('Error opening folder:\n' + err);
+      }
+    });
+    chooseExtensionsFolderBtn.addEventListener('click', async () => {
+      try {
+        const selected = await window.api.selectPath('directory');
+        if (selected) {
+          localStorage.setItem('camstem_customExtensionsPath', selected);
+          alert('Custom folder selected:\n' + selected + '\nThis will now be used.');
+        }
+      } catch (err) {
+        alert('Error choosing folder:\n' + err);
+      }
+    });
+    step2NextBtn.addEventListener('click', () => {
+      switchToStep(3);
+    });
+
+    // Step 3
+    copySplitterPathBtn.addEventListener('click', async () => {
+      try {
+        if (!demucsExecPath) {
+          alert('Splitter path not found.');
+          return;
+        }
+        await navigator.clipboard.writeText(demucsExecPath);
+        alert('Splitter path copied!');
+      } catch (err) {
+        alert('Error copying splitter path:\n' + err);
+      }
+    });
+    copyModelsPathBtn.addEventListener('click', async () => {
+      try {
+        if (!demucsModelsPath) {
+          alert('Model path not found.');
+          return;
+        }
+        await navigator.clipboard.writeText(demucsModelsPath);
+        alert('Model path copied!');
+      } catch (err) {
+        alert('Error copying model path:\n' + err);
+      }
+    });
+    step3NextBtn.addEventListener('click', () => {
+      switchToStep(4);
+    });
+
+    // Step 4
+    step4CompleteBtn.addEventListener('click', () => {
+      localStorage.setItem('premiereSetupComplete', 'true');
+      switchToStep(5);
+    });
+
+    // Step 5
+    restartSetupBtn.addEventListener('click', () => {
+      localStorage.removeItem('premiereSetupComplete');
+      switchToStep(1);
+    });
+    step5MenuBtn.addEventListener('click', () => {
+      window.location.href = 'dashboard.html';
+    });
+  </script>
 </body>
 </html>

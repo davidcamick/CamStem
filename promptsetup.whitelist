@@ -8,6 +8,7 @@ src/backend/demucs-cxfreeze-mac/demucs-cxfreeze
 src/backend/demucs-cxfreeze-win-cuda/demucs-cxfreeze
 src/backend/ffmpeg
 
+filelocations.txt
 
 package.json
 postcss.config.js

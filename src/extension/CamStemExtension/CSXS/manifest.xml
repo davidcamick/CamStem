@@ -12,6 +12,7 @@
 
   <ExecutionEnvironment>
     <HostList>
+      <!-- Premiere Pro from version 0.0 through 99.9 -->
       <Host Name="PPRO" Version="[0.0,99.9]"/>
     </HostList>
     <LocaleList>
@@ -26,6 +27,7 @@
     <Extension Id="CamStemExtension.panel">
       <DispatchInfo>
         <Resources>
+          <!-- Adjust these if your files differ -->
           <MainPath>./index.html</MainPath>
           <ScriptPath>./index.jsx</ScriptPath>
           <CEFCommandLine>
@@ -34,16 +36,27 @@
           </CEFCommandLine>
         </Resources>
         <Lifecycle>
+          <!-- Extension shows automatically -->
           <AutoVisible>true</AutoVisible>
         </Lifecycle>
         <UI>
-          <Type>Panel</Type>
-          <Menu>CamStem Audio Check</Menu>
+          <!-- Force Modeless => floating, cannot be docked -->
+          <Type>Modeless</Type>
+          <Menu>CamStem</Menu>
           <Geometry>
+            <!-- Force 600x700 -->
             <Size>
-              <Height>600</Height>
-              <Width>500</Width>
+              <Width>600</Width>
+              <Height>700</Height>
             </Size>
+            <MinSize>
+              <Width>600</Width>
+              <Height>700</Height>
+            </MinSize>
+            <MaxSize>
+              <Width>600</Width>
+              <Height>700</Height>
+            </MaxSize>
           </Geometry>
         </UI>
       </DispatchInfo>

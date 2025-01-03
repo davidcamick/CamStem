@@ -1,0 +1,7 @@
+windows:
+
+C:\Program Files (x86)\Common Files\Adobe\CEP\extensions
+
+mac:
+
+/Users/{USER}/Library/Application Support/Adobe/CEP/extensions

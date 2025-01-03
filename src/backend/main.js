@@ -149,7 +149,6 @@ async function processSoftwareKey(encryptedHex) {
   try {
     logToFile(`Encrypted Key Received: ${encryptedHex}`);
 
-    // FIX: rename "b" to "byte" for clarity
     const cipherBytes = new Uint8Array(
       encryptedHex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
     );
@@ -216,6 +215,39 @@ async function getStoredCredentials() {
   return { clerkID, stripeID };
 }
 
+// ------------- Resource Path Helper -------------
+function getResourcePath(relativePath) {
+  const basePath = app.isPackaged
+    ? path.join(process.resourcesPath)
+    : path.join(app.getAppPath());
+  const resolvedPath = path.join(basePath, relativePath);
+  logToFile(`Resolved Path: ${resolvedPath}`);
+  return resolvedPath;
+}
+
+// ------------- Derive the demucs exec path (like in run-demucs code) -------------
+function deriveDemucsExecPath() {
+  const platform = os.platform();
+
+  let relativeDemucsPath;
+  if (platform === 'darwin') {
+    relativeDemucsPath = isDev
+      ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
+      : 'demucs-cxfreeze-mac/demucs-cxfreeze';
+  } else if (platform === 'win32') {
+    relativeDemucsPath = isDev
+      ? 'src/backend/demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe'
+      : 'demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe';
+  } else {
+    // fallback for Linux, etc.
+    relativeDemucsPath = isDev
+      ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
+      : 'demucs-cxfreeze-mac/demucs-cxfreeze';
+  }
+
+  return getResourcePath(relativeDemucsPath);
+}
+
 // ----------------- IPC HANDLERS -----------------
 ipcMain.handle('select-path', async (event, type) => {
   const options = type === 'file'
@@ -229,6 +261,24 @@ ipcMain.handle('select-path', async (event, type) => {
     return result.filePaths[0];
   }
   return null;
+});
+
+// -------------- NEW: getDemucsPaths --------------
+ipcMain.handle('getDemucsPaths', async () => {
+  try {
+    const demucsExec = deriveDemucsExecPath();
+    const modelsPath = getResourcePath('Models');
+
+    // Return them to the front-end
+    return {
+      demucsExec,
+      models: modelsPath,
+    };
+  } catch (err) {
+    const msg = 'Error retrieving demucs or models path: ' + err.message;
+    logToFile(msg);
+    throw new Error(msg);
+  }
 });
 
 ipcMain.handle('check-valid-key', async () => {
@@ -355,49 +405,20 @@ ipcMain.handle('install-update-now', () => {
 });
 
 // ---------- DEMUCS RUNNER -----------
-function getResourcePath(relativePath) {
-  const basePath = app.isPackaged
-    ? path.join(process.resourcesPath)
-    : path.join(app.getAppPath());
-  const resolvedPath = path.join(basePath, relativePath);
-  logToFile(`Resolved Path: ${resolvedPath}`);
-  return resolvedPath;
-}
-
-/**
- *  We keep 'demucs-log', 'demucs-success', 'demucs-error' exactly the same
- *  plus the partial approach on stderr if you want it. 
- */
 ipcMain.on('run-demucs', (event, args) => {
-  const platform = os.platform();
-
-  let relativeDemucsPath;
-  if (platform === 'darwin') {
-    relativeDemucsPath = isDev
-      ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
-      : 'demucs-cxfreeze-mac/demucs-cxfreeze';
-  } else if (platform === 'win32') {
-    relativeDemucsPath = isDev
-      ? 'src/backend/demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe'
-      : 'demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe';
-  } else {
-    relativeDemucsPath = isDev
-      ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
-      : 'demucs-cxfreeze-mac/demucs-cxfreeze';
-  }
-
-  const demucsPath = getResourcePath(relativeDemucsPath);
-  const modelRepo = getResourcePath('Models');
-
   const { inputPath, outputPath, model, mp3Preset } = args;
 
   logToFile('Running Demucs with args:');
-  logToFile(`Demucs Path: ${demucsPath}`);
-  logToFile(`Model Repo: ${modelRepo}`);
   logToFile(`Input Path: ${inputPath}`);
   logToFile(`Output Path: ${outputPath}`);
   logToFile(`Model: ${model}`);
   logToFile(`MP3 Preset: ${mp3Preset}`);
+
+  const demucsPath = deriveDemucsExecPath();
+  const modelRepo = getResourcePath('Models');
+
+  logToFile(`Demucs Path: ${demucsPath}`);
+  logToFile(`Model Repo: ${modelRepo}`);
 
   const commandArgs = [
     '-n', model,
@@ -410,20 +431,17 @@ ipcMain.on('run-demucs', (event, args) => {
 
   logToFile(`Command Args: ${commandArgs.join(' ')}`);
 
-  // Instead of execFile, use spawn for real-time line-based output
   const demucsProcess = spawn(demucsPath, commandArgs, {
     shell: false,
     cwd: path.dirname(demucsPath),
   });
 
-  // stdout => forward to 'demucs-log'
   demucsProcess.stdout.on('data', (data) => {
     const out = data.toString();
     logToFile(`Demucs stdout: ${out}`);
     event.reply('demucs-log', out);
   });
 
-  // stderr => forward to 'demucs-log'
   demucsProcess.stderr.on('data', (data) => {
     const errOut = data.toString();
     logToFile(`Demucs stderr: ${errOut}`);
@@ -469,15 +487,11 @@ app.on('window-all-closed', () => {
 });
 
 /*************************************************************
- * TAILING THE LOG FILE (Optional)
- * This is the "new logic" that streams lines from demucs-log.txt
- * in real time, without removing your existing 'demucs-log' events.
+ * TAILING THE LOG FILE 
  *************************************************************/
-
 function tailLogFile(sender) {
-  const logPath = logFilePath; // same userData/demucs-log path
+  const logPath = logFilePath;
   let fileOffset = 0;
-  let tailInterval = null;
 
   fs.open(logPath, 'r', (err, fd) => {
     if (err) {
@@ -485,13 +499,12 @@ function tailLogFile(sender) {
       return;
     }
 
-    tailInterval = setInterval(() => {
+    const tailInterval = setInterval(() => {
       fs.stat(logPath, (statErr, stats) => {
         if (statErr) {
           console.error('stat error:', statErr);
           return;
         }
-        // If file grew
         if (stats.size > fileOffset) {
           const newSize = stats.size - fileOffset;
           const buffer = Buffer.alloc(newSize);
@@ -518,7 +531,70 @@ function tailLogFile(sender) {
   });
 }
 
-// The renderer can request "startTailLog"
 ipcMain.on('start-tail-log', (evt) => {
   tailLogFile(evt.sender);
+});
+
+// ---------- PREMIERE EXTENSION INSTALLER ----------
+ipcMain.handle('installPremiereExtension', async (event, chosenPath) => {
+  try {
+    const extensionSource = path.join(__dirname, '../extension/CamStemExtension');
+    const destination = path.join(chosenPath, 'CamStemExtension');
+
+    logToFile(`Installing Premiere Extension from: ${extensionSource} => ${destination}`);
+
+    function copyFolderSync(src, dest) {
+      if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest, { recursive: true });
+      }
+      const entries = fs.readdirSync(src, { withFileTypes: true });
+      for (const entry of entries) {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+        if (entry.isDirectory()) {
+          copyFolderSync(srcPath, destPath);
+        } else {
+          fs.copyFileSync(srcPath, destPath);
+        }
+      }
+    }
+
+    copyFolderSync(extensionSource, destination);
+
+    logToFile('Premiere Extension installed successfully!');
+    return { success: true };
+  } catch (err) {
+    const msg = `Error installing Premiere Extension: ${err.message}`;
+    logToFile(msg);
+    return { success: false, error: msg };
+  }
+});
+
+// ---------- OPEN ANY FOLDER IPC ----------
+ipcMain.handle('openAnyFolder', async (event, folderPath) => {
+  logToFile(`Request to open folder: ${folderPath}`);
+  if (!folderPath) {
+    return;
+  }
+  try {
+    await shell.openPath(folderPath);
+  } catch (err) {
+    logToFile('Error opening path: ' + err.message);
+  }
+});
+
+// ---------- GET DEFAULT EXTENSIONS FOLDER IPC ----------
+ipcMain.handle('getDefaultExtensionsFolder', () => {
+  const platform = os.platform();
+  if (platform === 'win32') {
+    // Windows
+    return 'C:\\Program Files (x86)\\Common Files\\Adobe\\CEP\\extensions';
+  } else if (platform === 'darwin') {
+    // Mac
+    const homeDir = os.homedir();
+    return path.join(homeDir, 'Library', 'Application Support', 'Adobe', 'CEP', 'extensions');
+  } else {
+    // fallback, maybe Linux or unknown
+    return '/tmp/AdobeCEP/extensions';
+  }
 });

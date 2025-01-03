@@ -7,6 +7,7 @@ this is my project, please read the contents and understand its functionality. o
 - `postcss.config.js`
 - `.env`
 - `package.json`
+- `filelocations.txt`
 
 `.github`
 ==============
@@ -69,6 +70,7 @@ this is my project, please read the contents and understand its functionality. o
 
   `extension`
   ==============
+    - `CamStemExtension.zip`
 
     `CamStemExtension`
     ==============
@@ -109,6 +111,135 @@ module.exports = {
         autoprefixer: {},
     },
 };
+```
+
+### package.json
+
+``` 
+{
+  "name": "CamStem",
+  "version": "1.0.0",
+  "description": "CamStem",
+  "main": "src/backend/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac --publish=always",
+    "build:win": "electron-builder --win --publish=always",
+    "build:all": "electron-builder --mac --win --publish=always",
+    "build": "npm run build:all",
+    "build:css": "npx tailwindcss -i ./src/frontend/index.css -o ./src/frontend/tailwind-output.css"
+  },
+  "author": "David Camick",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.25.9",
+    "@babel/standalone": "^7.26.2",
+    "babel-loader": "^9.2.1",
+    "electron": "^25.1.0",
+    "electron-builder": "^25.1.8",
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4"
+  },
+  "build": {
+    "appId": "camstem.org",
+    "productName": "CamStem",
+    "asar": false,
+    "compression": "maximum",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "davidcamick",
+        "repo": "CamStemReleases"
+      }
+    ],
+    "extraResources": [
+      {
+        "from": "src/assets",
+        "to": "app/src/assets"
+      },
+      {
+        "from": "Models",
+        "to": "Models",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "forceCodeSigning": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "compression": "maximum",
+      "extraFiles": [
+        {
+          "from": "src/backend/demucs-cxfreeze-win-cuda",
+          "to": "resources/demucs-cxfreeze-win-cuda",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "runAfterFinish": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "differentialPackage": false
+    },
+    "mac": {
+      "icon": "assets/icon.icns",
+      "target": [
+        "zip"
+      ],
+      "category": "public.app-category.utilities",
+      "artifactName": "${productName}-${version}-mac.${ext}",
+      "hardenedRuntime": true,
+      "extraFiles": [
+        {
+          "from": "src/backend/demucs-cxfreeze-mac",
+          "to": "resources/demucs-cxfreeze-mac",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ]
+    },
+    "files": [
+      "dist/**/*",
+      "src/backend/main.js",
+      "src/backend/preload.js",
+      "src/frontend/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "afterPack": "src/backend/afterPack.js"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.4.20",
+    "choco": "^0.2.1",
+    "dotenv": "^16.4.7",
+    "electron-is-dev": "^3.0.1",
+    "electron-updater": "^6.3.9",
+    "keytar": "^7.9.0",
+    "postcss": "^8.4.49",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "stripe": "^17.4.0",
+    "tailwindcss": "^3.4.15"
+  }
+}
 ```
 
 ### src\frontend\tailwind-output.css
@@ -2811,29 +2942,301 @@ body {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CamStem - Premiere Integration</title>
+  <title>CamStem - Premiere Integration Setup</title>
   <!-- Include Tailwind + Custom Index CSS -->
   <link rel="stylesheet" href="tailwind-output.css">
   <link rel="stylesheet" href="index.css">
+  <style>
+    /* Global style for steps container */
+    .step {
+      display: none; /* hidden by default */
+      position: relative;
+      padding-bottom: 50px; /* extra space at bottom if needed */
+    }
+
+    .buttons-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+
+    .container {
+      max-width: 480px; /* override if needed */
+    }
+
+    /* 
+      A CSS variable controlling Step 4’s container height.
+      We've set it to 450px as requested.
+    */
+    :root {
+      --step4-container-height: 450px;
+    }
+
+    /* Step 4 uses that variable for height. Removed scrollbar. */
+    #step4 {
+      height: var(--step4-container-height);
+      box-sizing: border-box;
+    }
+  </style>
 </head>
 <body>
-  <div class="container" style="max-width: 480px;">
-    <!-- Page title -->
-    <h1 class="page-title">Premiere Pro Integration</h1>
+  <!-- Main Container -->
+  <div class="container">
 
-    <p style="margin-bottom: 1.5rem;">
-      Premiere automation will be set up here. Feature coming soon!
-    </p>
+    <!-- STEP 1 -->
+    <div id="step1" class="step">
+      <h1 class="page-title">Set Up Premiere Pro Integration</h1>
+      <p style="margin-bottom:1rem;">
+        This extension requires Adobe Premiere Pro 2020 or newer (officially tested with Creative Cloud).
+      </p>
+      <p style="margin-bottom:1.5rem;">
+        Follow these steps to install and configure CamStem for Premiere.
+      </p>
+      <div class="buttons-row">
+        <button id="step1ContinueBtn" class="actionButton">
+          OK, Let's Set It Up
+        </button>
+        <button id="step1CancelBtn" class="actionButton">
+          Nevermind, Back to Main Menu
+        </button>
+      </div>
+    </div>
 
-    <!-- Back to Menu button -->
-    <button
-      class="actionButton"
-      onclick="window.location.href='dashboard.html'"
-      style="width: 100%;"
-    >
-      Back to Menu
-    </button>
+    <!-- STEP 2 -->
+    <div id="step2" class="step">
+      <h1 class="page-title">Install Extension in Extensions Folder</h1>
+      <p style="margin-bottom:1.5rem;">
+        First, install the extension into your Adobe Extensions folder.
+        Use the buttons below to open the default/custom folder, 
+        then drag (or copy) the "CamStemExtension" folder into it.
+      </p>
+      <div class="buttons-row">
+        <button id="openExtensionsFolderBtn" class="actionButton">
+          Open Extensions Folder
+        </button>
+        <button id="chooseExtensionsFolderBtn" class="actionButton">
+          Choose My Own Folder
+        </button>
+        <button id="step2NextBtn" class="actionButton" style="margin-left:1rem;">
+          Next
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div id="step3" class="step">
+      <h1 class="page-title">Add Splitter Path</h1>
+      <p style="margin-bottom:1.5rem;">
+        Copy the Splitter and Model paths into the Premiere extension's fields.
+      </p>
+      <!-- We do not display the actual paths, just the copy buttons. -->
+      <div class="buttons-row">
+        <button id="copySplitterPathBtn" class="actionButton">
+          Copy Splitter Path
+        </button>
+        <button id="copyModelsPathBtn" class="actionButton">
+          Copy Model Path
+        </button>
+        <button id="step3NextBtn" class="actionButton" style="margin-left:1rem;">
+          Next
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 4 => uses the variable-based height, no scrollbar, no "Quick Guidance" -->
+    <div id="step4" class="step">
+      <h1 class="page-title">You Are All Set Up! Here's How to Use It</h1>
+      <ul style="text-align:left; margin-left:1.5rem; margin-bottom:1.5rem;">
+        <li style="margin-bottom:0.5rem;">
+          1) Select the audio clip in Premiere that you want to split.
+        </li>
+        <li style="margin-bottom:0.5rem;">
+          2) In the CamStem extension, click “Split” and wait for the process to finish.
+        </li>
+        <li style="margin-bottom:0.5rem;">
+          3) Make sure the first 4-6 audio tracks are empty; placing stems overwrites them.
+        </li>
+        <li style="margin-bottom:0.5rem;">
+          4) Once placed, you can edit or move the stems as you like.
+        </li>
+      </ul>
+      <div class="buttons-row">
+        <button id="step4CompleteBtn" class="actionButton">
+          Complete Setup
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div id="step5" class="step">
+      <h1 class="page-title">Premiere Integration Completed</h1>
+      <p style="margin-bottom:1.5rem;">
+        Now open Adobe Premiere Pro and find the “CamStem” extension. Follow the steps
+        to split your audio clips. Happy editing!
+      </p>
+      <div class="buttons-row">
+        <button id="restartSetupBtn" class="actionButton">
+          Restart Setup
+        </button>
+        <button id="step5MenuBtn" class="actionButton">
+          Go Back to Main Menu
+        </button>
+      </div>
+    </div>
   </div>
+
+  <script>
+    // Step references
+    const stepOne   = document.getElementById('step1');
+    const stepTwo   = document.getElementById('step2');
+    const stepThree = document.getElementById('step3');
+    const stepFour  = document.getElementById('step4');
+    const stepFive  = document.getElementById('step5');
+
+    // Step 1
+    const step1ContinueBtn = document.getElementById('step1ContinueBtn');
+    const step1CancelBtn   = document.getElementById('step1CancelBtn');
+
+    // Step 2
+    const openExtensionsFolderBtn   = document.getElementById('openExtensionsFolderBtn');
+    const chooseExtensionsFolderBtn = document.getElementById('chooseExtensionsFolderBtn');
+    const step2NextBtn             = document.getElementById('step2NextBtn');
+
+    // Step 3
+    const copySplitterPathBtn = document.getElementById('copySplitterPathBtn');
+    const copyModelsPathBtn   = document.getElementById('copyModelsPathBtn');
+    const step3NextBtn        = document.getElementById('step3NextBtn');
+
+    // Step 4
+    const step4CompleteBtn = document.getElementById('step4CompleteBtn');
+
+    // Step 5
+    const restartSetupBtn = document.getElementById('restartSetupBtn');
+    const step5MenuBtn    = document.getElementById('step5MenuBtn');
+
+    // We'll store the demucs paths in variables (not displayed).
+    let demucsExecPath   = '';
+    let demucsModelsPath = '';
+
+    // Step switcher
+    function switchToStep(num) {
+      stepOne.style.display   = 'none';
+      stepTwo.style.display   = 'none';
+      stepThree.style.display = 'none';
+      stepFour.style.display  = 'none';
+      stepFive.style.display  = 'none';
+
+      if (num === 1) stepOne.style.display   = 'block';
+      if (num === 2) stepTwo.style.display   = 'block';
+      if (num === 3) stepThree.style.display = 'block';
+      if (num === 4) stepFour.style.display  = 'block';
+      if (num === 5) stepFive.style.display  = 'block';
+    }
+
+    // On load => if user has completed setup => step 5, else step 1
+    window.addEventListener('load', async () => {
+      const done = localStorage.getItem('premiereSetupComplete');
+      if (done === 'true') {
+        switchToStep(5);
+      } else {
+        switchToStep(1);
+      }
+
+      // Meanwhile, fetch demucs paths (in memory) for Step 3 copy logic
+      try {
+        const paths = await window.api.getDemucsPaths();
+        demucsExecPath   = paths.demucsExec || '';
+        demucsModelsPath = paths.models    || '';
+      } catch (err) {
+        demucsExecPath   = '';
+        demucsModelsPath = '';
+        console.error('Error retrieving Demucs paths:', err);
+      }
+    });
+
+    // Step 1
+    step1ContinueBtn.addEventListener('click', () => {
+      switchToStep(2);
+    });
+    step1CancelBtn.addEventListener('click', () => {
+      window.location.href = 'dashboard.html';
+    });
+
+    // Step 2
+    openExtensionsFolderBtn.addEventListener('click', async () => {
+      try {
+        let custom = localStorage.getItem('camstem_customExtensionsPath') || '';
+        if (custom) {
+          await window.api.openAnyFolder(custom);
+        } else {
+          const defPath = await window.api.getDefaultExtensionsFolder();
+          await window.api.openAnyFolder(defPath);
+        }
+      } catch (err) {
+        alert('Error opening folder:\n' + err);
+      }
+    });
+    chooseExtensionsFolderBtn.addEventListener('click', async () => {
+      try {
+        const selected = await window.api.selectPath('directory');
+        if (selected) {
+          localStorage.setItem('camstem_customExtensionsPath', selected);
+          alert('Custom folder selected:\n' + selected + '\nThis will now be used.');
+        }
+      } catch (err) {
+        alert('Error choosing folder:\n' + err);
+      }
+    });
+    step2NextBtn.addEventListener('click', () => {
+      switchToStep(3);
+    });
+
+    // Step 3
+    copySplitterPathBtn.addEventListener('click', async () => {
+      try {
+        if (!demucsExecPath) {
+          alert('Splitter path not found.');
+          return;
+        }
+        await navigator.clipboard.writeText(demucsExecPath);
+        alert('Splitter path copied!');
+      } catch (err) {
+        alert('Error copying splitter path:\n' + err);
+      }
+    });
+    copyModelsPathBtn.addEventListener('click', async () => {
+      try {
+        if (!demucsModelsPath) {
+          alert('Model path not found.');
+          return;
+        }
+        await navigator.clipboard.writeText(demucsModelsPath);
+        alert('Model path copied!');
+      } catch (err) {
+        alert('Error copying model path:\n' + err);
+      }
+    });
+    step3NextBtn.addEventListener('click', () => {
+      switchToStep(4);
+    });
+
+    // Step 4
+    step4CompleteBtn.addEventListener('click', () => {
+      localStorage.setItem('premiereSetupComplete', 'true');
+      switchToStep(5);
+    });
+
+    // Step 5
+    restartSetupBtn.addEventListener('click', () => {
+      localStorage.removeItem('premiereSetupComplete');
+      switchToStep(1);
+    });
+    step5MenuBtn.addEventListener('click', () => {
+      window.location.href = 'dashboard.html';
+    });
+  </script>
 </body>
 </html>
 ```
@@ -3000,9 +3403,9 @@ contextBridge.exposeInMainWorld('api', {
   },
 
   // 3) Choose path
-  selectPath: async (type, callback) => {
+  selectPath: async (type) => {
     const path = await ipcRenderer.invoke('select-path', type);
-    callback(path);
+    return path;
   },
 
   // 4) Open log file in Explorer/Finder
@@ -3043,6 +3446,29 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.on('demucs-logfile-line', (event, line) => {
       callback(line);
     });
+  },
+
+  // 11) Premiere extension installation (existing from previous steps)
+  installPremiereExtension: async (destinationPath) => {
+    const result = await ipcRenderer.invoke('installPremiereExtension', destinationPath);
+    return result;
+  },
+
+  // 12) We want to open an arbitrary folder from front-end
+  openAnyFolder: async (folderPath) => {
+    await ipcRenderer.invoke('openAnyFolder', folderPath);
+  },
+
+  // 13) Get the default OS extension folder
+  getDefaultExtensionsFolder: async () => {
+    const defPath = await ipcRenderer.invoke('getDefaultExtensionsFolder');
+    return defPath;
+  },
+
+  // 14) NEW: Get demucs exec + model folder path
+  getDemucsPaths: async () => {
+    // main.js returns { demucsExec, models }
+    return await ipcRenderer.invoke('getDemucsPaths');
   },
 });
 ```
@@ -3201,7 +3627,6 @@ async function processSoftwareKey(encryptedHex) {
   try {
     logToFile(`Encrypted Key Received: ${encryptedHex}`);
 
-    // FIX: rename "b" to "byte" for clarity
     const cipherBytes = new Uint8Array(
       encryptedHex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
     );
@@ -3268,6 +3693,39 @@ async function getStoredCredentials() {
   return { clerkID, stripeID };
 }
 
+// ------------- Resource Path Helper -------------
+function getResourcePath(relativePath) {
+  const basePath = app.isPackaged
+    ? path.join(process.resourcesPath)
+    : path.join(app.getAppPath());
+  const resolvedPath = path.join(basePath, relativePath);
+  logToFile(`Resolved Path: ${resolvedPath}`);
+  return resolvedPath;
+}
+
+// ------------- Derive the demucs exec path (like in run-demucs code) -------------
+function deriveDemucsExecPath() {
+  const platform = os.platform();
+
+  let relativeDemucsPath;
+  if (platform === 'darwin') {
+    relativeDemucsPath = isDev
+      ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
+      : 'demucs-cxfreeze-mac/demucs-cxfreeze';
+  } else if (platform === 'win32') {
+    relativeDemucsPath = isDev
+      ? 'src/backend/demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe'
+      : 'demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe';
+  } else {
+    // fallback for Linux, etc.
+    relativeDemucsPath = isDev
+      ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
+      : 'demucs-cxfreeze-mac/demucs-cxfreeze';
+  }
+
+  return getResourcePath(relativeDemucsPath);
+}
+
 // ----------------- IPC HANDLERS -----------------
 ipcMain.handle('select-path', async (event, type) => {
   const options = type === 'file'
@@ -3281,6 +3739,24 @@ ipcMain.handle('select-path', async (event, type) => {
     return result.filePaths[0];
   }
   return null;
+});
+
+// -------------- NEW: getDemucsPaths --------------
+ipcMain.handle('getDemucsPaths', async () => {
+  try {
+    const demucsExec = deriveDemucsExecPath();
+    const modelsPath = getResourcePath('Models');
+
+    // Return them to the front-end
+    return {
+      demucsExec,
+      models: modelsPath,
+    };
+  } catch (err) {
+    const msg = 'Error retrieving demucs or models path: ' + err.message;
+    logToFile(msg);
+    throw new Error(msg);
+  }
 });
 
 ipcMain.handle('check-valid-key', async () => {
@@ -3407,49 +3883,20 @@ ipcMain.handle('install-update-now', () => {
 });
 
 // ---------- DEMUCS RUNNER -----------
-function getResourcePath(relativePath) {
-  const basePath = app.isPackaged
-    ? path.join(process.resourcesPath)
-    : path.join(app.getAppPath());
-  const resolvedPath = path.join(basePath, relativePath);
-  logToFile(`Resolved Path: ${resolvedPath}`);
-  return resolvedPath;
-}
-
-/**
- *  We keep 'demucs-log', 'demucs-success', 'demucs-error' exactly the same
- *  plus the partial approach on stderr if you want it. 
- */
 ipcMain.on('run-demucs', (event, args) => {
-  const platform = os.platform();
-
-  let relativeDemucsPath;
-  if (platform === 'darwin') {
-    relativeDemucsPath = isDev
-      ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
-      : 'demucs-cxfreeze-mac/demucs-cxfreeze';
-  } else if (platform === 'win32') {
-    relativeDemucsPath = isDev
-      ? 'src/backend/demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe'
-      : 'demucs-cxfreeze-win-cuda/demucs-cxfreeze.exe';
-  } else {
-    relativeDemucsPath = isDev
-      ? 'src/backend/demucs-cxfreeze-mac/demucs-cxfreeze'
-      : 'demucs-cxfreeze-mac/demucs-cxfreeze';
-  }
-
-  const demucsPath = getResourcePath(relativeDemucsPath);
-  const modelRepo = getResourcePath('Models');
-
   const { inputPath, outputPath, model, mp3Preset } = args;
 
   logToFile('Running Demucs with args:');
-  logToFile(`Demucs Path: ${demucsPath}`);
-  logToFile(`Model Repo: ${modelRepo}`);
   logToFile(`Input Path: ${inputPath}`);
   logToFile(`Output Path: ${outputPath}`);
   logToFile(`Model: ${model}`);
   logToFile(`MP3 Preset: ${mp3Preset}`);
+
+  const demucsPath = deriveDemucsExecPath();
+  const modelRepo = getResourcePath('Models');
+
+  logToFile(`Demucs Path: ${demucsPath}`);
+  logToFile(`Model Repo: ${modelRepo}`);
 
   const commandArgs = [
     '-n', model,
@@ -3462,20 +3909,17 @@ ipcMain.on('run-demucs', (event, args) => {
 
   logToFile(`Command Args: ${commandArgs.join(' ')}`);
 
-  // Instead of execFile, use spawn for real-time line-based output
   const demucsProcess = spawn(demucsPath, commandArgs, {
     shell: false,
     cwd: path.dirname(demucsPath),
   });
 
-  // stdout => forward to 'demucs-log'
   demucsProcess.stdout.on('data', (data) => {
     const out = data.toString();
     logToFile(`Demucs stdout: ${out}`);
     event.reply('demucs-log', out);
   });
 
-  // stderr => forward to 'demucs-log'
   demucsProcess.stderr.on('data', (data) => {
     const errOut = data.toString();
     logToFile(`Demucs stderr: ${errOut}`);
@@ -3521,15 +3965,11 @@ app.on('window-all-closed', () => {
 });
 
 /*************************************************************
- * TAILING THE LOG FILE (Optional)
- * This is the "new logic" that streams lines from demucs-log.txt
- * in real time, without removing your existing 'demucs-log' events.
+ * TAILING THE LOG FILE 
  *************************************************************/
-
 function tailLogFile(sender) {
-  const logPath = logFilePath; // same userData/demucs-log path
+  const logPath = logFilePath;
   let fileOffset = 0;
-  let tailInterval = null;
 
   fs.open(logPath, 'r', (err, fd) => {
     if (err) {
@@ -3537,13 +3977,12 @@ function tailLogFile(sender) {
       return;
     }
 
-    tailInterval = setInterval(() => {
+    const tailInterval = setInterval(() => {
       fs.stat(logPath, (statErr, stats) => {
         if (statErr) {
           console.error('stat error:', statErr);
           return;
         }
-        // If file grew
         if (stats.size > fileOffset) {
           const newSize = stats.size - fileOffset;
           const buffer = Buffer.alloc(newSize);
@@ -3570,9 +4009,72 @@ function tailLogFile(sender) {
   });
 }
 
-// The renderer can request "startTailLog"
 ipcMain.on('start-tail-log', (evt) => {
   tailLogFile(evt.sender);
+});
+
+// ---------- PREMIERE EXTENSION INSTALLER ----------
+ipcMain.handle('installPremiereExtension', async (event, chosenPath) => {
+  try {
+    const extensionSource = path.join(__dirname, '../extension/CamStemExtension');
+    const destination = path.join(chosenPath, 'CamStemExtension');
+
+    logToFile(`Installing Premiere Extension from: ${extensionSource} => ${destination}`);
+
+    function copyFolderSync(src, dest) {
+      if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest, { recursive: true });
+      }
+      const entries = fs.readdirSync(src, { withFileTypes: true });
+      for (const entry of entries) {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+        if (entry.isDirectory()) {
+          copyFolderSync(srcPath, destPath);
+        } else {
+          fs.copyFileSync(srcPath, destPath);
+        }
+      }
+    }
+
+    copyFolderSync(extensionSource, destination);
+
+    logToFile('Premiere Extension installed successfully!');
+    return { success: true };
+  } catch (err) {
+    const msg = `Error installing Premiere Extension: ${err.message}`;
+    logToFile(msg);
+    return { success: false, error: msg };
+  }
+});
+
+// ---------- OPEN ANY FOLDER IPC ----------
+ipcMain.handle('openAnyFolder', async (event, folderPath) => {
+  logToFile(`Request to open folder: ${folderPath}`);
+  if (!folderPath) {
+    return;
+  }
+  try {
+    await shell.openPath(folderPath);
+  } catch (err) {
+    logToFile('Error opening path: ' + err.message);
+  }
+});
+
+// ---------- GET DEFAULT EXTENSIONS FOLDER IPC ----------
+ipcMain.handle('getDefaultExtensionsFolder', () => {
+  const platform = os.platform();
+  if (platform === 'win32') {
+    // Windows
+    return 'C:\\Program Files (x86)\\Common Files\\Adobe\\CEP\\extensions';
+  } else if (platform === 'darwin') {
+    // Mac
+    const homeDir = os.homedir();
+    return path.join(homeDir, 'Library', 'Application Support', 'Adobe', 'CEP', 'extensions');
+  } else {
+    // fallback, maybe Linux or unknown
+    return '/tmp/AdobeCEP/extensions';
+  }
 });
 ```
 
@@ -3583,67 +4085,174 @@ ipcMain.on('start-tail-log', (evt) => {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>CamStem Audio Check</title>
+  <title>CamStem</title>
   <style>
-    body {
-      font-family: sans-serif;
+    /* 
+      1) Full-screen gradient background, remove scrollbars, 
+         and white text for contrast 
+    */
+    html, body {
       margin: 0;
       padding: 0;
+      font-family: sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #003554, #051923) no-repeat center center fixed;
+      background-size: cover;
+      color: #ffffff;
+      overflow: hidden; /* remove scrollbars on the entire page */
     }
+
+    /* Optionally remove scrollbar track in WebKit browsers */
+    ::-webkit-scrollbar {
+      width: 0px;
+      background: transparent;
+    }
+
+    /* 
+      2) A container with a translucent background, 
+         centered horizontally, with rounded corners.
+    */
     .container {
-      padding: 10px;
+      max-width: 600px;
+      margin: 2rem auto;
+      background-color: rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
+
+    /* Title styling */
+    h1 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    /* Progress Bar Container + label */
+    .progress-container {
+      position: relative;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      width: 100%;
+      height: 20px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background-color: #28a745; /* green */
+      transition: width 0.4s ease;
+    }
+    .progress-label {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+      color: #ffffff;
+      font-weight: bold;
+      line-height: 20px;
+      pointer-events: none;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    /* Labels for inputs */
     label {
       display: block;
       margin-top: 10px;
       font-weight: bold;
     }
-    input[type="text"], select {
+
+    /* Inputs & selects with a translucent background, 
+       full width, border radius, etc. */
+    input[type="text"],
+    select {
       width: 100%;
       padding: 6px;
       margin-top: 4px;
       box-sizing: border-box;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      background-color: rgba(255,255,255,0.15);
+      color: #ffffff;
+      outline: none;
     }
+
+    /* Buttons with a slight hover effect */
     button {
       margin-top: 10px;
       padding: 8px 14px;
       cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background-color: #006494;
+      color: #ffffff;
+      transition: background-color 0.3s, transform 0.3s;
     }
+    button:hover {
+      background-color: #004a66;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Scrollable logs area */
     #status {
       margin-top: 10px;
       font-weight: bold;
       white-space: pre-wrap;
       max-height: 400px;
-      overflow-y: auto; /* so we can scroll if logs are huge */
+      overflow-y: auto; /* make logs scrollable */
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      padding: 8px;
+      background-color: rgba(255,255,255,0.1);
+    }
+
+    /* Hide the "Check Audio" button visually, 
+       but keep it in the DOM for your JS references */
+    #checkAudioBtn {
+      display: none;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>CamStem Audio Check</h1>
+    <!-- Title -->
+    <h1>CamStem</h1>
 
-    <label for="demucsPath">Path to demucs-cxfreeze:</label>
+    <!-- Progress Bar -->
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar"></div>
+      <div class="progress-label" id="progressLabel">0%</div>
+    </div>
+
+    <!-- Path to Process -->
+    <label for="demucsPath">Path to Process:</label>
     <input
       type="text"
       id="demucsPath"
       placeholder="e.g. C:\Program Files\CamStem\demucs-cxfreeze.exe"
     />
 
-    <label for="modelDir">Path to Models Folder:</label>
+    <!-- Assets Path -->
+    <label for="modelDir">Assets Path:</label>
     <input
       type="text"
       id="modelDir"
       placeholder="e.g. F:\Project-CamStem\Models"
     />
 
-    <label for="modelSelect">Model:</label>
+    <!-- Select Model -->
+    <label for="modelSelect">Select Model:</label>
     <select id="modelSelect">
       <option value="htdemucs">Default 4-Stem (htdemucs)</option>
       <option value="htdemucs_ft">High Quality 4-Stem (htdemucs_ft)</option>
       <option value="htdemucs_6s">Experimental 6-Stem (htdemucs_6s)</option>
     </select>
 
-    <label for="qualitySelect">MP3 Quality (2=highest, 7=lowest):</label>
+    <!-- Quality Preset -->
+    <label for="qualitySelect">Quality Preset (lower is better quality)</label>
     <select id="qualitySelect">
       <option value="2">2</option>
       <option value="3">3</option>
@@ -3653,18 +4262,122 @@ ipcMain.on('start-tail-log', (evt) => {
       <option value="7">7</option>
     </select>
 
-    <button id="savePathBtn">Save Paths</button>
+    <!-- Hidden checkAudioBtn to avoid breaking old logic -->
     <button id="checkAudioBtn">Check Audio</button>
-    <button id="splitAudioBtn">Split Audio + Import</button>
 
-    <!-- NEW BUTTON -->
-    <button id="placeStemsBtn">Place Stems on Timeline</button>
+    <!-- Save, Split, Place buttons (IDs unchanged) -->
+    <button id="savePathBtn">Save Settings</button>
+    <button id="splitAudioBtn">Split Audio</button>
+    <button id="placeStemsBtn">Place Stems On Timeline</button>
 
+    <!-- Scrollable status/logs -->
     <div id="status"></div>
   </div>
 
-  <!-- Adobe CEP + Our Scripts -->
+  <!-- Adobe CEP + Your Scripts -->
   <script src="CSInterface.js"></script>
+
+  <script>
+    /***************************************************************************
+     * Revert to simpler single-stage approach with:
+     *   - handleDemucsLog(newChunk)
+     *   - parse lines for "0%|", "NN%|", "100%|"
+     *   - show messages "Initializing...", "Creating Files...", "Done!"
+     *   - logs appended to #status
+     ***************************************************************************/
+    let demucsOutputBuffer = "";
+    let statusEl, progressBarEl, progressLabelEl;
+
+    window.addEventListener("load", function() {
+      statusEl       = document.getElementById("status");
+      progressBarEl  = document.getElementById("progressBar");
+      progressLabelEl= document.getElementById("progressLabel");
+      
+      // For demonstration, let's simulate logs. 
+      // In real usage, your index.js spawns Demucs, then calls handleDemucsLog(...)
+      const simulatedLogs = [
+        "[JS] Checking selected audio...",
+        "[JS] => Found inputAudio = something.mp3",
+        "Selected model is a bag of 1 models. You will see that many progress bars per track.",
+        "Separated tracks will be stored in C:/some/folder",
+        "Separating track C:/some/folder/something.mp3",
+        "[ERR]  0%|   0.0/193.04 [00:00<?, ?seconds/s]",
+        "[ERR]  25%|###   48.2/193.04 [00:01<00:06, 23.6seconds/s]",
+        "[ERR]  50%|#####  96.5/193.04 [00:02<00:03, 30.0seconds/s]",
+        "[ERR]  100%|#######| 193.04/193.04 [00:04<00:00, 40.0seconds/s]",
+        "[JS] Demucs exited with code 0",
+        "Done!"
+      ];
+      let idx = 0;
+      let demoTimer = setInterval(() => {
+        if (idx < simulatedLogs.length) {
+          handleDemucsLog(simulatedLogs[idx] + "\\n");
+          idx++;
+        } else {
+          clearInterval(demoTimer);
+        }
+      }, 1200);
+    });
+
+    /***************************************************************************
+     * handleDemucsLog(newChunk)
+     *  - Called from your Node child_process stdout & stderr events
+     ***************************************************************************/
+    function handleDemucsLog(newChunk) {
+      demucsOutputBuffer += newChunk;
+      const lines = demucsOutputBuffer.split(/\r?\n/);
+      demucsOutputBuffer = lines.pop(); // leftover partial line
+      lines.forEach(parseDemucsLine);
+    }
+
+    function parseDemucsLine(line) {
+      // 1) Always append raw line to the #status text
+      statusEl.textContent += line + "\\n";
+
+      // 2) Check for 0% => "Initializing..."
+      if (line.match(/\b0%?\|/)) {
+        setProgress(0);
+        progressLabelEl.textContent = "Initializing...";
+      }
+
+      // 3) Check for 100% => "Creating Files..."
+      else if (line.match(/\b100%?\|/)) {
+        setProgress(100);
+        progressLabelEl.textContent = "Creating Files - This May Take a Moment";
+      }
+
+      // 4) Else check for e.g. 17%| or 83%|
+      else {
+        // Could match lines like " 17%|####..."
+        const match = line.match(/\b(\d{1,3})%\|/);
+        if (match) {
+          let pct = parseInt(match[1], 10);
+          if (pct < 0) pct = 0;
+          if (pct > 100) pct = 100;
+          setProgress(pct);
+          progressLabelEl.textContent = pct + "%";
+        }
+      }
+
+      // 5) If line includes "Demucs exited with code 0", we consider it done
+      if (line.includes("Demucs exited with code 0")) {
+        // If we've not seen 100% yet, let's set 100
+        setProgress(100);
+        progressLabelEl.textContent = "Separation Completed";
+      }
+    }
+
+    // Helper to update the bar
+    function setProgress(pct) {
+      progressBarEl.style.width = pct + "%";
+      if (pct === 0) {
+        progressLabelEl.textContent = "0%";
+      } else if (pct === 100) {
+        progressLabelEl.textContent = "100%";
+      }
+    }
+  </script>
+
   <script src="index.js"></script>
 </body>
 </html>
@@ -5410,135 +6123,6 @@ function placeStemsManually() {
 
     logs.push("All stems placed on timeline successfully.");
     return logs.join("\n");
-}
-```
-
-### package.json
-
-``` 
-{
-  "name": "CamStem",
-  "version": "1.0.0",
-  "description": "CamStem",
-  "main": "src/backend/main.js",
-  "scripts": {
-    "start": "electron .",
-    "build:mac": "electron-builder --mac --publish=always",
-    "build:win": "electron-builder --win --publish=always",
-    "build:all": "electron-builder --mac --win --publish=always",
-    "build": "npm run build:all",
-    "build:css": "npx tailwindcss -i ./src/frontend/index.css -o ./src/frontend/tailwind-output.css"
-  },
-  "author": "David Camick",
-  "license": "MIT",
-  "devDependencies": {
-    "@babel/core": "^7.26.0",
-    "@babel/preset-env": "^7.26.0",
-    "@babel/preset-react": "^7.25.9",
-    "@babel/standalone": "^7.26.2",
-    "babel-loader": "^9.2.1",
-    "electron": "^25.1.0",
-    "electron-builder": "^25.1.8",
-    "webpack": "^5.96.1",
-    "webpack-cli": "^5.1.4"
-  },
-  "build": {
-    "appId": "camstem.org",
-    "productName": "CamStem",
-    "asar": false,
-    "compression": "maximum",
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "davidcamick",
-        "repo": "CamStemReleases"
-      }
-    ],
-    "extraResources": [
-      {
-        "from": "src/assets",
-        "to": "app/src/assets"
-      },
-      {
-        "from": "Models",
-        "to": "Models",
-        "filter": [
-          "**/*"
-        ]
-      }
-    ],
-    "win": {
-      "icon": "assets/icon.ico",
-      "forceCodeSigning": false,
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "compression": "maximum",
-      "extraFiles": [
-        {
-          "from": "src/backend/demucs-cxfreeze-win-cuda",
-          "to": "resources/demucs-cxfreeze-win-cuda",
-          "filter": [
-            "**/*"
-          ]
-        }
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": false,
-      "runAfterFinish": false,
-      "allowToChangeInstallationDirectory": true,
-      "artifactName": "${productName}-Setup-${version}.${ext}",
-      "differentialPackage": false
-    },
-    "mac": {
-      "icon": "assets/icon.icns",
-      "target": [
-        "zip"
-      ],
-      "category": "public.app-category.utilities",
-      "artifactName": "${productName}-${version}-mac.${ext}",
-      "hardenedRuntime": true,
-      "extraFiles": [
-        {
-          "from": "src/backend/demucs-cxfreeze-mac",
-          "to": "resources/demucs-cxfreeze-mac",
-          "filter": [
-            "**/*"
-          ]
-        }
-      ]
-    },
-    "files": [
-      "dist/**/*",
-      "src/backend/main.js",
-      "src/backend/preload.js",
-      "src/frontend/**/*"
-    ],
-    "directories": {
-      "output": "release"
-    },
-    "afterPack": "src/backend/afterPack.js"
-  },
-  "dependencies": {
-    "autoprefixer": "^10.4.20",
-    "choco": "^0.2.1",
-    "dotenv": "^16.4.7",
-    "electron-is-dev": "^3.0.1",
-    "electron-updater": "^6.3.9",
-    "keytar": "^7.9.0",
-    "postcss": "^8.4.49",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "stripe": "^17.4.0",
-    "tailwindcss": "^3.4.15"
-  }
 }
 ```
 
