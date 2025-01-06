@@ -241,7 +241,7 @@ module.exports = {
 }
 ```
 
-### src\frontend\tailwind-output.css
+### src/frontend/tailwind-output.css
 
 ``` 
 /* =======================
@@ -1343,7 +1343,7 @@ body {
 }
 ```
 
-### src\frontend\index.css
+### src/frontend/index.css
 
 ``` 
 /* =======================
@@ -1728,7 +1728,7 @@ body {
     }
 ```
 
-### src\frontend\dashboard.html
+### src/frontend/dashboard.html
 
 ``` 
 <!DOCTYPE html>
@@ -1879,7 +1879,7 @@ body {
 </html>
 ```
 
-### src\frontend\splitter.html
+### src/frontend/splitter.html
 
 ``` 
 <!DOCTYPE html>
@@ -1993,9 +1993,7 @@ body {
       <!-- For fine-tuned model: 4 lines, each either "Queued" or a percentage, turning green at 100% -->
       <div id="fineTunedStages" style="display:none; margin-top:1rem;">
         <!-- We'll use this label for final messages such as "Creating Files..." or "Splitting Process Completed" -->
-        <p id="refinementLabel" class="text-white" style="font-weight:bold; margin-bottom:0.5rem;">
-          <!-- No "Split Process Initializing" here for fine-tuned. We'll skip that. -->
-        </p>
+        <p id="refinementLabel" class="text-white" style="font-weight:bold; margin-bottom:0.5rem;"></p>
         <div>
           <strong class="text-white">Refinement #1:</strong>
           <span id="stage1progress" class="text-white">Starting…</span>
@@ -2050,6 +2048,26 @@ body {
   </div>
 
   <script>
+    /**************************************************************************************
+     * Function: showDesktopNotification
+     **************************************************************************************/
+    function showDesktopNotification(title, body) {
+      if (!("Notification" in window)) {
+        console.log("This browser does not support desktop notification.");
+        return;
+      }
+      if (Notification.permission === "granted") {
+        new Notification(title, { body });
+      }
+      else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then((perm) => {
+          if (perm === "granted") {
+            new Notification(title, { body });
+          }
+        });
+      }
+    }
+
     /**************************************************************************************
      * GLOBAL / STEP Variables
      **************************************************************************************/
@@ -2204,15 +2222,20 @@ body {
     /**************************************************************************************
      * STEP 3: Output Directory
      **************************************************************************************/
-    browseOutputBtn.addEventListener('click', () => {
-      window.api.selectPath('directory', (selectedFolder) => {
+    // Reverted logic to original style
+    browseOutputBtn.addEventListener('click', async () => {
+      try {
+        const selectedFolder = await window.api.selectPath('directory');
         if (selectedFolder) {
           chosenOutputPath = selectedFolder;
           browseOutputBtn.textContent = 'Output Selected ✓';
           step3ContinueBtn.classList.remove('btn-disabled');
         }
-      });
+      } catch (err) {
+        console.error('Error selecting folder:', err);
+      }
     });
+
     step3ContinueBtn.addEventListener('click', () => {
       if (!chosenOutputPath) {
         showWarning('Please select an output directory first.');
@@ -2266,19 +2289,15 @@ body {
         allStagesDone = false;
         stageComplete = [false, false, false, false];
 
-        // refinementLabel is blank initially (no "Split Process Initializing")
         refinementLabel.textContent = '';
         refinementLabel.className = 'text-white';
 
         stage1progress.textContent = 'Starting…';
         stage1progress.className = 'text-white';
-
         stage2progress.textContent = 'Queued';
         stage2progress.className = 'text-orange';
-
         stage3progress.textContent = 'Queued';
         stage3progress.className = 'text-orange';
-
         stage4progress.textContent = 'Queued';
         stage4progress.className = 'text-orange';
 
@@ -2309,7 +2328,6 @@ body {
     function updateFineTunedProgress(percentVal) {
       if (currentStage > 4) return;
 
-      // If current stage is done, but we see "0%" => next stage
       if (percentVal === 0 && stageComplete[currentStage - 1]) {
         currentStage++;
         if (currentStage > 4) return;
@@ -2321,7 +2339,6 @@ body {
 
       if (percentVal === 100 && !stageComplete[currentStage - 1]) {
         stageComplete[currentStage - 1] = true;
-        // If stage #4 => "Creating Files" in the label
         if (currentStage === 4) {
           refinementLabel.textContent = 'Creating Files - This May Take a Moment';
         }
@@ -2395,16 +2412,17 @@ body {
           stageComplete[3] = true;
           setStagePercent(3, 100);
         }
-        // Show final success in the label only
         refinementLabel.textContent = 'Splitting Process Completed';
         refinementLabel.classList.remove('text-white', 'text-red');
         refinementLabel.classList.add('text-green');
-
       } else {
         filteredLineDiv.classList.remove('text-white', 'text-red');
         filteredLineDiv.classList.add('text-green');
         filteredLineDiv.textContent = 'Splitting Process Completed';
       }
+
+      // Desktop notification on success
+      showDesktopNotification("CamStem", "Your stems have finished splitting!");
     });
 
     // error
@@ -2434,7 +2452,7 @@ body {
 </html>
 ```
 
-### src\frontend\landing.html
+### src/frontend/landing.html
 
 ``` 
 <!DOCTYPE html>
@@ -2552,7 +2570,7 @@ body {
 </html>
 ```
 
-### src\frontend\auth.html
+### src/frontend/auth.html
 
 ``` 
 <!DOCTYPE html>
@@ -2678,7 +2696,7 @@ body {
 </html>
 ```
 
-### src\frontend\settings.html
+### src/frontend/settings.html
 
 ``` 
 <!DOCTYPE html>
@@ -2740,7 +2758,7 @@ body {
 </html>
 ```
 
-### src\frontend\about.html
+### src/frontend/about.html
 
 ``` 
 <!DOCTYPE html>
@@ -2748,38 +2766,136 @@ body {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CamStem - About</title>
+  <title>About CamStem</title>
   <!-- Include Tailwind + Custom Index CSS -->
   <link rel="stylesheet" href="tailwind-output.css">
   <link rel="stylesheet" href="index.css">
+  <style>
+    /* Restore old gradient background, remove scroll bar */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;       /* fill the viewport vertically */
+      overflow: hidden;    /* no scroll bar */
+      background: linear-gradient(135deg, #006494, #051923);
+      color: white;
+      text-align: center;
+      font-family: Arial, sans-serif; /* or default from index.css */
+    }
+
+    /* Container at 576px */
+    .container {
+      max-width: 576px;
+      margin: 0 auto; /* center horizontally */
+      padding: 2rem;  /* some spacing inside */
+    }
+
+    .carouselWrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .carouselSlide {
+      text-align: center;
+      padding: 1rem;
+      background-color: rgba(255,255,255,0.07);
+      border-radius: 8px;
+      width: 320px; /* ensures each name line stays on one line */
+    }
+
+    .carouselNameLine {
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+      white-space: nowrap; /* keep names on one line */
+    }
+
+    .arrowBtn {
+      font-size: 1.8rem;
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .arrowBtn:hover {
+      transform: scale(1.2);
+    }
+
+    /* Title styling, if needed */
+    .page-title {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+  </style>
 </head>
 <body>
-  <div class="container" style="max-width: 480px;">
-    <!-- Use the .page-title class -->
-    <h1 class="page-title">About</h1>
+  <div class="container">
+    <h1 class="page-title">About CamStem</h1>
 
-    <p>
-      Welcome to CamStem. This software empowers you to separate audio stems,
-      integrate with editing workflows, and more. Below are some of the individuals
-      who have contributed to this project.
+    <p style="margin-bottom: 1.5rem;">
+      CamStem is the first stem splitter built for videography, integrated with Adobe Premiere Pro.
+      Developed by David Camick, it uses advanced audio separation to simplify editing so you can quickly
+      isolate and manipulate audio. Below are the people who have contributed to the project:
     </p>
 
-    <!-- Credits in 2-column format (like before) -->
-    <div class="credits-grid" style="margin: 1.5rem 0;">
-      <!-- 10 placeholders for contributor names -->
-      <div>Name 1</div>
-      <div>Name 2</div>
-      <div>Name 3</div>
-      <div>Name 4</div>
-      <div>Name 5</div>
-      <div>Name 6</div>
-      <div>Name 7</div>
-      <div>Name 8</div>
-      <div>Name 9</div>
-      <div>Name 10</div>
+    <!-- Carousel -->
+    <div class="carouselWrapper">
+      <button id="prevSlide" class="arrowBtn">←</button>
+      <div style="position: relative;">
+        <!-- Slide 1 -->
+        <div class="carouselSlide" data-slide="0" style="display: block;">
+          <div class="carouselNameLine">Developer: David Camick</div>
+          <div class="carouselNameLine">Consultant: Kagen Jensen</div>
+          <div class="carouselNameLine">Consultant: Russell Page</div>
+          <div class="carouselNameLine">Consultant: Stevie Maloof</div>
+          <div class="carouselNameLine">Primary Beta Tester: Ben Gladstone</div>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="carouselSlide" data-slide="1" style="display: none;">
+          <div class="carouselNameLine">Beta Tester: Cooper Hill</div>
+          <div class="carouselNameLine">Beta Tester: Tre Production</div>
+          <div class="carouselNameLine">Beta Tester: Physccoo</div>
+          <div class="carouselNameLine">Beta Tester: kv.visuals</div>
+          <div class="carouselNameLine">Beta Tester: Andrew Schwallier</div>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="carouselSlide" data-slide="2" style="display: none;">
+          <div class="carouselNameLine">Beta Tester: A Hero's Vision</div>
+          <div class="carouselNameLine">Beta Tester: Lude Zombo</div>
+          <div class="carouselNameLine">Beta Tester: Taylor Denise</div>
+          <div class="carouselNameLine">Beta Tester: Nasir Butler</div>
+          <div class="carouselNameLine">Beta Tester: Devin Paschall</div>
+        </div>
+
+        <!-- Slide 4 -->
+        <div class="carouselSlide" data-slide="3" style="display: none;">
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+        </div>
+
+        <!-- Slide 5 -->
+        <div class="carouselSlide" data-slide="4" style="display: none;">
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+          <div class="carouselNameLine"></div>
+        </div>
+      </div>
+      <button id="nextSlide" class="arrowBtn">→</button>
     </div>
 
-    <!-- Back to Menu button (use .actionButton) -->
+    <!-- Back to Menu button -->
     <button
       class="actionButton"
       onclick="window.location.href='dashboard.html'"
@@ -2788,11 +2904,38 @@ body {
       Back to Menu
     </button>
   </div>
+
+  <!-- Basic Carousel JS -->
+  <script>
+    (function() {
+      let currentSlideIndex = 0;
+      const slides = document.querySelectorAll('.carouselSlide');
+      const totalSlides = slides.length;
+      const prevBtn = document.getElementById('prevSlide');
+      const nextBtn = document.getElementById('nextSlide');
+
+      function showSlide(index) {
+        slides.forEach((slide, i) => {
+          slide.style.display = (i === index) ? 'block' : 'none';
+        });
+      }
+
+      prevBtn.addEventListener('click', () => {
+        currentSlideIndex = (currentSlideIndex - 1 + totalSlides) % totalSlides;
+        showSlide(currentSlideIndex);
+      });
+
+      nextBtn.addEventListener('click', () => {
+        currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
+        showSlide(currentSlideIndex);
+      });
+    })();
+  </script>
 </body>
 </html>
 ```
 
-### src\frontend\update.html
+### src/frontend/update.html
 
 ``` 
 <!DOCTYPE html>
@@ -2933,7 +3076,7 @@ body {
 </html>
 ```
 
-### src\frontend\premiere.html
+### src/frontend/premiere.html
 
 ``` 
 <!DOCTYPE html>
@@ -3240,7 +3383,7 @@ body {
 </html>
 ```
 
-### src\frontend\splitter.css
+### src/frontend/splitter.css
 
 ``` 
 /* ============================================================
@@ -3251,27 +3394,27 @@ body {
     position: relative; /* for absolutely positioned child (the exit pill) */
     padding-bottom: 50px; /* enough space at the bottom */
     min-height: 300px; /* ensures there's a decent vertical area */
-  }
-  
-  /* ============================================================
-     Drop Area for Step 2 (selecting MP3)
-  ============================================================ */
-  .drop-area {
+}
+
+/* ============================================================
+   Drop Area for Step 2 (selecting MP3)
+============================================================ */
+.drop-area {
     border: 2px dashed #00ffd8;
     border-radius: 8px;
     padding: 2rem;
     cursor: pointer;
     text-align: center;
     transition: background-color 0.2s ease;
-  }
-  .drop-area:hover {
+}
+.drop-area:hover {
     background-color: rgba(0, 255, 216, 0.1);
-  }
-  
-  /* ============================================================
-     Buttons for MP3 preset (Step 4)
-  ============================================================ */
-  .preset-button {
+}
+
+/* ============================================================
+   Buttons for MP3 preset (Step 4)
+============================================================ */
+.preset-button {
     background-color: #003554;
     color: white;
     padding: 0.75rem 1.5rem;
@@ -3282,28 +3425,28 @@ body {
     display: inline-block;
     border: none;
     font-size: 1.1rem;
-  }
-  .preset-button:hover {
+}
+.preset-button:hover {
     background-color: #002940;
     transform: translateY(-4px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  }
-  .preset-button.active {
+}
+.preset-button.active {
     background-color: #006494 !important;
-  }
-  
-  /* ============================================================
-     Disabled Buttons
-  ============================================================ */
-  .btn-disabled {
+}
+
+/* ============================================================
+   Disabled Buttons
+============================================================ */
+.btn-disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-  
-  /* ============================================================
-     Modals (Warning, etc.)
-  ============================================================ */
-  .modal {
+}
+
+/* ============================================================
+   Modals (Warning, etc.)
+============================================================ */
+.modal {
     display: none; /* hidden by default */
     position: fixed;
     z-index: 999;
@@ -3314,8 +3457,8 @@ body {
     background-color: rgba(0,0,0,0.6);
     align-items: center;
     justify-content: center;
-  }
-  .modal-content {
+}
+.modal-content {
     background-color: #003554;
     margin: auto;
     padding: 1.5rem;
@@ -3324,8 +3467,8 @@ body {
     max-width: 400px;
     color: #fff;
     text-align: center;
-  }
-  .close-btn {
+}
+.close-btn {
     background-color: #8B0000;
     color: #fff;
     border: none;
@@ -3334,16 +3477,16 @@ body {
     font-size: 1rem;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.3s ease;
-  }
-  .close-btn:hover {
+}
+.close-btn:hover {
     background-color: #690000;
     transform: translateY(-3px);
-  }
-  
-  /* ============================================================
-     Discrete Exit Pill (Steps 1-5)
-  ============================================================ */
-  .exit-pill {
+}
+
+/* ============================================================
+   Discrete Exit Pill (Steps 1-5)
+============================================================ */
+.exit-pill {
     position: absolute;
     bottom: 20px;
     left: 50%;
@@ -3357,33 +3500,33 @@ body {
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.3s ease;
     text-decoration: none;
-    opacity: 0.8; 
-  }
-  .exit-pill:hover {
+    opacity: 0.8;
+}
+.exit-pill:hover {
     background-color: rgba(255, 255, 255, 0.25);
     transform: translate(-50%, -2px);
-  }
-  
-  /* 
-     The real-time console area is #demucsConsole
-     The single last line from the tail is #latestLineDiv
-     And the single "filtered" line is #filteredLine
-  */
-  .latest-log-line {
+}
+
+/*
+   The real-time console area is #demucsConsole
+   The single last line from the tail is #latestLineDiv
+   And the single "filtered" line is #filteredLine
+*/
+.latest-log-line {
     margin-top: 1rem;
     color: #0ff;
     font-weight: bold;
-  }
-  
-  #filteredLine {
+}
+
+#filteredLine {
     margin-top: 1rem;
     color: #ffa;
     font-weight: bold;
     font-size: 0.95rem;
-  }
-  ```
+}
+```
 
-### src\backend\preload.js
+### src/backend/preload.js
 
 ``` 
 // src/backend/preload.js
@@ -3472,7 +3615,7 @@ contextBridge.exposeInMainWorld('api', {
 });
 ```
 
-### src\backend\main.js
+### src/backend/main.js
 
 ``` 
 // src/backend/main.js
@@ -4077,7 +4220,7 @@ ipcMain.handle('getDefaultExtensionsFolder', () => {
 });
 ```
 
-### src\extension\CamStemExtension\index.html
+### src/extension/CamStemExtension/index.html
 
 ``` 
 <!DOCTYPE html>
@@ -4490,7 +4633,7 @@ ipcMain.handle('getDefaultExtensionsFolder', () => {
 </html>
 ```
 
-### src\extension\CamStemExtension\CSInterface.js
+### src/extension/CamStemExtension/CSInterface.js
 
 ``` 
 /**************************************************************************************************
@@ -5688,7 +5831,7 @@ CSInterface.prototype.getWindowTitle = function()
 };
 ```
 
-### src\extension\CamStemExtension\index.js
+### src/extension/CamStemExtension/index.js
 
 ``` 
 (function() {
@@ -6223,7 +6366,7 @@ CSInterface.prototype.getWindowTitle = function()
 })();
 ```
 
-### src\extension\CamStemExtension\index.jsx
+### src/extension/CamStemExtension/index.jsx
 
 ``` 
 /**

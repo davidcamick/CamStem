@@ -7,44 +7,50 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 >
   <ExtensionList>
+    <!-- ID must match the one below in <DispatchInfoList> -->
     <Extension Id="CamStemExtension.panel" Version="6.0.0"/>
   </ExtensionList>
 
   <ExecutionEnvironment>
     <HostList>
-      <!-- Premiere Pro from version 0.0 through 99.9 -->
+      <!-- Premiere Pro from version 0.0 through 99.9, so it definitely loads -->
       <Host Name="PPRO" Version="[0.0,99.9]"/>
     </HostList>
     <LocaleList>
       <Locale Code="All"/>
     </LocaleList>
     <RequiredRuntimeList>
+      <!-- CEP 11 typically corresponds to CC 2021+. If needed for older CC, adjust to 10.0 -->
       <RequiredRuntime Name="CSXS" Version="11.0"/>
     </RequiredRuntimeList>
   </ExecutionEnvironment>
 
   <DispatchInfoList>
+    <!-- Match the extension Id from <ExtensionList> above -->
     <Extension Id="CamStemExtension.panel">
       <DispatchInfo>
         <Resources>
-          <!-- Adjust these if your files differ -->
+          <!-- Keep your existing file names exactly: index.html + index.jsx -->
           <MainPath>./index.html</MainPath>
           <ScriptPath>./index.jsx</ScriptPath>
           <CEFCommandLine>
-            <!-- Must enable Node to spawn demucs -->
+            <!-- Must enable Node for demucs spawning, plus some extras for file access + debugging -->
             <Parameter>--enable-nodejs</Parameter>
+            <Parameter>--allow-file-access-from-files</Parameter>
+            <Parameter>--allow-file-access</Parameter>
+            <Parameter>--enable-remote-debugging</Parameter>
           </CEFCommandLine>
         </Resources>
         <Lifecycle>
-          <!-- Extension shows automatically -->
+          <!-- Make it visible without further user steps -->
           <AutoVisible>true</AutoVisible>
         </Lifecycle>
         <UI>
-          <!-- Force Modeless => floating, cannot be docked -->
-          <Type>Modeless</Type>
+          <!-- CRUCIAL: "Panel" so it shows up under Window > Extensions -->
+          <Type>Panel</Type>
           <Menu>CamStem</Menu>
           <Geometry>
-            <!-- Force 600x700 -->
+            <!-- Force the panel to be a fixed 600×700. You can adjust if desired. -->
             <Size>
               <Width>600</Width>
               <Height>700</Height>

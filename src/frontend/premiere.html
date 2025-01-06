@@ -27,16 +27,11 @@
       max-width: 480px; /* override if needed */
     }
 
-    /* 
-      A CSS variable controlling Step 4’s container height.
-      We've set it to 450px as requested.
-    */
     :root {
-      --step4-container-height: 450px;
+      --step4-container-height: 450px; /* used for step5 below */
     }
 
-    /* Step 4 uses that variable for height. Removed scrollbar. */
-    #step4 {
+    #step5 {
       height: var(--step4-container-height);
       box-sizing: border-box;
     }
@@ -65,12 +60,27 @@
       </div>
     </div>
 
-    <!-- STEP 2 -->
+    <!-- STEP 2 => Download Extension -->
     <div id="step2" class="step">
+      <h1 class="page-title">Download Extension</h1>
+      <p style="margin-bottom:1.5rem;">
+        Please go to <strong>camstem.org</strong>, log in, then head to your dashboard.
+        Download the CamStem Premiere Extension (.zip), unzip it, and return here once it's ready.
+      </p>
+      <!-- Removed the external link button; only the Next button remains -->
+      <div class="buttons-row">
+        <button id="step2NextBtn" class="actionButton">
+          Next
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3 => Install Extension -->
+    <div id="step3" class="step">
       <h1 class="page-title">Install Extension in Extensions Folder</h1>
       <p style="margin-bottom:1.5rem;">
         First, install the extension into your Adobe Extensions folder.
-        Use the buttons below to open the default/custom folder, 
+        Use the buttons below to open the default/custom folder,
         then drag (or copy) the "CamStemExtension" folder into it.
       </p>
       <div class="buttons-row">
@@ -80,19 +90,18 @@
         <button id="chooseExtensionsFolderBtn" class="actionButton">
           Choose My Own Folder
         </button>
-        <button id="step2NextBtn" class="actionButton" style="margin-left:1rem;">
+        <button id="step3NextBtn" class="actionButton">
           Next
         </button>
       </div>
     </div>
 
-    <!-- STEP 3 -->
-    <div id="step3" class="step">
+    <!-- STEP 4 => Add Splitter Path -->
+    <div id="step4" class="step">
       <h1 class="page-title">Add Splitter Path</h1>
       <p style="margin-bottom:1.5rem;">
         Copy the Splitter and Model paths into the Premiere extension's fields.
       </p>
-      <!-- We do not display the actual paths, just the copy buttons. -->
       <div class="buttons-row">
         <button id="copySplitterPathBtn" class="actionButton">
           Copy Splitter Path
@@ -100,14 +109,14 @@
         <button id="copyModelsPathBtn" class="actionButton">
           Copy Model Path
         </button>
-        <button id="step3NextBtn" class="actionButton" style="margin-left:1rem;">
+        <button id="step4NextBtn" class="actionButton">
           Next
         </button>
       </div>
     </div>
 
-    <!-- STEP 4 => uses the variable-based height, no scrollbar, no "Quick Guidance" -->
-    <div id="step4" class="step">
+    <!-- STEP 5 => Usage Explanation -->
+    <div id="step5" class="step">
       <h1 class="page-title">You Are All Set Up! Here's How to Use It</h1>
       <ul style="text-align:left; margin-left:1.5rem; margin-bottom:1.5rem;">
         <li style="margin-bottom:0.5rem;">
@@ -124,14 +133,14 @@
         </li>
       </ul>
       <div class="buttons-row">
-        <button id="step4CompleteBtn" class="actionButton">
+        <button id="step5CompleteBtn" class="actionButton">
           Complete Setup
         </button>
       </div>
     </div>
 
-    <!-- STEP 5 -->
-    <div id="step5" class="step">
+    <!-- STEP 6 => Completed -->
+    <div id="step6" class="step">
       <h1 class="page-title">Premiere Integration Completed</h1>
       <p style="margin-bottom:1.5rem;">
         Now open Adobe Premiere Pro and find the “CamStem” extension. Follow the steps
@@ -141,11 +150,12 @@
         <button id="restartSetupBtn" class="actionButton">
           Restart Setup
         </button>
-        <button id="step5MenuBtn" class="actionButton">
+        <button id="step6MenuBtn" class="actionButton">
           Go Back to Main Menu
         </button>
       </div>
     </div>
+
   </div>
 
   <script>
@@ -155,64 +165,66 @@
     const stepThree = document.getElementById('step3');
     const stepFour  = document.getElementById('step4');
     const stepFive  = document.getElementById('step5');
+    const stepSix   = document.getElementById('step6');
 
     // Step 1
     const step1ContinueBtn = document.getElementById('step1ContinueBtn');
     const step1CancelBtn   = document.getElementById('step1CancelBtn');
 
-    // Step 2
+    // Step 2 => Download Extension
+    // Removed the external link button, so there's only step2NextBtn left
+    const step2NextBtn           = document.getElementById('step2NextBtn');
+
+    // Step 3 => Install Extension
     const openExtensionsFolderBtn   = document.getElementById('openExtensionsFolderBtn');
     const chooseExtensionsFolderBtn = document.getElementById('chooseExtensionsFolderBtn');
-    const step2NextBtn             = document.getElementById('step2NextBtn');
+    const step3NextBtn             = document.getElementById('step3NextBtn');
 
-    // Step 3
+    // Step 4 => Add Paths
     const copySplitterPathBtn = document.getElementById('copySplitterPathBtn');
     const copyModelsPathBtn   = document.getElementById('copyModelsPathBtn');
-    const step3NextBtn        = document.getElementById('step3NextBtn');
+    const step4NextBtn        = document.getElementById('step4NextBtn');
 
-    // Step 4
-    const step4CompleteBtn = document.getElementById('step4CompleteBtn');
+    // Step 5 => Usage
+    const step5CompleteBtn = document.getElementById('step5CompleteBtn');
 
-    // Step 5
+    // Step 6 => Completed
     const restartSetupBtn = document.getElementById('restartSetupBtn');
-    const step5MenuBtn    = document.getElementById('step5MenuBtn');
+    const step6MenuBtn    = document.getElementById('step6MenuBtn');
 
-    // We'll store the demucs paths in variables (not displayed).
     let demucsExecPath   = '';
     let demucsModelsPath = '';
 
-    // Step switcher
     function switchToStep(num) {
       stepOne.style.display   = 'none';
       stepTwo.style.display   = 'none';
       stepThree.style.display = 'none';
       stepFour.style.display  = 'none';
       stepFive.style.display  = 'none';
+      stepSix.style.display   = 'none';
 
       if (num === 1) stepOne.style.display   = 'block';
       if (num === 2) stepTwo.style.display   = 'block';
       if (num === 3) stepThree.style.display = 'block';
       if (num === 4) stepFour.style.display  = 'block';
       if (num === 5) stepFive.style.display  = 'block';
+      if (num === 6) stepSix.style.display   = 'block';
     }
 
-    // On load => if user has completed setup => step 5, else step 1
+    // On load => jump to step 6 if done, else step 1
     window.addEventListener('load', async () => {
       const done = localStorage.getItem('premiereSetupComplete');
       if (done === 'true') {
-        switchToStep(5);
+        switchToStep(6);
       } else {
         switchToStep(1);
       }
 
-      // Meanwhile, fetch demucs paths (in memory) for Step 3 copy logic
       try {
         const paths = await window.api.getDemucsPaths();
         demucsExecPath   = paths.demucsExec || '';
         demucsModelsPath = paths.models    || '';
       } catch (err) {
-        demucsExecPath   = '';
-        demucsModelsPath = '';
         console.error('Error retrieving Demucs paths:', err);
       }
     });
@@ -225,10 +237,16 @@
       window.location.href = 'dashboard.html';
     });
 
-    // Step 2
+    // Step 2 => Download Extension
+    // Only next button
+    step2NextBtn.addEventListener('click', () => {
+      switchToStep(3);
+    });
+
+    // Step 3 => Install Extension
     openExtensionsFolderBtn.addEventListener('click', async () => {
       try {
-        let custom = localStorage.getItem('camstem_customExtensionsPath') || '';
+        const custom = localStorage.getItem('camstem_customExtensionsPath') || '';
         if (custom) {
           await window.api.openAnyFolder(custom);
         } else {
@@ -250,11 +268,11 @@
         alert('Error choosing folder:\n' + err);
       }
     });
-    step2NextBtn.addEventListener('click', () => {
-      switchToStep(3);
+    step3NextBtn.addEventListener('click', () => {
+      switchToStep(4);
     });
 
-    // Step 3
+    // Step 4 => Add Paths
     copySplitterPathBtn.addEventListener('click', async () => {
       try {
         if (!demucsExecPath) {
@@ -279,22 +297,22 @@
         alert('Error copying model path:\n' + err);
       }
     });
-    step3NextBtn.addEventListener('click', () => {
-      switchToStep(4);
-    });
-
-    // Step 4
-    step4CompleteBtn.addEventListener('click', () => {
-      localStorage.setItem('premiereSetupComplete', 'true');
+    step4NextBtn.addEventListener('click', () => {
       switchToStep(5);
     });
 
-    // Step 5
+    // Step 5 => Usage
+    step5CompleteBtn.addEventListener('click', () => {
+      localStorage.setItem('premiereSetupComplete', 'true');
+      switchToStep(6);
+    });
+
+    // Step 6 => Completed
     restartSetupBtn.addEventListener('click', () => {
       localStorage.removeItem('premiereSetupComplete');
       switchToStep(1);
     });
-    step5MenuBtn.addEventListener('click', () => {
+    step6MenuBtn.addEventListener('click', () => {
       window.location.href = 'dashboard.html';
     });
   </script>
