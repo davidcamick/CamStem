@@ -20,7 +20,7 @@ jobs:
       - name: Set app version
         run: |
           echo "Bumping version to ${{ github.event.inputs.version }}"
-          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          npm version ${{ github.event.inputs.version }} --allow-same-version --no-git-tag-version
 
       # 3) Install Developer ID Certificate
       - name: Install Developer ID Certificate
