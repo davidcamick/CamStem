@@ -80,7 +80,7 @@
       "differentialPackage": false
     },
     "mac": {
-      "icon": "assets/icon.icns",
+      "icon": "src/assets/icon.icns",
       "target": [
         "zip"
       ],
@@ -101,7 +101,8 @@
       "dist/**/*",
       "src/backend/main.js",
       "src/backend/preload.js",
-      "src/frontend/**/*"
+      "src/frontend/**/*",
+      "src/assets/**"
     ],
     "directories": {
       "output": "release"
