@@ -39,7 +39,11 @@
     "extraResources": [
       {
         "from": "src/assets",
-        "to": "app/src/assets"
+        "to": "app/src/assets",
+        "filter": [
+          "**/*",
+          "!icon.icns"
+        ]
       },
       {
         "from": "Models",
