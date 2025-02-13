@@ -124,7 +124,24 @@ function createWindow() {
     // Example: if you want to send the assets path
     mainWindow.webContents.send('set-assets-path', assetsPath);
   });
+
+  // Check for updates
+  autoUpdater.checkForUpdatesAndNotify();
 }
+
+// Auto-updater events
+autoUpdater.on('update-available', () => {
+  console.log('Update available');
+});
+
+autoUpdater.on('update-downloaded', () => {
+  console.log('Update downloaded');
+  autoUpdater.quitAndInstall();
+});
+
+autoUpdater.on('error', (err) => {
+  console.error('Error in auto-updater:', err);
+});
 
 // Dynamically set the assets path
 const assetsPath = isDev
