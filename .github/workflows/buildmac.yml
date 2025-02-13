@@ -47,167 +47,64 @@ jobs:
           # 3.6 Allow codesign to use the key
           security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
 
-      # 4) Download CamStemExtension.zip from 'release-assets'
-      - name: Download CamStemExtension.zip
-        run: |
-          echo "Fetching releases list..."
-          RELEASES=$(curl -sL \
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/davidcamick/camstem/releases")
-          
-          if [ $? -ne 0 ]; then
-            echo "Failed to fetch releases"
-            exit 1
-          fi
-          
-          # Find the release with tag "release-assets"
-          RELEASE_ID=$(echo "$RELEASES" | jq -r '.[] | select(.tag_name=="release-assets") | .id')
-          
-          if [ -z "$RELEASE_ID" ] || [ "$RELEASE_ID" == "null" ]; then
-            echo "Could not find release with tag 'release-assets'"
-            exit 1
-          fi
-          
-          echo "Found release with ID: $RELEASE_ID"
-          
-          # Get asset ID for CamStemExtension.zip
-          ASSET_ID=$(curl -sL \
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/davidcamick/camstem/releases/$RELEASE_ID" | \
-            jq -r '.assets[] | select(.name=="CamStemExtension.zip") | .id')
-          
-          if [ -z "$ASSET_ID" ] || [ "$ASSET_ID" == "null" ]; then
-            echo "Could not find CamStemExtension.zip in release assets"
-            exit 1
-          fi
-          
-          echo "Downloading asset ID: $ASSET_ID"
-          curl -LJ \
-            -H "Accept: application/octet-stream" \
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            "https://api.github.com/repos/davidcamick/camstem/releases/assets/$ASSET_ID" \
-            -o CamStemExtension.zip
-
-          if [ ! -f CamStemExtension.zip ]; then
-            echo "Failed to download CamStemExtension.zip"
-            exit 1
-          fi
-
-          rm -rf src/backend/CamStemExtension
-          unzip -q CamStemExtension.zip -d src/backend
-          rm CamStemExtension.zip
-
-      # 5) Download demucs-cxfreeze-mac.zip from 'release-assets'
+      # 4) Download demucs-cxfreeze-mac.zip from 'release-assets'
       - name: Download demucs-cxfreeze-mac.zip
         run: |
-          echo "Fetching releases list..."
-          RELEASES=$(curl -sL \
+          echo "Fetching release data from 'release-assets'..."
+          RELEASE_DATA=$(curl -s \
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/davidcamick/camstem/releases")
-          
-          if [ $? -ne 0 ]; then
-            echo "Failed to fetch releases"
-            exit 1
-          fi
-          
-          # Find the release with tag "release-assets"
-          RELEASE_ID=$(echo "$RELEASES" | jq -r '.[] | select(.tag_name=="release-assets") | .id')
-          
-          if [ -z "$RELEASE_ID" ] || [ "$RELEASE_ID" == "null" ]; then
-            echo "Could not find release with tag 'release-assets'"
-            exit 1
-          fi
-          
-          echo "Found release with ID: $RELEASE_ID"
-          
-          # Get asset ID
-          ASSET_ID=$(curl -sL \
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/davidcamick/camstem/releases/$RELEASE_ID" | \
+            "https://api.github.com/repos/davidcamick/camstem/releases/tags/release-assets")
+
+          ASSET_ID=$(echo "$RELEASE_DATA" | \
             jq -r '.assets[] | select(.name=="demucs-cxfreeze-mac.zip") | .id')
-          
+
           if [ -z "$ASSET_ID" ] || [ "$ASSET_ID" == "null" ]; then
-            echo "Could not find demucs-cxfreeze-mac.zip in release assets"
+            echo "Could not find demucs-cxfreeze-mac.zip in release-assets!"
             exit 1
           fi
-          
-          echo "Downloading asset ID: $ASSET_ID"
-          curl -LJ \
+
+          echo "Downloading demucs-cxfreeze-mac.zip (asset id=$ASSET_ID) ..."
+          curl -L \
             -H "Accept: application/octet-stream" \
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             "https://api.github.com/repos/davidcamick/camstem/releases/assets/$ASSET_ID" \
             -o demucs-cxfreeze-mac.zip
 
-          if [ ! -f demucs-cxfreeze-mac.zip ]; then
-            echo "Failed to download demucs-cxfreeze-mac.zip"
-            exit 1
-          fi
-
           rm -rf src/backend/demucs-cxfreeze-mac
           unzip -q demucs-cxfreeze-mac.zip -d src/backend
           rm demucs-cxfreeze-mac.zip
 
-      # 6) Download Models.zip from 'release-assets'
+      # 5) Download Models.zip from 'release-assets'
       - name: Download Models.zip
         run: |
-          echo "Fetching releases list..."
-          RELEASES=$(curl -sL \
+          RELEASE_DATA=$(curl -s \
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/davidcamick/camstem/releases")
-          
-          if [ $? -ne 0 ]; then
-            echo "Failed to fetch releases"
-            exit 1
-          fi
-          
-          # Find the release with tag "release-assets"
-          RELEASE_ID=$(echo "$RELEASES" | jq -r '.[] | select(.tag_name=="release-assets") | .id')
-          
-          if [ -z "$RELEASE_ID" ] || [ "$RELEASE_ID" == "null" ]; then
-            echo "Could not find release with tag 'release-assets'"
-            exit 1
-          fi
-          
-          echo "Found release with ID: $RELEASE_ID"
-          
-          # Get asset ID
-          ASSET_ID=$(curl -sL \
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/davidcamick/camstem/releases/$RELEASE_ID" | \
+            "https://api.github.com/repos/davidcamick/camstem/releases/tags/release-assets")
+
+          ASSET_ID=$(echo "$RELEASE_DATA" | \
             jq -r '.assets[] | select(.name=="Models.zip") | .id')
-          
+
           if [ -z "$ASSET_ID" ] || [ "$ASSET_ID" == "null" ]; then
-            echo "Could not find Models.zip in release assets"
+            echo "Could not find Models.zip in release-assets!"
             exit 1
           fi
-          
-          echo "Downloading asset ID: $ASSET_ID"
-          curl -LJ \
+
+          echo "Downloading Models.zip (asset id=$ASSET_ID) ..."
+          curl -L \
             -H "Accept: application/octet-stream" \
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             "https://api.github.com/repos/davidcamick/camstem/releases/assets/$ASSET_ID" \
             -o Models.zip
 
-          if [ ! -f Models.zip ]; then
-            echo "Failed to download Models.zip"
-            exit 1
-          fi
-
           rm -rf Models
           unzip -q Models.zip -d .
           rm Models.zip
 
-      # 7) Install dependencies
+      # 6) Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # 8) Build & publish
+      # 7) Build & publish
       - name: Build Mac (publish to GitHub)
         run: npm run build:mac
         env:
