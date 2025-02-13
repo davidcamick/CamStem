@@ -1,0 +1,75 @@
+name: Build Windows and Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number for the Windows build (e.g. 0.9.8)"
+        required: true
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      # 1) Check out the code
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      # 2) Bump version
+      - name: Set app version
+        run: |
+          echo "Bumping version to ${{ github.event.inputs.version }}"
+          npm version ${{ github.event.inputs.version }} --allow-same-version --no-git-tag-version
+
+      # 3) Download demucs-cxfreeze-win-cuda.7z from 'release-assets'
+      - name: Download demucs-cxfreeze-win-cuda
+        run: |
+          curl -L `
+            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" `
+            "https://github.com/davidcamick/CamStem/releases/download/release-assets/demucs-cxfreeze-win-cuda.7z" `
+            -o demucs-cxfreeze-win-cuda.7z
+
+          Remove-Item -Recurse -Force src/backend/demucs-cxfreeze-win-cuda -ErrorAction SilentlyContinue
+          7z x demucs-cxfreeze-win-cuda.7z -osrc/backend
+          Remove-Item demucs-cxfreeze-win-cuda.7z
+
+      # 4) Download Models.zip from 'release-assets'
+      - name: Download Models.zip
+        run: |
+          curl -L `
+            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" `
+            "https://github.com/davidcamick/CamStem/releases/download/release-assets/Models.zip" `
+            -o Models.zip
+
+          Remove-Item -Recurse -Force Models -ErrorAction SilentlyContinue
+          7z x Models.zip
+          Remove-Item Models.zip
+
+      # 5) Install dependencies
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Clear npm cache
+        run: |
+          npm cache clean --force
+          npm cache verify
+
+      - name: Install dependencies (without electron)
+        run: |
+          npm install --no-save --ignore-scripts
+          npm install --save-dev electron@latest
+        continue-on-error: false
+
+      - name: Rebuild dependencies
+        run: |
+          npm rebuild
+          npm run postinstall || true
+
+      # 6) Build & publish
+      - name: Build Windows (publish to GitHub)
+        run: npm run build:win
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}

@@ -4,38 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Software Key Authentication</title>
-  <!-- Include Tailwind + Custom Index CSS -->
   <link rel="stylesheet" href="tailwind-output.css">
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <!-- Container from index.css (max-width override) -->
   <div class="container" style="max-width: 480px;">
-    <!-- Same style as landing.html: text-4xl font-bold mb-4 -->
     <h1 class="text-4xl font-bold mb-4">Software Key Authentication</h1>
 
-    <input
-      type="text"
-      id="softwareKey"
-      placeholder="Enter your software key"
-      style="
-        width: 100%;
-        padding: 0.75rem 1rem;
-        margin-bottom: 1rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-        color: #333;
-      "
-    />
+    <div id="keyInput">
+      <input
+        type="text"
+        id="softwareKey"
+        placeholder="Enter your software key"
+        style="width: 100%; padding: 0.75rem 1rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; color: #333;"
+      />
 
-    <!-- Buttons side by side, matching landing page style (.actionButton) -->
-    <div style="display: flex; gap: 1rem; justify-content: center;">
-      <button id="validateButton" class="actionButton">Validate Key</button>
-      <button id="logoutButton" class="actionButton">Remove Saved Keys</button>
+      <div style="display: flex; gap: 1rem; justify-content: center;">
+        <button id="validateButton" class="actionButton">Validate Key</button>
+        <button id="logoutButton" class="actionButton">Remove Saved Keys</button>
+      </div>
+
+      <p id="statusMessage" class="message" style="margin-top: 1rem;"></p>
     </div>
-
-    <p id="statusMessage" class="message" style="margin-top: 1rem;"></p>
   </div>
 
   <script>
@@ -43,6 +33,17 @@
     const validateButton = document.getElementById('validateButton');
     const logoutButton = document.getElementById('logoutButton');
     const statusMessage = document.getElementById('statusMessage');
+
+    let apiConfig = null;
+
+    // Load API configuration on startup
+    window.addEventListener('load', async () => {
+      try {
+        apiConfig = await window.api.getApiConfig();
+      } catch (error) {
+        console.error('Failed to load API config:', error);
+      }
+    });
 
     // Load saved key on page load and auto-submit if key exists
     window.addEventListener('load', async () => {

@@ -17,6 +17,7 @@ const stripe = require('stripe')(
 
 // 2) Import autoUpdater from electron-updater
 const { autoUpdater } = require('electron-updater');
+const apiClient = require('./apiClient');
 
 let isDev = false;
 
@@ -199,7 +200,13 @@ async function processSoftwareKey(encryptedHex) {
 
     const clerkID = reverseString(revClerkID);
     const stripeID = reverseString(revStripeID);
+    
+    // Generate a simple auth token from the Clerk ID
+    const authToken = Buffer.from(clerkID).toString('base64');
+    await keytar.setPassword('camstem-app', 'auth-token', authToken);
+    
     logToFile(`Decrypted Clerk ID: ${clerkID}, Decrypted Stripe ID: ${stripeID}`);
+    logToFile(`Auth token generated and stored: ${authToken}`);
 
     return { clerkID, stripeID };
   } catch (err) {
@@ -327,29 +334,21 @@ ipcMain.handle('get-user-id', async () => {
 
 ipcMain.handle('check-subscription-status', async () => {
   try {
-    const { stripeID } = await getStoredCredentials();
-    if (!stripeID) {
-      throw new Error('Stripe ID not found in stored credentials.');
+    const { clerkID: userId } = await getStoredCredentials();
+    if (!userId) {
+      throw new Error('User ID not found in stored credentials.');
     }
 
-    logToFile(`Checking subscription status for Stripe ID: ${stripeID}`);
-
-    const subscriptions = await stripe.subscriptions.list({
-      customer: stripeID,
-      status: 'all',
-    });
-
-    const activeSubscription = subscriptions.data.find(
-      (sub) => sub.status === 'active' || sub.status === 'trialing'
-    );
-
-    if (!activeSubscription) {
-      logToFile('No active subscription found.');
-      return { active: false, reason: 'Subscription is canceled or expired.' };
+    const token = await keytar.getPassword('camstem-app', 'auth-token');
+    if (!token) {
+      throw new Error('Authentication token not found.');
     }
 
-    logToFile(`Active subscription found: ${activeSubscription.id}`);
-    return { active: true };
+    const result = await apiClient.verifySubscription(userId, token);
+    return {
+      active: result.success,
+      reason: result.success ? null : (result.error || 'Subscription verification failed')
+    };
   } catch (err) {
     logToFile(`Error checking subscription status: ${err.message}`);
     return { active: false, reason: err.message };
@@ -469,6 +468,14 @@ ipcMain.handle('open-log-file', () => {
 app.whenReady().then(() => {
   createWindow();
   setupAutoUpdaterLogs();
+  
+  // Check for updates on startup
+  autoUpdater.checkForUpdates();
+  
+  // Check for updates every hour
+  setInterval(() => {
+    autoUpdater.checkForUpdates();
+  }, 60 * 60 * 1000);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

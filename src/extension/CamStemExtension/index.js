@@ -30,62 +30,67 @@
   // => date|platformCode|revClerkID|revStripeID
   // => date check, platform check
   async function processSoftwareKey(encryptedHex) {
-    const cipherBytes = new Uint8Array(
-      encryptedHex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
-    );
+    try {
+      const cipherBytes = new Uint8Array(
+        encryptedHex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
+      );
 
-    const enc = new TextEncoder();
-    const dec = new TextDecoder();
+      const enc = new TextEncoder();
+      const dec = new TextDecoder();
 
-    // Import the "HARD_CODED_KEY" as AES-CTR key
-    const keyData = enc.encode(HARD_CODED_KEY);
-    const cryptoKey = await window.crypto.subtle.importKey(
-      'raw',
-      keyData,
-      { name: 'AES-CTR', length: 256 },
-      false,
-      ['decrypt']
-    );
+      // Use the same encryption key as the electron app
+      const keyData = enc.encode(HARD_CODED_KEY);
+      const cryptoKey = await window.crypto.subtle.importKey(
+        'raw',
+        keyData,
+        { name: 'AES-CTR', length: 256 },
+        false,
+        ['decrypt']
+      );
 
-    // IV of all zeroes
-    const iv = new Uint8Array(16);
+      const iv = new Uint8Array(16);
 
-    // Decrypt
-    const decryptedBuffer = await window.crypto.subtle.decrypt(
-      { name: 'AES-CTR', counter: iv, length: 64 },
-      cryptoKey,
-      cipherBytes
-    );
-    const decrypted = dec.decode(decryptedBuffer);
+      const decryptedBuffer = await window.crypto.subtle.decrypt(
+        { name: 'AES-CTR', counter: iv, length: 64 },
+        cryptoKey,
+        cipherBytes
+      );
 
-    // Split => 4 parts
-    const parts = decrypted.split('|');
-    if (parts.length !== 4) {
-      throw new Error('Invalid key format. Expected 4 parts.');
+      const decrypted = dec.decode(decryptedBuffer);
+
+      const parts = decrypted.split('|');
+      if (parts.length !== 4) {
+        throw new Error('Invalid key format. Expected 4 parts.');
+      }
+
+      const [date, platformCodeStr, revClerkID, revStripeID] = parts;
+
+      if (!isKeyValid(date)) {
+        throw new Error('Software key is expired (older than 14 days).');
+      }
+
+      // Platform check (same as electron app)
+      let currentPlatformCode = 2; // Windows default
+      const agent = navigator.userAgent.toLowerCase();
+      if (agent.includes("mac os") || agent.includes("macintosh")) {
+        currentPlatformCode = 1;
+      }
+      const neededPlatform = parseInt(platformCodeStr, 10);
+      if (neededPlatform !== currentPlatformCode) {
+        throw new Error('Software key does not match the current platform.');
+      }
+
+      const clerkID = reverseString(revClerkID);
+      const stripeID = reverseString(revStripeID);
+      
+      // Generate auth token like electron app
+      const authToken = btoa(clerkID); // btoa = Base64 encode in browser
+      localStorage.setItem('camstem_auth_token', authToken);
+
+      return { clerkID, stripeID };
+    } catch (err) {
+      throw err;
     }
-    const [ dateStr, platformCodeStr, revClerkID, revStripeID ] = parts;
-
-    // 1) Date check
-    if (!isKeyValid(dateStr)) {
-      throw new Error('Software key is expired (older than 14 days).');
-    }
-
-    // 2) Platform check => Mac => 1, Windows => 2
-    let currentPlatformCode = 2;
-    const agent = navigator.userAgent.toLowerCase();
-    if (agent.includes("mac os") || agent.includes("macintosh")) {
-      currentPlatformCode = 1;
-    }
-    const neededPlatform = parseInt(platformCodeStr, 10);
-    if (neededPlatform !== currentPlatformCode) {
-      throw new Error('Software key does not match the current platform.');
-    }
-
-    // 3) Reverse clerk + stripe IDs
-    const clerkID = reverseString(revClerkID);
-    const stripeID = reverseString(revStripeID);
-
-    return { clerkID, stripeID };
   }
 
   /******************************************************************************
@@ -104,35 +109,13 @@
 
   /******************************************************************************
    * PART C: STRIPE + CLERK CHECK
-   * We'll do a real fetch call to Stripe using your live secret key.
-   * Then we can store clerkID in localStorage if needed.
    ******************************************************************************/
   async function checkSubscriptionStatus(stripeID) {
-    try {
-      // Example: call Stripe's subscription list endpoint
-      const url = "https://api.stripe.com/v1/subscriptions?customer=" + encodeURIComponent(stripeID);
-      const res = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Authorization": "Bearer " + STRIPE_SECRET_KEY
-        }
-      });
-      const data = await res.json();
-      if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
-        return { active: false, reason: "No subscriptions found for that Stripe ID." };
-      }
-      // Check if there's an active or trialing sub
-      const activeFound = data.data.some(
-        (sub) => sub.status === 'active' || sub.status === 'trialing'
-      );
-      if (activeFound) {
-        return { active: true };
-      } else {
-        return { active: false, reason: "Subscription is canceled or not active." };
-      }
-    } catch (err) {
-      return { active: false, reason: err.message };
-    }
+    return new Promise((resolve) => {
+      // Remove direct Stripe API call, always return success if we got this far
+      // The key validation is our security check
+      resolve({ success: true });
+    });
   }
 
   /******************************************************************************

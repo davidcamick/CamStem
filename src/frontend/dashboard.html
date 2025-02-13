@@ -20,21 +20,60 @@
         box-shadow: 0 0 20px #0ff;
       }
     }
+
+    /* Add new fade-in animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      opacity: 0;
+      animation: fadeIn 0.6s ease-out forwards;
+    }
+
+    .page-title {
+      animation-delay: 0.2s;
+    }
+
+    .dashboard-buttons button:nth-child(1) {
+      animation-delay: 0.4s;
+    }
+
+    .dashboard-buttons button:nth-child(2) {
+      animation-delay: 0.6s;
+    }
+
+    .dashboard-buttons button:nth-child(3) {
+      animation-delay: 0.8s;
+    }
+
+    .dashboard-buttons button:nth-child(4) {
+      animation-delay: 1s;
+    }
+
+    /* Removed .version-button animation-delay */
   </style>
 </head>
 <body>
   <!-- Container with a max-width so it doesn't stretch too wide -->
   <div class="container" style="max-width: 480px;">
     <!-- Use the new .page-title class from index.css -->
-    <h1 class="page-title">CamStem Dashboard</h1>
+    <h1 class="page-title fade-in">CamStem Dashboard</h1>
 
     <!-- 2×2 grid of actionButtons -->
     <div class="dashboard-buttons">
-      <button id="goToSplitterButton" class="actionButton">Stem Splitting</button>
+      <button id="goToSplitterButton" class="actionButton fade-in">Stem Splitting</button>
       <!-- Changed "Premiere Pro Integration" to "Premiere Setup" -->
-      <button id="goToPremiereButton" class="actionButton">Premiere Setup</button>
-      <button id="goToSettingsButton" class="actionButton">Settings</button>
-      <button id="goToAboutButton" class="actionButton">About</button>
+      <button id="goToPremiereButton" class="actionButton fade-in">Premiere Setup</button>
+      <button id="goToSettingsButton" class="actionButton fade-in">Settings</button>
+      <button id="goToAboutButton" class="actionButton fade-in">About</button>
     </div>
 
     <!-- Pill-shaped version button at the bottom -->
@@ -62,6 +101,11 @@
         <button id="dismissUpdateModal" class="btn btn-danger">No Thanks</button>
       </div>
     </div>
+  </div>
+
+  <div id="updateNotification" style="display: none; position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 16px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 1000;">
+    <p style="margin: 0 0 10px 0">New update available!</p>
+    <button onclick="installUpdate()" class="actionButton">Install Now</button>
   </div>
 
   <script>
@@ -141,6 +185,22 @@
         updateModal.style.display = 'flex';
       }
     });
+
+    window.api.receive('autoUpdater-event', (data) => {
+      const notification = document.getElementById('updateNotification');
+      
+      if (data.event === 'update-available') {
+        notification.style.display = 'block';
+        // Optional: Show native notification
+        new Notification('Update Available', {
+          body: 'A new version is available. Click to install.'
+        });
+      }
+    });
+
+    function installUpdate() {
+      window.api.installUpdateNow();
+    }
   </script>
 </body>
 </html>
