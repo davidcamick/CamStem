@@ -72,8 +72,26 @@ jobs:
           rm Models.zip
 
       # 6) Install dependencies
-      - name: Install dependencies
-        run: npm install
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Clear npm cache
+        run: |
+          npm cache clean --force
+          npm cache verify
+
+      - name: Install dependencies (without electron)
+        run: |
+          npm install --no-save --ignore-scripts
+          npm install --save-dev electron@latest
+        continue-on-error: false
+
+      - name: Rebuild dependencies
+        run: |
+          npm rebuild
+          npm run postinstall || true
 
       # 7) Build & publish
       - name: Build Mac (publish to GitHub)
