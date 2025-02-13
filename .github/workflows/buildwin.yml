@@ -26,7 +26,7 @@ jobs:
       - name: Download demucs-cxfreeze-win-cuda
         run: |
           curl -L `
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" `
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" `
             "https://github.com/davidcamick/CamStem/releases/download/release-assets/demucs-cxfreeze-win-cuda.7z" `
             -o demucs-cxfreeze-win-cuda.7z
 
@@ -38,7 +38,7 @@ jobs:
       - name: Download Models.zip
         run: |
           curl -L `
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" `
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" `
             "https://github.com/davidcamick/CamStem/releases/download/release-assets/Models.zip" `
             -o Models.zip
 
@@ -70,6 +70,8 @@ jobs:
 
       # 6) Build & publish
       - name: Build Windows (publish to GitHub)
-        run: npm run build:win
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm run build:win
