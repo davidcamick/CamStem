@@ -51,6 +51,21 @@
     </div>
   </div>
 
+  <!-- Add Update Modal -->
+  <div class="modal" id="updateModal">
+    <div class="modal-content">
+      <h2>Update Available</h2>
+      <p>A new version of CamStem is available! Would you like to update now?</p>
+      <div class="modal-buttons">
+        <button id="goToUpdatePage" class="btn btn-primary">Update</button>
+        <button id="dismissUpdateModal" class="btn btn-danger">No Thanks</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Version Pill -->
+  <a id="versionButton" class="version-button">v?.?.?</a>
+
   <script>
     const introVideoWrapper = document.getElementById('introVideoWrapper');
     const mainContent = document.getElementById('mainContent');
@@ -106,6 +121,49 @@
     window.addEventListener('click', (event) => {
       if (event.target === signUpModal) {
         signUpModal.style.display = 'none';
+      }
+    });
+
+    // Add version pill functionality
+    const versionButton = document.getElementById('versionButton');
+    const updateModal = document.getElementById('updateModal');
+    const goToUpdatePage = document.getElementById('goToUpdatePage');
+    const dismissUpdateModal = document.getElementById('dismissUpdateModal');
+
+    // Get version on load
+    (async () => {
+      try {
+        const version = await window.api.getAppVersion();
+        versionButton.textContent = `v${version}`;
+      } catch (err) {
+        console.error('Error getting app version:', err);
+        versionButton.textContent = 'v?.?.?';
+      }
+    })();
+
+    // Check for updates when clicking version pill
+    versionButton.addEventListener('click', async () => {
+      try {
+        await window.api.checkForUpdates();
+      } catch (err) {
+        console.error('Error checking for updates:', err);
+      }
+    });
+
+    // Update modal handlers
+    goToUpdatePage.addEventListener('click', () => {
+      window.location.href = 'update.html';
+    });
+    dismissUpdateModal.addEventListener('click', () => {
+      updateModal.style.display = 'none';
+    });
+
+    // Listen for autoUpdater events
+    window.api.receive('autoUpdater-event', (data) => {
+      console.log('autoUpdater-event in landing:', data);
+      if (data.event === 'update-available') {
+        versionButton.classList.add('glow');
+        updateModal.style.display = 'flex';
       }
     });
   </script>

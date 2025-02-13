@@ -240,6 +240,29 @@
    .hidden {
      display: none;
    }
+
+   /* Position the version button at the bottom of the landing page */
+   #versionButton {
+     position: fixed;
+     bottom: 20px;
+     left: 50%;
+     transform: translateX(-50%);
+     opacity: 0.8;
+     z-index: 60; /* above the video */
+   }
+   
+   /* Glow animation for updates */
+   .glow {
+     animation: glowAnimation 1s ease-in-out infinite alternate;
+   }
+   @keyframes glowAnimation {
+     from {
+       box-shadow: 0 0 10px #fff;
+     }
+     to {
+       box-shadow: 0 0 20px #0ff;
+     }
+   }
    
    /* =======================
       About Page Specific (about.html)
