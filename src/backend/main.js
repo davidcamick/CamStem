@@ -12,7 +12,7 @@ const keytar = require('keytar');
 const { webcrypto } = require('crypto');
 const os = require('os');
 const stripe = require('stripe')(
-  process.env.STRIPE_SECRET_KEY || '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'
+  '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'
 );
 
 // 2) Import autoUpdater from electron-updater
@@ -597,4 +597,9 @@ ipcMain.handle('getDefaultExtensionsFolder', () => {
     // fallback, maybe Linux or unknown
     return '/tmp/AdobeCEP/extensions';
   }
+});
+
+// ---------- NEW IPC HANDLER FOR OPENING EXTERNAL URLS ----------
+ipcMain.handle('openExternal', (event, url) => {
+  shell.openExternal(url);
 });

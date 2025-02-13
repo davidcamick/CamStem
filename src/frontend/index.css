@@ -261,6 +261,11 @@
      margin-top: 1rem;
    }
    
+   .dashboard-buttons .actionButton {
+     padding: 0.65rem 1.25rem;
+     font-size: 1rem;
+   }
+   
    /* =======================
       Splitter Page Specific (splitter.html)
       ======================= */

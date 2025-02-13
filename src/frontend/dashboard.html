@@ -4,43 +4,88 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CamStem</title>
-  <!-- Include Tailwind + Custom Index CSS -->
   <link rel="stylesheet" href="tailwind-output.css">
   <link rel="stylesheet" href="index.css">
-  <!-- Only new style for the "glow" effect -->
   <style>
     .glow {
       animation: glowAnimation 1s ease-in-out infinite alternate;
     }
     @keyframes glowAnimation {
-      from {
-        box-shadow: 0 0 10px #fff;
-      }
-      to {
-        box-shadow: 0 0 20px #0ff;
-      }
+      from { box-shadow: 0 0 10px #fff; }
+      to { box-shadow: 0 0 20px #0ff; }
+    }
+
+    /* New dashboard-specific styles */
+    .main-title {
+      font-size: 3rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .sub-title {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+
+    .primary-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .primary-button {
+      background-color: #0082cc;
+      padding: 1.5rem 1rem;
+      font-size: 1.2rem;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .primary-button:hover {
+      background-color: #006ba8;
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .secondary-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
     }
   </style>
 </head>
 <body>
-  <!-- Container with a max-width so it doesn't stretch too wide -->
-  <div class="container" style="max-width: 480px;">
-    <!-- Use the new .page-title class from index.css -->
-    <h1 class="page-title">CamStem Dashboard</h1>
+  <div class="container" style="max-width: 800px;">
+    <!-- Main title and subtitle -->
+    <h1 class="main-title">CamStem</h1>
+    <h2 class="sub-title">Dashboard</h2>
 
-    <!-- 2×2 grid of actionButtons -->
-    <div class="dashboard-buttons">
-      <button id="goToSplitterButton" class="actionButton">Stem Splitting</button>
-      <!-- Changed "Premiere Pro Integration" to "Premiere Setup" -->
-      <button id="goToPremiereButton" class="actionButton">Premiere Setup</button>
-      <button id="goToSettingsButton" class="actionButton">Settings</button>
-      <button id="goToAboutButton" class="actionButton">About</button>
+    <!-- Primary action buttons -->
+    <div class="primary-buttons">
+      <button id="goToSplitterButton" class="primary-button">
+        Stem Splitting
+      </button>
+      <button id="goToProjectsButton" class="primary-button">
+        Project File Manager
+      </button>
+      <button id="goToConverterButton" class="primary-button">
+        File Converter
+      </button>
     </div>
 
-    <!-- Pill-shaped version button at the bottom -->
-    <a id="versionButton" class="version-button">
-      v?.?.?
-    </a>
+    <!-- Secondary buttons -->
+    <div class="secondary-buttons">
+      <button id="goToAboutButton" class="actionButton">About</button>
+      <button id="goToSettingsButton" class="actionButton">Settings</button>
+      <button id="goToPremiereButton" class="actionButton">Premiere Setup</button>
+      <button id="manageSubscriptionButton" class="actionButton">Manage Subscription</button>
+    </div>
+
+    <!-- Version button -->
+    <a id="versionButton" class="version-button">v?.?.?</a>
   </div>
 
   <!-- Error Modal -->
@@ -103,6 +148,23 @@
       window.location.href = 'about.html';
     });
 
+    // Add event listeners for new buttons 
+    const button1 = document.getElementById('button1');
+    const button2 = document.getElementById('button2');
+    const button3 = document.getElementById('button3');
+
+    button1.addEventListener('click', () => {
+      console.log('Button 1 clicked');
+    });
+
+    button2.addEventListener('click', () => {
+      console.log('Button 2 clicked');
+    });
+
+    button3.addEventListener('click', () => {
+      console.log('Button 3 clicked');
+    });
+
     // Pill-shaped version button -> update.html
     const versionButton = document.getElementById('versionButton');
     (async () => {
@@ -140,6 +202,36 @@
         // Show the update modal on launch
         updateModal.style.display = 'flex';
       }
+    });
+
+    // Primary button navigation
+    document.getElementById('goToSplitterButton').addEventListener('click', () => {
+      window.location.href = 'splitter.html';
+    });
+
+    document.getElementById('goToProjectsButton').addEventListener('click', () => {
+      window.location.href = 'projectfiles.html';
+    });
+
+    document.getElementById('goToConverterButton').addEventListener('click', () => {
+      window.location.href = 'converter.html';
+    });
+
+    // Secondary button navigation
+    document.getElementById('goToAboutButton').addEventListener('click', () => {
+      window.location.href = 'about.html';
+    });
+
+    document.getElementById('goToSettingsButton').addEventListener('click', () => {
+      window.location.href = 'settings.html';
+    });
+
+    document.getElementById('goToPremiereButton').addEventListener('click', () => {
+      window.location.href = 'premiere.html';
+    });
+
+    document.getElementById('manageSubscriptionButton').addEventListener('click', () => {
+      window.api.openExternal('https://camstem.org/dashboard');
     });
   </script>
 </body>

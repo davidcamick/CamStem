@@ -11,7 +11,7 @@
    * (As described in your main.js, but now all local to the extension.)
    ******************************************************************************/
   const HARD_CODED_KEY = "DA3K9Y5kdGQ217dhKehCT4Jip0ehJ7rY";  // from your main.js
-  const STRIPE_SECRET_KEY = "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";
+  const STRIPE_SECRET_KEY = "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";
 
   // We'll allow a 14-day validity window for the key's date
   function isKeyValid(dateStr) {

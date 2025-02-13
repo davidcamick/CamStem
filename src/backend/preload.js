@@ -81,4 +81,7 @@ contextBridge.exposeInMainWorld('api', {
     // main.js returns { demucsExec, models }
     return await ipcRenderer.invoke('getDemucsPaths');
   },
+
+  // 15) NEW: Open external URL
+  openExternal: (url) => ipcRenderer.invoke('openExternal', url),
 });
