@@ -108,7 +108,7 @@ jobs:
       # 7) Build & publish
       - name: Build Mac (publish to GitHub)
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_ID: ${{ inputs.sign_app == 'true' && secrets.APPLE_ID || '' }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ inputs.sign_app == 'true' && secrets.APPLE_ID_PASSWORD || '' }}
           APPLE_TEAM_ID: ${{ inputs.sign_app == 'true' && secrets.APPLE_TEAM_ID || '' }}
