@@ -56,24 +56,9 @@ jobs:
       # 4) Download demucs-cxfreeze-mac.zip from 'release-assets'
       - name: Download demucs-cxfreeze-mac.zip
         run: |
-          echo "Fetching release data from 'release-assets'..."
-          RELEASE_DATA=$(curl -s \
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            "https://api.github.com/repos/davidcamick/camstem/releases/tags/release-assets")
-
-          ASSET_ID=$(echo "$RELEASE_DATA" | \
-            jq -r '.assets[] | select(.name=="demucs-cxfreeze-mac.zip") | .id')
-
-          if [ -z "$ASSET_ID" ] || [ "$ASSET_ID" == "null" ]; then
-            echo "Could not find demucs-cxfreeze-mac.zip in release-assets!"
-            exit 1
-          fi
-
-          echo "Downloading demucs-cxfreeze-mac.zip (asset id=$ASSET_ID) ..."
           curl -L \
-            -H "Accept: application/octet-stream" \
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            "https://api.github.com/repos/davidcamick/camstem/releases/assets/$ASSET_ID" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://github.com/davidcamick/CamStem/releases/download/release-assets/demucs-cxfreeze-mac.zip" \
             -o demucs-cxfreeze-mac.zip
 
           rm -rf src/backend/demucs-cxfreeze-mac
@@ -83,23 +68,9 @@ jobs:
       # 5) Download Models.zip from 'release-assets'
       - name: Download Models.zip
         run: |
-          RELEASE_DATA=$(curl -s \
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            "https://api.github.com/repos/davidcamick/camstem/releases/tags/release-assets")
-
-          ASSET_ID=$(echo "$RELEASE_DATA" | \
-            jq -r '.assets[] | select(.name=="Models.zip") | .id')
-
-          if [ -z "$ASSET_ID" ] || [ "$ASSET_ID" == "null" ]; then
-            echo "Could not find Models.zip in release-assets!"
-            exit 1
-          fi
-
-          echo "Downloading Models.zip (asset id=$ASSET_ID) ..."
           curl -L \
-            -H "Accept: application/octet-stream" \
-            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            "https://api.github.com/repos/davidcamick/camstem/releases/assets/$ASSET_ID" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://github.com/davidcamick/CamStem/releases/download/release-assets/Models.zip" \
             -o Models.zip
 
           rm -rf Models
