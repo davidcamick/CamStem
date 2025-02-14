@@ -6,6 +6,11 @@ on:
       version:
         description: "Version number for the Mac build (e.g. 0.9.8)"
         required: true
+      sign_app:
+        description: "Sign the application (true/false)"
+        required: true
+        default: 'false'
+        type: boolean
 
 permissions:
   contents: write
@@ -28,8 +33,9 @@ jobs:
           echo "Bumping version to ${{ github.event.inputs.version }}"
           npm version ${{ github.event.inputs.version }} --allow-same-version --no-git-tag-version
 
-      # 3) Install Developer ID Certificate
+      # 3) Install Developer ID Certificate (only if signing)
       - name: Install Developer ID Certificate
+        if: ${{ inputs.sign_app == 'true' }}
         run: |
           # 3.1 Decode the base64-encoded p12
           echo "${{ secrets.MAC_CERT_P12 }}" | base64 --decode > /tmp/cert.p12
@@ -103,7 +109,13 @@ jobs:
       - name: Build Mac (publish to GitHub)
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: npm run build:mac
+          APPLE_ID: ${{ inputs.sign_app == 'true' && secrets.APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ inputs.sign_app == 'true' && secrets.APPLE_ID_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ inputs.sign_app == 'true' && secrets.APPLE_TEAM_ID || '' }}
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ inputs.sign_app == 'true' }}
+        run: |
+          if [ "${{ inputs.sign_app }}" == "true" ]; then
+            npm run build:mac
+          else
+            electron-builder --mac --publish=always --config.mac.identity=null
+          fi
