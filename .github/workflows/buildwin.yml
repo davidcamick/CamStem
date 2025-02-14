@@ -7,6 +7,12 @@ on:
         description: "Version number for the Windows build (e.g. 0.9.8)"
         required: true
 
+permissions:
+  contents: write
+  packages: write
+  issues: write
+  pull-requests: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -71,5 +77,5 @@ jobs:
       # 6) Build & publish
       - name: Build Windows (publish to GitHub)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build:win

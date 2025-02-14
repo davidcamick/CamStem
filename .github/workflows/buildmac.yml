@@ -7,6 +7,12 @@ on:
         description: "Version number for the Mac build (e.g. 0.9.8)"
         required: true
 
+permissions:
+  contents: write
+  packages: write
+  issues: write
+  pull-requests: write
+
 jobs:
   build-mac:
     runs-on: macos-latest
@@ -50,9 +56,24 @@ jobs:
       # 4) Download demucs-cxfreeze-mac.zip from 'release-assets'
       - name: Download demucs-cxfreeze-mac.zip
         run: |
-          curl -L \
+          echo "Fetching release data from 'release-assets'..."
+          RELEASE_DATA=$(curl -s \
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            "https://github.com/davidcamick/CamStem/releases/download/release-assets/demucs-cxfreeze-mac.zip" \
+            "https://api.github.com/repos/davidcamick/camstem/releases/tags/release-assets")
+
+          ASSET_ID=$(echo "$RELEASE_DATA" | \
+            jq -r '.assets[] | select(.name=="demucs-cxfreeze-mac.zip") | .id')
+
+          if [ -z "$ASSET_ID" ] || [ "$ASSET_ID" == "null" ]; then
+            echo "Could not find demucs-cxfreeze-mac.zip in release-assets!"
+            exit 1
+          fi
+
+          echo "Downloading demucs-cxfreeze-mac.zip (asset id=$ASSET_ID) ..."
+          curl -L \
+            -H "Accept: application/octet-stream" \
+            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
+            "https://api.github.com/repos/davidcamick/camstem/releases/assets/$ASSET_ID" \
             -o demucs-cxfreeze-mac.zip
 
           rm -rf src/backend/demucs-cxfreeze-mac
@@ -62,9 +83,23 @@ jobs:
       # 5) Download Models.zip from 'release-assets'
       - name: Download Models.zip
         run: |
-          curl -L \
+          RELEASE_DATA=$(curl -s \
             -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            "https://github.com/davidcamick/CamStem/releases/download/release-assets/Models.zip" \
+            "https://api.github.com/repos/davidcamick/camstem/releases/tags/release-assets")
+
+          ASSET_ID=$(echo "$RELEASE_DATA" | \
+            jq -r '.assets[] | select(.name=="Models.zip") | .id')
+
+          if [ -z "$ASSET_ID" ] || [ "$ASSET_ID" == "null" ]; then
+            echo "Could not find Models.zip in release-assets!"
+            exit 1
+          fi
+
+          echo "Downloading Models.zip (asset id=$ASSET_ID) ..."
+          curl -L \
+            -H "Accept: application/octet-stream" \
+            -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
+            "https://api.github.com/repos/davidcamick/camstem/releases/assets/$ASSET_ID" \
             -o Models.zip
 
           rm -rf Models
@@ -82,11 +117,8 @@ jobs:
           npm cache clean --force
           npm cache verify
 
-      - name: Install dependencies (without electron)
-        run: |
-          npm install --no-save --ignore-scripts
-          npm install --save-dev electron@latest
-        continue-on-error: false
+      - name: Install dependencies
+        run: npm install
 
       - name: Rebuild dependencies
         run: |
@@ -96,12 +128,8 @@ jobs:
       # 7) Build & publish
       - name: Build Mac (publish to GitHub)
         env:
-          # Change GH_TOKEN to GITHUB_TOKEN
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Apple Developer email
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
-
-          # Electron-builder 25+ expects these EXACT variable names
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: npm run build:mac
