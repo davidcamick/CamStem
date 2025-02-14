@@ -88,8 +88,11 @@ jobs:
           npm cache clean --force
           npm cache verify
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install dependencies (without electron)
+        run: |
+          npm install --no-save --ignore-scripts
+          npm install --save-dev electron@latest
+        continue-on-error: false
 
       - name: Rebuild dependencies
         run: |

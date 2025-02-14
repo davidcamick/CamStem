@@ -90,8 +90,7 @@
     "mac": {
       "icon": "src/assets/icon.icns",
       "target": [
-        "zip",
-        "dmg"
+        "zip"
       ],
       "category": "public.app-category.utilities",
       "artifactName": "${productName}-${version}-mac.${ext}",
@@ -105,27 +104,6 @@
           ]
         }
       ]
-    },
-    "dmg": {
-      "background": "src/assets/dmg-background.png",
-      "icon": "src/assets/icon.icns",
-      "iconSize": 100,
-      "contents": [
-        {
-          "x": 130,
-          "y": 220
-        },
-        {
-          "x": 410,
-          "y": 220,
-          "type": "link",
-          "path": "/Applications"
-        }
-      ],
-      "window": {
-        "width": 540,
-        "height": 400
-      }
     },
     "files": [
       "dist/**/*",
