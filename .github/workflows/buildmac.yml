@@ -117,5 +117,5 @@ jobs:
           if [ "${{ inputs.sign_app }}" == "true" ]; then
             npm run build:mac
           else
-            electron-builder --mac --publish=always --config.mac.identity=null
+            npx electron-builder --mac --publish=always --config.mac.identity=null
           fi
