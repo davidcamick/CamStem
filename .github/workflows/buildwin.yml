@@ -71,7 +71,5 @@ jobs:
       # 6) Build & publish
       - name: Build Windows (publish to GitHub)
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npm run build:win
+        run: npm run build:win

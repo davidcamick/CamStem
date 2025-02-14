@@ -27,15 +27,19 @@
   "build": {
     "appId": "camstem.org",
     "productName": "CamStem",
-    "asar": false,
-    "compression": "maximum",
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "davidcamick",
-        "repo": "CamStemReleases"
-      }
+    "asar": true,
+    "asarUnpack": [
+      "src/backend/demucs-cxfreeze-win-cuda/**/*",
+      "src/backend/demucs-cxfreeze-mac/**/*",
+      "Models/**/*"
     ],
+    "compression": "maximum",
+    "publish": {
+      "provider": "github",
+      "owner": "davidcamick",
+      "repo": "CamStemReleases",
+      "private": true
+    },
     "extraResources": [
       {
         "from": "src/assets",

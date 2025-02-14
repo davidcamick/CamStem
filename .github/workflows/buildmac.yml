@@ -95,13 +95,13 @@ jobs:
 
       # 7) Build & publish
       - name: Build Mac (publish to GitHub)
-        run: npm run build:mac
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
+          # Change GH_TOKEN to GITHUB_TOKEN
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Apple Developer email
           APPLE_ID: ${{ secrets.APPLE_ID }}
 
           # Electron-builder 25+ expects these EXACT variable names
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: npm run build:mac
