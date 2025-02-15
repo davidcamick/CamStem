@@ -2,6 +2,11 @@ name: Build Windows
 
 on:
   workflow_dispatch:
+    inputs:
+      release_name:
+        description: 'Release name'
+        required: true
+        default: 'Release'
 
 jobs:
   build:
@@ -44,7 +49,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ steps.package_version.outputs.version }}
-          release_name: Release ${{ steps.package_version.outputs.version }}
+          release_name: ${{ github.event.inputs.release_name }} ${{ steps.package_version.outputs.version }}
           draft: false
           prerelease: false
 
