@@ -109,13 +109,15 @@ jobs:
       - name: Build Mac (publish to GitHub)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_ID: ${{ inputs.sign_app == 'true' && secrets.APPLE_ID || '' }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ inputs.sign_app == 'true' && secrets.APPLE_ID_PASSWORD || '' }}
-          APPLE_TEAM_ID: ${{ inputs.sign_app == 'true' && secrets.APPLE_TEAM_ID || '' }}
-          CSC_IDENTITY_AUTO_DISCOVERY: ${{ inputs.sign_app == 'true' }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ github.event.inputs.sign_app }}
         run: |
-          if [ "${{ inputs.sign_app }}" == "true" ]; then
+          if [ "${{ github.event.inputs.sign_app }}" = "true" ]; then
+            echo "Building with code signing..."
             npm run build:mac
           else
+            echo "Building without code signing..."
             npx electron-builder --mac --publish=always --config.mac.identity=null
           fi
