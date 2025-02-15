@@ -29,17 +29,19 @@ jobs:
           npm version ${{ github.event.inputs.version }} --allow-same-version --no-git-tag-version
         shell: bash
 
-      # 3) Download demucs-cxfreeze-win-cuda.zip from 'release-assets'
-      - name: Download demucs-cxfreeze-win-cuda.zip
+      # 3) Download demucs-cxfreeze-win-cuda.7z from 'release-assets'
+      - name: Download and extract demucs-cxfreeze-win-cuda
         run: |
           curl -L `
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" `
-            "https://github.com/davidcamick/CamStem/releases/download/release-assets/demucs-cxfreeze-win-cuda.zip" `
-            -o demucs-cxfreeze-win-cuda.zip
+            "https://github.com/davidcamick/CamStem/releases/download/release-assets/demucs-cxfreeze-win-cuda.7z" `
+            -o demucs-cxfreeze-win-cuda.7z
 
           Remove-Item -Path src/backend/demucs-cxfreeze-win-cuda -Recurse -ErrorAction SilentlyContinue
-          Expand-Archive -Path demucs-cxfreeze-win-cuda.zip -DestinationPath src/backend -Force
-          Remove-Item demucs-cxfreeze-win-cuda.zip
+          
+          # Extract using 7z (built into Windows runners)
+          7z x demucs-cxfreeze-win-cuda.7z -osrc/backend
+          Remove-Item demucs-cxfreeze-win-cuda.7z
         shell: pwsh
 
       # 4) Download Models.zip from 'release-assets'
