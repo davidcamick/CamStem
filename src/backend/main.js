@@ -17,7 +17,7 @@ const stripe = require('stripe')(
 
 // 2) Import autoUpdater from electron-updater
 const { autoUpdater } = require('electron-updater');
-const apiClient = require('./apiClient');
+const apiClient = require(path.join(__dirname, 'apiClient'));
 
 let isDev = false;
 

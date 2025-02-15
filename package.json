@@ -109,6 +109,7 @@
       "dist/**/*",
       "src/backend/main.js",
       "src/backend/preload.js",
+      "src/backend/apiClient.js",
       "src/frontend/**/*",
       "src/assets/**"
     ],
