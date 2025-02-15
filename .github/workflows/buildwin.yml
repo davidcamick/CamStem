@@ -1,0 +1,85 @@
+name: Build Windows and Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number for the Windows build (e.g. 0.9.8)"
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      # 1) Check out the code
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      # 2) Bump version
+      - name: Set app version
+        run: |
+          echo "Bumping version to ${{ github.event.inputs.version }}"
+          npm version ${{ github.event.inputs.version }} --allow-same-version --no-git-tag-version
+        shell: bash
+
+      # 3) Download demucs-cxfreeze-win-cuda.zip from 'release-assets'
+      - name: Download demucs-cxfreeze-win-cuda.zip
+        run: |
+          curl -L `
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" `
+            "https://github.com/davidcamick/CamStem/releases/download/release-assets/demucs-cxfreeze-win-cuda.zip" `
+            -o demucs-cxfreeze-win-cuda.zip
+
+          Remove-Item -Path src/backend/demucs-cxfreeze-win-cuda -Recurse -ErrorAction SilentlyContinue
+          Expand-Archive -Path demucs-cxfreeze-win-cuda.zip -DestinationPath src/backend -Force
+          Remove-Item demucs-cxfreeze-win-cuda.zip
+        shell: pwsh
+
+      # 4) Download Models.zip from 'release-assets'
+      - name: Download Models.zip
+        run: |
+          curl -L `
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" `
+            "https://github.com/davidcamick/CamStem/releases/download/release-assets/Models.zip" `
+            -o Models.zip
+
+          Remove-Item -Path Models -Recurse -ErrorAction SilentlyContinue
+          Expand-Archive -Path Models.zip -DestinationPath . -Force
+          Remove-Item Models.zip
+        shell: pwsh
+
+      # 5) Install dependencies
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Clear npm cache
+        run: |
+          npm cache clean --force
+          npm cache verify
+        shell: bash
+
+      - name: Install dependencies
+        run: npm install
+        shell: bash
+
+      - name: Rebuild dependencies
+        run: |
+          npm rebuild
+          npm run postinstall || true
+        shell: bash
+
+      # 6) Build & publish
+      - name: Build Windows (publish to GitHub)
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npm run build:win
+        shell: bash
