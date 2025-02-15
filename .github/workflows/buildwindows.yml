@@ -1,12 +1,7 @@
-name: Build and Publish Windows
+name: Build Windows
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,10 +16,15 @@ jobs:
         with:
           node-version: '16'
 
+      - name: Download custom Demucs binary
+        run: |
+          curl -L -o demucs.7z https://github.com/davidcamick/CamStem/releases/download/release-assets/demucs-cxfreeze-win-cuda.7z
+          7z x demucs.7z -o./resources/demucs-dist
+
       - name: Install dependencies
         run: npm install
 
-      - name: Build the Electron app for Windows
+      - name: Build the app
         run: npm run build:win
 
       - name: Upload artifact
