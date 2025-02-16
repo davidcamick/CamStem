@@ -3,6 +3,12 @@
 // 1) Load environment variables from .env
 require('dotenv').config();
 
+// Add this check right after loading dotenv
+if (!process.env.API_BASE_URL) {
+  console.error('API_BASE_URL environment variable is missing');
+  process.env.API_BASE_URL = 'https://stripe-backend.accounts-abd.workers.dev'; // Fallback URL
+}
+
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 // We spawn a process for demucs
