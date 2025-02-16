@@ -11,9 +11,8 @@ const fs = require('fs');
 const keytar = require('keytar');
 const { webcrypto } = require('crypto');
 const os = require('os');
-const stripe = require('stripe')(
-  process.env.STRIPE_SECRET_KEY || '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'
-);
+const stripe = require('stripe');
+let stripeInstance = null;
 
 // 2) Import autoUpdater from electron-updater
 const { autoUpdater } = require('electron-updater');
@@ -28,18 +27,22 @@ let isDev = false;
 
 let mainWindow;
 
-// Hardcoded encryption key (if needed)
-const HARD_CODED_KEY = "DA3K9Y5kdGQ217dhKehCT4Jip0ehJ7rY";
+// Update API_BASE_URL fallback
+const API_BASE_URL = process.env.API_BASE_URL;
 
 // Set up the log file path
 const logFilePath = path.join(app.getPath('userData'), 'demucs-log.txt');
 
-// Utility: Append logs to file + console
+// Add error handling for file operations
 function logToFile(message) {
-  const timestamp = new Date().toISOString();
-  const fullMsg = `[${timestamp}] ${message}\n`;
-  fs.appendFileSync(logFilePath, fullMsg);
-  console.log(fullMsg.trim());
+  try {
+    const timestamp = new Date().toISOString();
+    const fullMsg = `[${timestamp}] ${message}\n`;
+    fs.appendFileSync(logFilePath, fullMsg);
+    console.log(fullMsg.trim());
+  } catch (err) {
+    console.error('Failed to write to log file:', err);
+  }
 }
 
 // ---------- AUTO-UPDATER SETUP -----------
@@ -165,6 +168,15 @@ function isKeyValid(dateStr) {
 // Decrypt software key
 async function processSoftwareKey(encryptedHex) {
   try {
+    const apiKeys = await apiClient.getApiKeys();
+    if (!apiKeys.success || !apiKeys.encryptionKey) {
+      throw new Error('Failed to retrieve encryption key');
+    }
+
+    logToFile(`Using encryption key for decryption`); // Don't log the actual key
+
+    const { encryptionKey } = apiKeys;
+
     logToFile(`Encrypted Key Received: ${encryptedHex}`);
 
     const cipherBytes = new Uint8Array(
@@ -174,7 +186,7 @@ async function processSoftwareKey(encryptedHex) {
     const enc = new TextEncoder();
     const dec = new TextDecoder();
 
-    const keyData = enc.encode(HARD_CODED_KEY);
+    const keyData = enc.encode(encryptionKey);
     const cryptoKey = await webcrypto.subtle.importKey(
       'raw',
       keyData,
@@ -351,24 +363,45 @@ ipcMain.handle('get-user-id', async () => {
 
 ipcMain.handle('check-subscription-status', async () => {
   try {
+    if (!stripeInstance) {
+      throw new Error('Stripe not initialized');
+    }
+
     const { clerkID: userId } = await getStoredCredentials();
+    logToFile(`Checking subscription for user ID: ${userId}`);
+    
     if (!userId) {
       throw new Error('User ID not found in stored credentials.');
     }
 
     const token = await keytar.getPassword('camstem-app', 'auth-token');
+    logToFile(`Using auth token: ${token}`);
+    
     if (!token) {
       throw new Error('Authentication token not found.');
     }
 
     const result = await apiClient.verifySubscription(userId, token);
+    logToFile(`Subscription check result: ${JSON.stringify(result, null, 2)}`);
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to verify subscription');
+    }
+
     return {
-      active: result.success,
-      reason: result.success ? null : (result.error || 'Subscription verification failed')
+      active: result.hasSubscription,
+      type: result.subscriptionType,
+      expiresAt: result.expiresAt,
+      reason: result.hasSubscription ? null : 'No active subscription found'
     };
   } catch (err) {
     logToFile(`Error checking subscription status: ${err.message}`);
-    return { active: false, reason: err.message };
+    return { 
+      active: false, 
+      type: null,
+      expiresAt: null,
+      reason: err.message 
+    };
   }
 });
 
@@ -482,25 +515,35 @@ ipcMain.handle('open-log-file', () => {
 });
 
 // ---------- APP LIFECYCLE ----------
-app.whenReady().then(() => {
-  createWindow();
-  setupAutoUpdaterLogs();
-  
-  // Check for updates on startup
-  autoUpdater.checkForUpdates();
-  
-  // Check for updates every hour
-  setInterval(() => {
+app.whenReady().then(async () => {
+  try {
+    await initializeStripe();
+    createWindow();
+    setupAutoUpdaterLogs();
+    
+    // Check for updates on startup
     autoUpdater.checkForUpdates();
-  }, 60 * 60 * 1000);
+    
+    // Check for updates every hour
+    setInterval(() => {
+      autoUpdater.checkForUpdates();
+    }, 60 * 60 * 1000);
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
-  });
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+      }
+    });
 
-  logToFile('App started.');
+    logToFile('App started.');
+  } catch (err) {
+    logToFile(`Failed to initialize app: ${err.message}`);
+    dialog.showErrorBox(
+      'Initialization Error',
+      'Failed to initialize the application. Please check your internet connection and try again.'
+    );
+    app.quit();
+  }
 });
 
 app.on('window-all-closed', () => {
@@ -622,3 +665,19 @@ ipcMain.handle('getDefaultExtensionsFolder', () => {
     return '/tmp/AdobeCEP/extensions';
   }
 });
+
+// Initialize stripe with key from backend
+async function initializeStripe() {
+  try {
+    const response = await apiClient.getApiKeys();
+    if (response.success && response.stripeKey) {
+      stripeInstance = stripe(response.stripeKey);
+      logToFile('Stripe initialized successfully');
+    } else {
+      throw new Error('No Stripe key received from backend');
+    }
+  } catch (err) {
+    logToFile(`Failed to initialize Stripe: ${err.message}`);
+    throw err;
+  }
+}
