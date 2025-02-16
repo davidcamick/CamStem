@@ -45,6 +45,14 @@ function logToFile(message) {
   }
 }
 
+// Configure autoUpdater before setup
+autoUpdater.setFeedURL({
+  provider: 'github',
+  owner: 'davidcamick',
+  repo: 'CamStemReleases', // This is where updates will be looked for
+  private: false // Since this is a public repo
+});
+
 // ---------- AUTO-UPDATER SETUP -----------
 function setupAutoUpdaterLogs() {
   // Let the user decide when to install after download
