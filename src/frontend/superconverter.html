@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperConverter - Coming Soon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #051923, #003554);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .coming-soon-card {
+            background: rgba(5, 25, 35, 0.8);
+            border: 1px solid rgba(0, 166, 251, 0.2);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            backdrop-filter: blur(8px);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <div class="coming-soon-card">
+        <h1 class="text-4xl font-bold mb-6">The SuperConverter</h1>
+        <p class="text-xl text-zinc-300 mb-8">Advanced conversion tools are being developed to revolutionize your workflow!</p>
+        <button onclick="window.location.href='dashboard.html'" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-all">
+            Back to Dashboard
+        </button>
+    </div>
+</body>
+</html>

@@ -81,4 +81,18 @@ contextBridge.exposeInMainWorld('api', {
     // main.js returns { demucsExec, models }
     return await ipcRenderer.invoke('getDemucsPaths');
   },
+
+  // 15) NEW: Get system status
+  getSystemStatus: async () => {
+    try {
+      ipcRenderer.send('log-message', 'Attempting to fetch system status from worker...');
+      const response = await fetch('https://stripe-backend.accounts-abd.workers.dev/get-status');
+      const data = await response.json();
+      ipcRenderer.send('log-message', `Status response received: ${JSON.stringify(data)}`);
+      return data;
+    } catch (error) {
+      ipcRenderer.send('log-message', `Error fetching status: ${error.message}`);
+      throw error;
+    }
+  }
 });

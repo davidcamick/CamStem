@@ -1,206 +1,404 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CamStem</title>
-  <!-- Include Tailwind + Custom Index CSS -->
-  <link rel="stylesheet" href="tailwind-output.css">
-  <link rel="stylesheet" href="index.css">
-  <!-- Only new style for the "glow" effect -->
-  <style>
-    .glow {
-      animation: glowAnimation 1s ease-in-out infinite alternate;
-    }
-    @keyframes glowAnimation {
-      from {
-        box-shadow: 0 0 10px #fff;
-      }
-      to {
-        box-shadow: 0 0 20px #0ff;
-      }
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CamStem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #051923, #003554);
+            min-height: 100vh;
+            /* Add flex centering */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    /* Add new fade-in animations */
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.8rem;  /* Slightly larger gaps */
+            padding: 1.8rem;
+            max-width: 1400px;  /* Match container */
+            margin: 0 auto;
+        }
 
-    .fade-in {
-      opacity: 0;
-      animation: fadeIn 0.6s ease-out forwards;
-    }
+        .bento-card {
+            position: relative;
+            background: rgba(5, 25, 35, 0.8);
+            border: 1px solid rgba(0, 166, 251, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;  /* Adjusted padding */
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+            height: 100%;
+            min-height: 180px;  /* Ensure minimum height */
+        }
 
-    .page-title {
-      animation-delay: 0.2s;
-    }
+        .bento-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 166, 251, 0.15);
+            border-color: rgba(0, 166, 251, 0.4);
+        }
 
-    .dashboard-buttons button:nth-child(1) {
-      animation-delay: 0.4s;
-    }
+        .gradient-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, rgba(6, 182, 212, 0.1), rgba(59, 130, 246, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 1rem;
+        }
 
-    .dashboard-buttons button:nth-child(2) {
-      animation-delay: 0.6s;
-    }
+        .bento-card:hover .gradient-overlay {
+            opacity: 1;
+        }
 
-    .dashboard-buttons button:nth-child(3) {
-      animation-delay: 0.8s;
-    }
+        .span-2 {
+            grid-column: span 2;
+        }
 
-    .dashboard-buttons button:nth-child(4) {
-      animation-delay: 1s;
-    }
+        .badge {
+            position: absolute;
+            bottom: 1rem;
+            right: 1.5rem;
+            background: #00a6fb;
+            color: white;
+            padding: 0.25rem 1rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            transition: transform 0.2s ease;
+        }
 
-    /* Removed .version-button animation-delay */
-  </style>
+        .bento-card:hover .badge {
+            transform: scale(1.1);
+        }
+
+        #versionButton {
+            color: #00a6fb !important;
+        }
+
+        /* Add backdrop blur to container */
+        .container {
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+            /* Remove any auto margins that might affect centering */
+            margin: 0 auto;
+            /* Add some padding for breathing room */
+            padding: 2.5rem;  /* Slightly more padding */
+            /* Ensure container doesn't stretch too wide */
+            width: 100%;
+            max-width: 1400px;  /* Increased from 1200px */
+        }
+
+        /* Add new style for the announcement panel */
+        .announcement-card {
+            grid-column: 1 / -1; /* Span all columns */
+            min-height: 80px; /* About 1/3 height of regular cards */
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Add status indicator styles */
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+        }
+
+        .status-operational {
+            background-color: #00b300;
+        }
+
+        .status-degraded {
+            background-color: #f5a623;
+        }
+
+        .status-outage {
+            background-color: #ff0000;
+        }
+
+        /* Add flex layout to announcement card content */
+        .announcement-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+    </style>
 </head>
-<body>
-  <!-- Container with a max-width so it doesn't stretch too wide -->
-  <div class="container" style="max-width: 480px;">
-    <!-- Use the new .page-title class from index.css -->
-    <h1 class="page-title fade-in">CamStem Dashboard</h1>
+<body class="text-white">
+    <div class="container">
+        <h1 class="text-4xl font-bold text-center mb-2">CamStem</h1>
+        <div class="bento-grid">
+            <!-- Add new announcement panel -->
+            <div id="announcementPanel" class="bento-card announcement-card" onclick="window.location.href='status.html'">
+                <div class="gradient-overlay"></div>
+                <div class="announcement-content">
+                    <div class="flex items-center">
+                        <div id="statusIndicator" class="status-indicator"></div>
+                        <div>
+                            <h3 class="text-xl font-semibold" id="statusTitle">System Status</h3>
+                            <p class="text-zinc-400 text-sm" id="statusTime"></p>
+                        </div>
+                    </div>
+                    <p class="text-zinc-400" id="statusMessage">Checking system status...</p>
+                </div>
+            </div>
 
-    <!-- 2×2 grid of actionButtons -->
-    <div class="dashboard-buttons">
-      <button id="goToSplitterButton" class="actionButton fade-in">Stem Splitting</button>
-      <!-- Changed "Premiere Pro Integration" to "Premiere Setup" -->
-      <button id="goToPremiereButton" class="actionButton fade-in">Premiere Setup</button>
-      <button id="goToSettingsButton" class="actionButton fade-in">Settings</button>
-      <button id="goToAboutButton" class="actionButton fade-in">About</button>
+            <div id="goToSplitterButton" class="bento-card span-2">
+                <div class="gradient-overlay"></div>
+                <h3 class="text-2xl font-semibold mb-4">Stem Splitting</h3>
+                <p class="text-zinc-400 mb-4">Split your audio into separate instrument tracks with advanced AI technology</p>
+                <div class="badge">Main</div>
+            </div>
+
+            <div id="goToPremiereButton" class="bento-card">
+                <div class="gradient-overlay"></div>
+                <h3 class="text-xl font-semibold mb-2">Premiere Setup</h3>
+                <p class="text-zinc-400">Configure Adobe Premiere integration</p>
+            </div>
+
+            <div id="goToSettingsButton" class="bento-card">
+                <div class="gradient-overlay"></div>
+                <h3 class="text-xl font-semibold mb-2">Settings</h3>
+                <p class="text-zinc-400">Customize your workflow</p>
+            </div>
+
+            <div id="goToAboutButton" class="bento-card span-2">
+                <div class="gradient-overlay"></div>
+                <h3 class="text-xl font-semibold mb-2">About CamStem</h3>
+                <p class="text-zinc-400">Learn more about the application and check for updates</p>
+                <span id="versionButton" class="text-sm text-zinc-500 absolute bottom-4 left-4">v?.?.?</span>
+            </div>
+        </div>
     </div>
 
-    <!-- Pill-shaped version button at the bottom -->
-    <a id="versionButton" class="version-button">
-      v?.?.?
-    </a>
-  </div>
-
-  <!-- Error Modal -->
-  <div class="modal" id="errorModal">
-    <div class="modal-content">
-      <h2>Error</h2>
-      <p id="errorMessage"></p>
-      <button id="errorModalCloseButton" class="close-btn">Close</button>
+    <!-- Add proper modal structure -->
+    <div id="errorModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-zinc-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h2 class="text-xl font-bold mb-4">Error</h2>
+            <p id="errorMessage" class="text-zinc-300 mb-4"></p>
+            <button id="errorModalCloseButton" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+                Close
+            </button>
+        </div>
     </div>
-  </div>
 
-  <!-- New Update Modal -->
-  <div class="modal" id="updateModal" style="display: none;">
-    <div class="modal-content">
-      <h2>Update Available</h2>
-      <p>A new version of CamStem is available! Would you like to update now?</p>
-      <div class="modal-buttons">
-        <button id="goToUpdatePage" class="btn btn-primary">Update</button>
-        <button id="dismissUpdateModal" class="btn btn-danger">No Thanks</button>
-      </div>
+    <div id="updateModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-zinc-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h2 class="text-xl font-bold mb-4">Update Available</h2>
+            <p class="text-zinc-300 mb-4">A new version of CamStem is available!</p>
+            <div class="flex justify-end space-x-4">
+                <button id="goToUpdatePage" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                    Update Now
+                </button>
+                <button id="dismissUpdateModal" class="bg-zinc-600 hover:bg-zinc-700 text-white px-4 py-2 rounded">
+                    Later
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div id="updateNotification" style="display: none; position: fixed; top: 20px; right: 20px; background: #4CAF50; color: white; padding: 16px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 1000;">
-    <p style="margin: 0 0 10px 0">New update available!</p>
-    <button onclick="installUpdate()" class="actionButton">Install Now</button>
-  </div>
+    <script>
+        // Error modal references
+        const errorModal = document.getElementById('errorModal');
+        const errorMessageElem = document.getElementById('errorMessage');
+        const errorModalCloseButton = document.getElementById('errorModalCloseButton');
 
-  <script>
-    // Error modal references
-    const errorModal = document.getElementById('errorModal');
-    const errorMessageElem = document.getElementById('errorMessage');
-    const errorModalCloseButton = document.getElementById('errorModalCloseButton');
+        function showErrorModal(message) {
+            errorMessageElem.textContent = message;
+            errorModal.style.display = 'flex';
+        }
 
-    function showErrorModal(message) {
-      errorMessageElem.textContent = message;
-      errorModal.style.display = 'flex';
-    }
-
-    errorModalCloseButton.addEventListener('click', () => {
-      errorModal.style.display = 'none';
-    });
-    window.addEventListener('click', (event) => {
-      if (event.target === errorModal) {
-        errorModal.style.display = 'none';
-      }
-    });
-
-    // Dashboard Buttons
-    const goToSplitterButton = document.getElementById('goToSplitterButton');
-    const goToPremiereButton = document.getElementById('goToPremiereButton');
-    const goToSettingsButton = document.getElementById('goToSettingsButton');
-    const goToAboutButton = document.getElementById('goToAboutButton');
-
-    goToSplitterButton.addEventListener('click', () => {
-      window.location.href = 'splitter.html';
-    });
-    goToPremiereButton.addEventListener('click', () => {
-      window.location.href = 'premiere.html';
-    });
-    goToSettingsButton.addEventListener('click', () => {
-      window.location.href = 'settings.html';
-    });
-    goToAboutButton.addEventListener('click', () => {
-      window.location.href = 'about.html';
-    });
-
-    // Pill-shaped version button -> update.html
-    const versionButton = document.getElementById('versionButton');
-    (async () => {
-      try {
-        const version = await window.api.getAppVersion();
-        versionButton.textContent = `v${version}`;
-      } catch (err) {
-        console.error('Error getting app version:', err);
-        versionButton.textContent = 'v?.?.?';
-      }
-    })();
-
-    versionButton.addEventListener('click', () => {
-      window.location.href = 'update.html';
-    });
-
-    // New Update Modal references
-    const updateModal = document.getElementById('updateModal');
-    const goToUpdatePageButton = document.getElementById('goToUpdatePage');
-    const dismissUpdateModalButton = document.getElementById('dismissUpdateModal');
-
-    goToUpdatePageButton.addEventListener('click', () => {
-      window.location.href = 'update.html';
-    });
-    dismissUpdateModalButton.addEventListener('click', () => {
-      updateModal.style.display = 'none';
-    });
-
-    // Listen for autoUpdater events to handle the glow and show/hide update modal
-    window.api.receive('autoUpdater-event', (data) => {
-      console.log('autoUpdater-event in dashboard:', data);
-      if (data.event === 'update-available') {
-        // Make version button glow
-        versionButton.classList.add('glow');
-        // Show the update modal on launch
-        updateModal.style.display = 'flex';
-      }
-    });
-
-    window.api.receive('autoUpdater-event', (data) => {
-      const notification = document.getElementById('updateNotification');
-      
-      if (data.event === 'update-available') {
-        notification.style.display = 'block';
-        // Optional: Show native notification
-        new Notification('Update Available', {
-          body: 'A new version is available. Click to install.'
+        errorModalCloseButton.addEventListener('click', () => {
+            errorModal.style.display = 'none';
         });
-      }
-    });
+        window.addEventListener('click', (event) => {
+            if (event.target === errorModal) {
+                errorModal.style.display = 'none';
+            }
+        });
 
-    function installUpdate() {
-      window.api.installUpdateNow();
-    }
-  </script>
+        // Dashboard Buttons
+        const goToSplitterButton = document.getElementById('goToSplitterButton');
+        const goToPremiereButton = document.getElementById('goToPremiereButton');
+        const goToSettingsButton = document.getElementById('goToSettingsButton');
+        const goToAboutButton = document.getElementById('goToAboutButton');
+
+        goToSplitterButton.addEventListener('click', () => {
+            window.location.href = 'splitter.html';
+        });
+        goToPremiereButton.addEventListener('click', () => {
+            window.location.href = 'premiere.html';
+        });
+        goToSettingsButton.addEventListener('click', () => {
+            window.location.href = 'settings.html';
+        });
+        goToAboutButton.addEventListener('click', () => {
+            window.location.href = 'about.html';
+        });
+
+        // Pill-shaped version button -> update.html
+        const versionButton = document.getElementById('versionButton');
+        (async () => {
+            try {
+                const version = await window.api.getAppVersion();
+                versionButton.textContent = `v${version}`;
+            } catch (err) {
+                console.error('Error getting app version:', err);
+                versionButton.textContent = 'v?.?.?';
+            }
+        })();
+
+        versionButton.addEventListener('click', () => {
+            window.location.href = 'update.html';
+        });
+
+        // New Update Modal references
+        const updateModal = document.getElementById('updateModal');
+        const goToUpdatePageButton = document.getElementById('goToUpdatePage');
+        const dismissUpdateModalButton = document.getElementById('dismissUpdateModal');
+
+        goToUpdatePageButton.addEventListener('click', () => {
+            window.location.href = 'update.html';
+        });
+        dismissUpdateModalButton.addEventListener('click', () => {
+            updateModal.style.display = 'none';
+        });
+
+        // Listen for autoUpdater events to handle the glow and show/hide update modal
+        window.api.receive('autoUpdater-event', (data) => {
+            console.log('autoUpdater-event in dashboard:', data);
+            if (data.event === 'update-available') {
+                // Make version button glow
+                versionButton.classList.add('glow');
+                // Show the update modal on launch
+                updateModal.style.display = 'flex';
+            }
+        });
+
+        window.api.receive('autoUpdater-event', (data) => {
+            const notification = document.getElementById('updateNotification');
+            
+            if (data.event === 'update-available') {
+                notification.style.display = 'block';
+                // Optional: Show native notification
+                new Notification('Update Available', {
+                    body: 'A new version is available. Click to install.'
+                });
+            }
+        });
+
+        function installUpdate() {
+            window.api.installUpdateNow();
+        }
+
+        // Status fetching and updating
+        function getStatusColor(status) {
+            switch (status.toLowerCase()) {
+                case 'operational':
+                    return 'status-operational';
+                case 'degraded':
+                case 'monitoring':
+                    return 'status-degraded';
+                case 'outage':
+                case 'critical':
+                    return 'status-outage';
+                default:
+                    return '';
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
+
+        // Add cache management for status
+        function getCachedStatus() {
+            const cached = sessionStorage.getItem('statusData');
+            if (cached) {
+                return JSON.parse(cached);
+            }
+            return null;
+        }
+
+        function cacheStatus(data) {
+            sessionStorage.setItem('statusData', JSON.stringify(data));
+            sessionStorage.setItem('statusCacheTime', Date.now().toString());
+        }
+
+        function isCacheValid() {
+            const cacheTime = sessionStorage.getItem('statusCacheTime');
+            if (!cacheTime) return false;
+            // Cache valid for 1 minute
+            return (Date.now() - parseInt(cacheTime)) < 60000;
+        }
+
+        async function updateStatus() {
+            try {
+                // First, check cache and update UI immediately if available
+                const cached = getCachedStatus();
+                if (cached && isCacheValid()) {
+                    updateStatusUI(cached);
+                }
+
+                // Then fetch new data
+                const response = await window.api.getSystemStatus();
+                if (!response.success || !response.status) {
+                    throw new Error('Invalid status response');
+                }
+
+                // Cache the new data
+                cacheStatus(response);
+                // Update UI with fresh data
+                updateStatusUI(response);
+            } catch (error) {
+                console.error('Failed to fetch status:', error);
+                const message = document.getElementById('statusMessage');
+                message.textContent = 'Unable to fetch system status';
+            }
+        }
+
+        function updateStatusUI(data) {
+            const statusData = data.status;
+            const indicator = document.getElementById('statusIndicator');
+            const title = document.getElementById('statusTitle');
+            const message = document.getElementById('statusMessage');
+            const timeElement = document.getElementById('statusTime');
+
+            indicator.className = `status-indicator ${getStatusColor(statusData.overall)}`;
+            title.textContent = `System Status: ${statusData.overall}`;
+            message.textContent = statusData.message || 'All systems operational';
+            
+            if (statusData.lastUpdated) {
+                timeElement.textContent = 'Last updated: ' + formatDate(statusData.lastUpdated);
+            }
+        }
+
+        // Preload status when navigating away
+        document.querySelectorAll('[id^="goTo"]').forEach(button => {
+            button.addEventListener('click', () => {
+                // Before navigation, trigger a status update
+                window.api.getSystemStatus().then(response => {
+                    if (response.success) {
+                        cacheStatus(response);
+                    }
+                });
+            });
+        });
+
+        // Initial update using cache-first strategy
+        updateStatus();
+
+        // Update every 2 minutes
+        setInterval(updateStatus, 120000);
+    </script>
 </body>
 </html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CamStem Status</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #051923, #003554);
+            min-height: 100vh;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-operational { background-color: #00b300; }
+        .status-degraded { background-color: #f5a623; }
+        .status-outage { background-color: #ff0000; }
+
+        .incident-card {
+            background: rgba(5, 25, 35, 0.8);
+            border: 1px solid rgba(0, 166, 251, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+            margin-bottom: 1.5rem;
+        }
+
+        .incident-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 166, 251, 0.15);
+            border-color: rgba(0, 166, 251, 0.4);
+        }
+
+        .update-timeline {
+            border-left: 2px solid rgba(0, 166, 251, 0.2);
+            padding-left: 1rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body class="text-white p-8">
+    <div class="max-w-4xl mx-auto"></div>
+        <!-- Header with back button -->
+        <div class="flex items-center mb-8">
+            <button onclick="window.location.href='dashboard.html'" class="text-cyan-400 hover:text-cyan-300">
+                ← Back to Dashboard
+            </button>
+        </div>
+
+        <!-- Header Section -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold mb-4">System Status</h1>
+            <div id="statusBadge" class="inline-flex items-center px-4 py-2 rounded-full bg-[#003554]/40">
+                <div id="statusDot" class="status-indicator"></div>
+                <span id="statusMessage" class="capitalize">Checking status...</span>
+            </div>
+            <div id="lastUpdated" class="text-sm text-gray-400 mt-2"></div>
+        </div>
+
+        <!-- Incidents List -->
+        <div id="incidentsList" class="space-y-6"></div>
+            <!-- Incidents will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        function renderIncident(incident) {
+            return `
+                <div class="incident-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold">${incident.title}</h3>
+                        <span class="px-3 py-1 rounded-full text-sm bg-[#003554] text-cyan-400">
+                            ${incident.impact}
+                        </span>
+                    </div>
+                    ${incident.updates.map(update => `
+                        <div class="update-timeline">
+                            <div class="text-sm text-cyan-400">${formatDate(update.timestamp)}</div>
+                            <div class="font-medium text-white mt-1">${update.status}</div>
+                            <div class="text-gray-300 mt-1">${update.message}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function getCachedStatus() {
+            const cached = sessionStorage.getItem('statusData');
+            if (cached) {
+                return JSON.parse(cached);
+            }
+            return null;
+        }
+
+        function cacheStatus(data) {
+            sessionStorage.setItem('statusData', JSON.stringify(data));
+            sessionStorage.setItem('statusCacheTime', Date.now().toString());
+        }
+
+        async function updateStatus() {
+            try {
+                // Use cached data first if available
+                const cached = getCachedStatus();
+                if (cached) {
+                    updateStatusUI(cached);
+                }
+
+                // Fetch fresh data
+                const response = await window.api.getSystemStatus();
+                if (!response.success || !response.status) {
+                    throw new Error('Invalid status response');
+                }
+
+                // Cache and update with new data
+                cacheStatus(response);
+                updateStatusUI(response);
+            } catch (error) {
+                console.error('Failed to fetch status:', error);
+            }
+        }
+
+        function updateStatusUI(response) {
+            // Update status badge
+            const statusDot = document.getElementById('statusDot');
+            const statusMessage = document.getElementById('statusMessage');
+            const lastUpdated = document.getElementById('lastUpdated');
+            const incidentsList = document.getElementById('incidentsList');
+
+            statusDot.className = `status-indicator ${getStatusColor(response.status.overall)}`;
+            statusMessage.textContent = response.status.message;
+            lastUpdated.textContent = `Last updated: ${formatDate(response.status.lastUpdated)}`;
+
+            // Render all incidents
+            if (response.incidents && response.incidents.length > 0) {
+                incidentsList.innerHTML = response.incidents
+                    .map(incident => renderIncident(incident))
+                    .join('');
+            } else {
+                incidentsList.innerHTML = `
+                    <div class="incident-card">
+                        <p class="text-gray-400">No incidents reported.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function getStatusColor(status) {
+            switch (status.toLowerCase()) {
+                case 'operational': return 'status-operational';
+                case 'degraded':
+                case 'monitoring': return 'status-degraded';
+                case 'outage':
+                case 'critical': return 'status-outage';
+                default: return '';
+            }
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
+
+        // Initial update
+        updateStatus();
+        
+        // Update every 2 minutes
+        setInterval(updateStatus, 120000);
+    </script>
+</body>
+</html>

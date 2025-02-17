@@ -128,8 +128,8 @@ function setupAutoUpdaterLogs() {
 // ---------- CREATE THE MAIN WINDOW -----------
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1040,    // 800 * 1.3 = 1040px
+    height: 660,    // 600 * 1.1 = 660px
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -138,6 +138,7 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, '../frontend/landing.html'));
 
   mainWindow.webContents.on('did-finish-load', () => {
+    logToFile('Dashboard loaded - Starting status check...');
     // Example: if you want to send the assets path
     mainWindow.webContents.send('set-assets-path', assetsPath);
   });
@@ -465,6 +466,11 @@ ipcMain.handle('check-for-updates', () => {
 ipcMain.handle('install-update-now', () => {
   logToFile('User chose to install update now');
   autoUpdater.quitAndInstall();
+});
+
+// Add this with your other ipcMain handlers
+ipcMain.on('log-message', (event, message) => {
+    logToFile(message);
 });
 
 // ---------- DEMUCS RUNNER -----------
