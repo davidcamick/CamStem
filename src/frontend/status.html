@@ -46,6 +46,32 @@
     </style>
 </head>
 <body class="text-white p-8">
+    <script>
+        // Call this once when app launches
+        async function initializeStatus() {
+            if (!localStorage.getItem('systemStatus')) {
+                try {
+                    await window.api.refreshSystemStatus();
+                } catch (error) {
+                    console.error('Error initializing status:', error);
+                }
+            }
+        }
+
+        async function updateStatus() {
+            try {
+                const response = await window.api.getSystemStatus();
+                updateStatusUI(response);
+            } catch (error) {
+                console.error('Error updating status:', error);
+            }
+        }
+
+        // Call initialize when the app starts
+        window.addEventListener('load', () => {
+            initializeStatus().then(() => updateStatus());
+        });
+    </script>
     <div class="max-w-4xl mx-auto"></div>
         <!-- Header with back button -->
         <div class="flex items-center mb-8">
@@ -104,22 +130,25 @@
             sessionStorage.setItem('statusCacheTime', Date.now().toString());
         }
 
+        let cachedStatus = null;
+        let lastFetchTime = 0;
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
         async function updateStatus() {
             try {
-                // Use cached data first if available
-                const cached = getCachedStatus();
-                if (cached) {
-                    updateStatusUI(cached);
+                const now = Date.now();
+                if (cachedStatus && (now - lastFetchTime) < CACHE_DURATION) {
+                    updateStatusUI(cachedStatus);
+                    return;
                 }
 
-                // Fetch fresh data
                 const response = await window.api.getSystemStatus();
                 if (!response.success || !response.status) {
                     throw new Error('Invalid status response');
                 }
 
-                // Cache and update with new data
-                cacheStatus(response);
+                cachedStatus = response;
+                lastFetchTime = now;
                 updateStatusUI(response);
             } catch (error) {
                 console.error('Failed to fetch status:', error);

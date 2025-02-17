@@ -13,7 +13,7 @@
     <!-- Title -->
     <h1 class="page-title">Settings</h1>
 
-    <!-- 2x1 Grid for the first two buttons -->
+    <!-- 3x1 Grid for all buttons -->
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
       <button 
         id="removeKeysButton" 
@@ -26,6 +26,14 @@
         onclick="window.location.href='update.html'"
       >
         Go to Update Page
+      </button>
+      <!-- Add Premiere Setup button that spans full width -->
+      <button
+        class="actionButton"
+        onclick="window.location.href='premiere.html'"
+        style="grid-column: span 2;"
+      >
+        Premiere Pro Extension Setup
       </button>
     </div>
 

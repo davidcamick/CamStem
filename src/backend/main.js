@@ -473,6 +473,18 @@ ipcMain.on('log-message', (event, message) => {
     logToFile(message);
 });
 
+// Add status handler
+ipcMain.handle('get-system-status', async () => {
+  try {
+    const response = await fetch('https://stripe-backend.accounts-abd.workers.dev/get-status');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching system status:', error);
+    throw error;
+  }
+});
+
 // ---------- DEMUCS RUNNER -----------
 ipcMain.on('run-demucs', (event, args) => {
   const { inputPath, outputPath, model, mp3Preset } = args;

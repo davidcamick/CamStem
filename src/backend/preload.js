@@ -94,5 +94,28 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.send('log-message', `Error fetching status: ${error.message}`);
       throw error;
     }
+  },
+
+  // Replace the existing getSystemStatus and refreshSystemStatus functions with:
+  getSystemStatus: async () => {
+    try {
+      const response = await ipcRenderer.invoke('get-system-status');
+      return response;
+    } catch (error) {
+      console.error('Error getting system status:', error);
+      throw error;
+    }
+  },
+
+  refreshSystemStatus: async () => {
+    // Force a fresh status check and update cache
+    try {
+      const status = await ipcRenderer.invoke('get-system-status');
+      localStorage.setItem('systemStatus', JSON.stringify(status));
+      return status;
+    } catch (error) {
+      console.error('Error refreshing system status:', error);
+      throw error;
+    }
   }
 });
