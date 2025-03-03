@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SuperConverter - Coming Soon</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="index.css">
     <style>
         body {
             background: linear-gradient(to bottom right, #051923, #003554);
@@ -34,5 +35,22 @@
             Back to Dashboard
         </button>
     </div>
+    
+    <!-- Add beta indicator -->
+    <div class="beta-indicator" id="betaIndicator"></div>
+
+    <script>
+        // Check beta status on load
+        (async () => {
+            try {
+                const { isBeta } = await window.api.checkBetaMode();
+                if (isBeta) {
+                    document.getElementById('betaIndicator').style.display = 'block';
+                }
+            } catch (err) {
+                console.error('Error checking beta status:', err);
+            }
+        })();
+    </script>
 </body>
 </html>

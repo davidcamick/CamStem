@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GameTime - Coming Soon</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="index.css">
     <style>
         body {
             background: linear-gradient(to bottom right, #051923, #003554);
@@ -29,10 +30,27 @@
 <body class="text-white">
     <div class="coming-soon-card">
         <h1 class="text-4xl font-bold mb-6">GameTime</h1>
-        <p class="text-xl text-zinc-300 mb-8">An exciting new feature is coming soon to enhance your gaming experience!</p>
+        <p class="text-xl text-zinc-300 mb-8">GameTime is the first ever automatic sports highlight sorter and clipper that works without extreme computing power or AI. Coming soon</p>
         <button onclick="window.location.href='dashboard.html'" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-all">
             Back to Dashboard
         </button>
     </div>
+    
+    <!-- Add beta indicator -->
+    <div class="beta-indicator" id="betaIndicator"></div>
+
+    <script>
+        // Check beta status on load
+        (async () => {
+            try {
+                const { isBeta } = await window.api.checkBetaMode();
+                if (isBeta) {
+                    document.getElementById('betaIndicator').style.display = 'block';
+                }
+            } catch (err) {
+                console.error('Error checking beta status:', err);
+            }
+        })();
+    </script>
 </body>
 </html>

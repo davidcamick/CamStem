@@ -163,7 +163,23 @@
     </div>
   </div>
 
+  <!-- Add beta indicator -->
+  <div class="beta-indicator" id="betaIndicator"></div>
+
   <script>
+    // Add this to the top of your existing script
+    // Check beta status on load
+    (async () => {
+        try {
+            const { isBeta } = await window.api.checkBetaMode();
+            if (isBeta) {
+                document.getElementById('betaIndicator').style.display = 'block';
+            }
+        } catch (err) {
+            console.error('Error checking beta status:', err);
+        }
+    })();
+
     /**************************************************************************************
      * Function: showDesktopNotification
      **************************************************************************************/

@@ -24,6 +24,9 @@
       <button id="installUpdateButton" class="btn">
         Install Update
       </button>
+      <button id="betaTestButton" class="btn">
+        Beta Test
+      </button>
     </div>
 
     <!-- Back to Menu link -->
@@ -38,6 +41,26 @@
       <button id="errorModalCloseButton" class="close-btn">Close</button>
     </div>
   </div>
+
+  <!-- Add Beta Modal -->
+  <div class="modal" id="betaModal">
+    <div class="modal-content">
+      <h2>Beta Mode</h2>
+      <div id="betaInputSection">
+        <p>Enter beta password to activate beta mode:</p>
+        <input type="password" id="betaPassword" class="form-input" style="margin: 1rem 0; width: 100%; padding: 0.5rem;">
+        <button id="activateBetaBtn" class="btn">Activate Beta</button>
+      </div>
+      <div id="betaActiveSection" style="display:none;">
+        <p>Beta mode is currently active.</p>
+        <button id="deactivateBetaBtn" class="btn btn-danger">Deactivate Beta</button>
+      </div>
+      <button id="closeBetaModal" class="close-btn" style="margin-top: 1rem;">Close</button>
+    </div>
+  </div>
+
+  <!-- Add beta indicator -->
+  <div class="beta-indicator" id="betaIndicator"></div>
 
   <script>
     // Grab elements
@@ -129,6 +152,68 @@
       } catch (err) {
         console.error('Error installing update:', err);
         showErrorModal(`Error installing update: ${err.message}`);
+      }
+    });
+
+    // Add beta mode handling
+    const betaTestButton = document.getElementById('betaTestButton');
+    const betaModal = document.getElementById('betaModal');
+    const betaPassword = document.getElementById('betaPassword');
+    const activateBetaBtn = document.getElementById('activateBetaBtn');
+    const deactivateBetaBtn = document.getElementById('deactivateBetaBtn');
+    const closeBetaModal = document.getElementById('closeBetaModal');
+    const betaInputSection = document.getElementById('betaInputSection');
+    const betaActiveSection = document.getElementById('betaActiveSection');
+    const betaIndicator = document.getElementById('betaIndicator');
+
+    // Check beta status on load
+    (async () => {
+      try {
+        const { isBeta } = await window.api.checkBetaMode();
+        if (isBeta) {
+          betaIndicator.style.display = 'block';
+          betaInputSection.style.display = 'none';
+          betaActiveSection.style.display = 'block';
+        }
+      } catch (err) {
+        console.error('Error checking beta status:', err);
+      }
+    })();
+
+    betaTestButton.addEventListener('click', () => {
+      betaModal.style.display = 'flex';
+    });
+
+    closeBetaModal.addEventListener('click', () => {
+      betaModal.style.display = 'none';
+    });
+
+    activateBetaBtn.addEventListener('click', async () => {
+      try {
+        const result = await window.api.activateBetaMode(betaPassword.value);
+        if (result.success) {
+          betaIndicator.style.display = 'block';
+          betaInputSection.style.display = 'none';
+          betaActiveSection.style.display = 'block';
+          betaPassword.value = '';
+        } else {
+          showErrorModal(result.error || 'Invalid beta password');
+        }
+      } catch (err) {
+        showErrorModal('Error activating beta mode: ' + err.message);
+      }
+    });
+
+    deactivateBetaBtn.addEventListener('click', async () => {
+      try {
+        const result = await window.api.deactivateBetaMode();
+        if (result.success) {
+          betaIndicator.style.display = 'none';
+          betaInputSection.style.display = 'block';
+          betaActiveSection.style.display = 'none';
+        }
+      } catch (err) {
+        showErrorModal('Error deactivating beta mode: ' + err.message);
       }
     });
   </script>

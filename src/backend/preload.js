@@ -117,5 +117,10 @@ contextBridge.exposeInMainWorld('api', {
       console.error('Error refreshing system status:', error);
       throw error;
     }
-  }
+  },
+
+  // Add these new beta functions
+  activateBetaMode: async (password) => ipcRenderer.invoke('activate-beta-mode', password),
+  deactivateBetaMode: async () => ipcRenderer.invoke('deactivate-beta-mode'),
+  checkBetaMode: async () => ipcRenderer.invoke('check-beta-mode'),
 });

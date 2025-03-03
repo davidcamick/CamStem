@@ -132,6 +132,9 @@
       <button id="nextSlide" class="arrowBtn">→</button>
     </div>
 
+    <!-- Add beta indicator -->
+    <div class="beta-indicator" id="betaIndicator"></div>
+
     <!-- Back to Menu button -->
     <button
       class="actionButton"
@@ -144,6 +147,19 @@
 
   <!-- Basic Carousel JS -->
   <script>
+    // Add this before your carousel script
+    // Check beta status on load
+    (async () => {
+        try {
+            const { isBeta } = await window.api.checkBetaMode();
+            if (isBeta) {
+                document.getElementById('betaIndicator').style.display = 'block';
+            }
+        } catch (err) {
+            console.error('Error checking beta status:', err);
+        }
+    })();
+
     (function() {
       let currentSlideIndex = 0;
       const slides = document.querySelectorAll('.carouselSlide');

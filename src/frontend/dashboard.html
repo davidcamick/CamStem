@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CamStem</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="index.css">
     <style>
         body {
             background: linear-gradient(to bottom right, #051923, #003554);
@@ -22,6 +23,7 @@
             padding: 1.8rem;
             max-width: 1400px;  /* Match container */
             margin: 0 auto;
+            width: 80%;  /* Change from 100% to 80% to create 10% padding on each side */
         }
 
         .bento-card {
@@ -77,20 +79,6 @@
 
         #versionButton {
             color: #00a6fb !important;
-        }
-
-        /* Add backdrop blur to container */
-        .container {
-            backdrop-filter: blur(10px);
-            position: relative;
-            z-index: 1;
-            /* Remove any auto margins that might affect centering */
-            margin: 0 auto;
-            /* Add some padding for breathing room */
-            padding: 2.5rem;  /* Slightly more padding */
-            /* Ensure container doesn't stretch too wide */
-            width: 100%;
-            max-width: 1400px;  /* Increased from 1200px */
         }
 
         /* Add new style for the announcement panel */
@@ -280,10 +268,21 @@
         .delay-4 { animation-delay: 1.0s; }
         .delay-5 { animation-delay: 1.2s; }
         .delay-6 { animation-delay: 1.4s; }
+
+        /* Update container to be invisible but keep layout */
+        .container {
+            position: relative;
+            z-index: 1;
+            margin: 0 auto;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 1400px;
+            background: transparent; /* Make it invisible */
+        }
     </style>
 </head>
 <body class="text-white">
-    <div class="container">
+    <div class="wrapper">
         <!-- Add settings icon -->
         <div class="settings-icon-container animate-settings">
             <div class="settings-icon-inner">
@@ -378,7 +377,23 @@
 
     <a id="bottomVersionPill" class="bottom-version-pill animate-version">v?.?.?</a>
 
+    <!-- Add beta indicator -->
+    <div class="beta-indicator" id="betaIndicator"></div>
+
     <script>
+        // Add this to the top of your existing script
+        // Check beta status on load
+        (async () => {
+            try {
+                const { isBeta } = await window.api.checkBetaMode();
+                if (isBeta) {
+                    document.getElementById('betaIndicator').style.display = 'block';
+                }
+            } catch (err) {
+                console.error('Error checking beta status:', err);
+            }
+        })();
+
         // Error modal references
         const errorModal = document.getElementById('errorModal');
         const errorMessageElem = document.getElementById('errorMessage');

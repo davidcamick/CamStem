@@ -1,0 +1,2 @@
+1. fix stem splitter logic to be easier to Use
+2. make it so that the game time and like other beta features aren't currently enabled

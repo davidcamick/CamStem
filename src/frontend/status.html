@@ -47,6 +47,19 @@
 </head>
 <body class="text-white p-8">
     <script>
+        // Add this to the top of your existing script
+        // Check beta status on load
+        (async () => {
+            try {
+                const { isBeta } = await window.api.checkBetaMode();
+                if (isBeta) {
+                    document.getElementById('betaIndicator').style.display = 'block';
+                }
+            } catch (err) {
+                console.error('Error checking beta status:', err);
+            }
+        })();
+
         // Call this once when app launches
         async function initializeStatus() {
             if (!localStorage.getItem('systemStatus')) {
@@ -89,6 +102,9 @@
             </div>
             <div id="lastUpdated" class="text-sm text-gray-400 mt-2"></div>
         </div>
+
+        <!-- Add beta indicator -->
+        <div class="beta-indicator" id="betaIndicator"></div>
 
         <!-- Incidents List -->
         <div id="incidentsList" class="space-y-6"></div>

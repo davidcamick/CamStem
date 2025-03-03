@@ -485,6 +485,42 @@ ipcMain.handle('get-system-status', async () => {
   }
 });
 
+// Add these beta mode IPC handlers before app.whenReady()
+ipcMain.handle('activate-beta-mode', async (event, password) => {
+  try {
+    if (password === 'CamStemBeta1') {
+      await keytar.setPassword('camstem-app', 'beta-mode', 'true');
+      logToFile('Beta mode activated');
+      return { success: true };
+    }
+    return { success: false, error: 'Invalid beta password' };
+  } catch (err) {
+    logToFile(`Error activating beta mode: ${err.message}`);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('deactivate-beta-mode', async () => {
+  try {
+    await keytar.deletePassword('camstem-app', 'beta-mode');
+    logToFile('Beta mode deactivated');
+    return { success: true };
+  } catch (err) {
+    logToFile(`Error deactivating beta mode: ${err.message}`);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('check-beta-mode', async () => {
+  try {
+    const isBeta = await keytar.getPassword('camstem-app', 'beta-mode');
+    return { isBeta: isBeta === 'true' };
+  } catch (err) {
+    logToFile(`Error checking beta mode: ${err.message}`);
+    return { isBeta: false };
+  }
+});
+
 // ---------- DEMUCS RUNNER -----------
 ipcMain.on('run-demucs', (event, args) => {
   const { inputPath, outputPath, model, mp3Preset } = args;

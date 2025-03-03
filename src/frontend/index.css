@@ -401,3 +401,18 @@
       font-weight: 700;     /* bold */
       margin-bottom: 1rem;  /* like mb-4 */
     }
+
+/* Beta mode indicator */
+.beta-indicator {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #ff7b00;
+  z-index: 1000;
+  opacity: 0.8;
+  box-shadow: 0 0 8px #ff7b00;
+  display: none;  /* hidden by default */
+}
