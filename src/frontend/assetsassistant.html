@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assets Assistant - CamStem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #051923, #003554);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .container {
+            background: rgba(5, 25, 35, 0.8);
+            border: 1px solid rgba(0, 166, 251, 0.2);
+            border-radius: 1rem;
+            padding: 2rem;
+            backdrop-filter: blur(8px);
+            max-width: 600px;
+            margin: 0 2rem;
+            text-align: center;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-5px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="back-button" onclick="window.location.href='dashboard.html'">
+        ← Back to Dashboard
+    </div>
+
+    <div class="container animate-fade-in">
+        <h1 class="text-4xl font-bold mb-6">Assets Assistant</h1>
+        <div class="space-y-4">
+            <p class="text-xl text-zinc-300">Welcome to the Assets Assistant!</p>
+            <p class="text-zinc-400">This feature is coming soon. We're working hard to bring you a streamlined way to manage and compile your project files.</p>
+            <div class="mt-8 text-sm text-zinc-500">
+                Expected Release: Q1 2024
+            </div>
+        </div>
+    </div>
+</body>
+</html>

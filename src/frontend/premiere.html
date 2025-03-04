@@ -35,11 +35,34 @@
       height: var(--step4-container-height);
       box-sizing: border-box;
     }
+
+    #betaMessage {
+      text-align: center;
+      padding: 2rem;
+      display: none;
+    }
+    #setupContainer {
+      display: none;
+    }
   </style>
 </head>
 <body>
+  <!-- Beta Message Container -->
+  <div id="betaMessage">
+    <h1 class="page-title">Premiere Integration Coming Soon</h1>
+    <p style="margin-bottom:1.5rem;">
+      The Premiere Pro integration is currently under development and will be available soon.
+      Stay tuned for updates!
+    </p>
+    <div class="buttons-row">
+      <button onclick="window.location.href='dashboard.html'" class="actionButton">
+        Back to Main Menu
+      </button>
+    </div>
+  </div>
+
   <!-- Main Container -->
-  <div class="container">
+  <div id="setupContainer" class="container">
 
     <!-- STEP 1 -->
     <div id="step1" class="step">
@@ -211,21 +234,38 @@
       if (num === 6) stepSix.style.display   = 'block';
     }
 
-    // On load => jump to step 6 if done, else step 1
+    // On load => check beta access first
     window.addEventListener('load', async () => {
-      const done = localStorage.getItem('premiereSetupComplete');
-      if (done === 'true') {
-        switchToStep(6);
-      } else {
-        switchToStep(1);
-      }
-
       try {
-        const paths = await window.api.getDemucsPaths();
-        demucsExecPath   = paths.demucsExec || '';
-        demucsModelsPath = paths.models    || '';
+        const betaStatus = await window.api.checkBetaMode();
+        
+        if (!betaStatus.isBeta) {
+          document.getElementById('betaMessage').style.display = 'block';
+          document.getElementById('setupContainer').style.display = 'none';
+          return;
+        }
+
+        document.getElementById('betaMessage').style.display = 'none';
+        document.getElementById('setupContainer').style.display = 'block';
+
+        const done = localStorage.getItem('premiereSetupComplete');
+        if (done === 'true') {
+          switchToStep(6);
+        } else {
+          switchToStep(1);
+        }
+
+        try {
+          const paths = await window.api.getDemucsPaths();
+          demucsExecPath = paths.demucsExec || '';
+          demucsModelsPath = paths.models || '';
+        } catch (err) {
+          console.error('Error retrieving Demucs paths:', err);
+        }
       } catch (err) {
-        console.error('Error retrieving Demucs paths:', err);
+        console.error('Error checking beta access:', err);
+        document.getElementById('betaMessage').style.display = 'block';
+        document.getElementById('setupContainer').style.display = 'none';
       }
     });
 

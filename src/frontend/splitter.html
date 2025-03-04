@@ -117,7 +117,7 @@
     }
 
     .preset-button.active {
-      background: rgba(0, 166, 251, 0.4);
+      background: rgba(0, 166, 251, 4);
       border-color: rgba(0, 166, 251, 0.6);
       transform: scale(1.05);
     }
@@ -222,9 +222,14 @@
       <p style="margin-bottom: 1rem;">
         Where should we place your separated stems?
       </p>
-      <button id="browseOutputBtn" class="btn btn-secondary" style="margin-bottom: 1.5rem;">
-        Browse for Folder
-      </button>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem;">
+        <button id="browseOutputBtn" class="btn btn-secondary">
+          Browse for Folder
+        </button>
+        <button id="sameAsInputBtn" class="btn btn-secondary">
+          Same as Input
+        </button>
+      </div>
       <button id="step3ContinueBtn" class="btn btn-primary btn-disabled">Next</button>
       <a href="dashboard.html" class="exit-pill">Exit</a>
     </div>
@@ -502,6 +507,24 @@
       }
     });
 
+    const sameAsInputBtn = document.getElementById('sameAsInputBtn');
+
+    sameAsInputBtn.addEventListener('click', async () => {
+      if (chosenFilePath) {
+        try {
+          // Wait for the async IPC call
+          chosenOutputPath = await window.api.getDirectoryFromPath(chosenFilePath);
+          browseOutputBtn.textContent = 'Output Selected ✓';
+          step3ContinueBtn.classList.remove('btn-disabled');
+        } catch (err) {
+          console.error('Error getting directory:', err);
+          showWarning('Error setting output directory');
+        }
+      } else {
+        showWarning('No input file selected yet!');
+      }
+    });
+
     step3ContinueBtn.addEventListener('click', () => {
       if (!chosenOutputPath) {
         showWarning('Please select an output directory first.');
@@ -649,26 +672,52 @@
     });
 
     // success
-    window.api.receive('demucs-success', (msg) => {
+    window.api.receive('demucs-success', async (msg) => {
       parseDemucsOutput();
 
-      if (chosenModel === 'htdemucs_ft') {
-        // If stage4 isn't done, force it to 100
-        if (!stageComplete[3]) {
-          stageComplete[3] = true;
-          setStagePercent(3, 100);
+      try {
+        // First do the normal success UI updates
+        if (chosenModel === 'htdemucs_ft') {
+          if (!stageComplete[3]) {
+            stageComplete[3] = true;
+            setStagePercent(3, 100);
+          }
+          refinementLabel.textContent = 'Moving stems to final location...';
+          refinementLabel.classList.remove('text-white', 'text-red');
+          refinementLabel.classList.add('text-green');
+        } else {
+          filteredLineDiv.classList.remove('text-white', 'text-red');
+          filteredLineDiv.classList.add('text-green');
+          filteredLineDiv.textContent = 'Moving stems to final location...';
         }
-        refinementLabel.textContent = 'Splitting Process Completed';
-        refinementLabel.classList.remove('text-white', 'text-red');
-        refinementLabel.classList.add('text-green');
-      } else {
-        filteredLineDiv.classList.remove('text-white', 'text-red');
-        filteredLineDiv.classList.add('text-green');
-        filteredLineDiv.textContent = 'Splitting Process Completed';
-      }
 
-      // Desktop notification on success
-      showDesktopNotification("CamStem", "Your stems have finished splitting!");
+        // Now move the stems
+        if (finalStemsPath) {
+          const result = await window.api.moveStems(finalStemsPath, chosenOutputPath);
+          if (!result.success) {
+            throw new Error(result.error || 'Failed to move stems');
+          }
+        }
+
+        // Update UI with final success message
+        if (chosenModel === 'htdemucs_ft') {
+          refinementLabel.textContent = 'Splitting Process Completed';
+        } else {
+          filteredLineDiv.textContent = 'Splitting Process Completed';
+        }
+
+        // Show notification
+        showDesktopNotification("CamStem", "Your stems have finished splitting!");
+      } catch (err) {
+        console.error('Error moving stems:', err);
+        if (chosenModel === 'htdemucs_ft') {
+          refinementLabel.classList.add('text-red');
+          refinementLabel.textContent = 'Error moving stems. Check logs.';
+        } else {
+          filteredLineDiv.classList.add('text-red');
+          filteredLineDiv.textContent = 'Error moving stems. Check logs.';
+        }
+      }
     });
 
     // error

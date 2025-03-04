@@ -14,6 +14,7 @@ const path = require('path');
 // We spawn a process for demucs
 const { spawn } = require('child_process');
 const fs = require('fs');
+const fsPromises = require('fs').promises;  // Add this for promise-based operations
 const keytar = require('keytar');
 const { webcrypto } = require('crypto');
 const os = require('os');
@@ -39,12 +40,12 @@ const API_BASE_URL = process.env.API_BASE_URL;
 // Set up the log file path
 const logFilePath = path.join(app.getPath('userData'), 'demucs-log.txt');
 
-// Add error handling for file operations
+// Fix the logToFile function to use synchronous fs
 function logToFile(message) {
   try {
     const timestamp = new Date().toISOString();
     const fullMsg = `[${timestamp}] ${message}\n`;
-    fs.appendFileSync(logFilePath, fullMsg);
+    fs.appendFileSync(logFilePath, fullMsg);  // Use regular fs for sync operations
     console.log(fullMsg.trim());
   } catch (err) {
     console.error('Failed to write to log file:', err);
@@ -521,6 +522,88 @@ ipcMain.handle('check-beta-mode', async () => {
   }
 });
 
+// Add this new IPC handler before app.whenReady()
+ipcMain.handle('move-stems', async (event, sourcePath, outputBase) => {
+  try {
+    // Get the original filename from the sourcePath
+    const songFolders = await fsPromises.readdir(sourcePath);
+    if (songFolders.length === 0) {
+      throw new Error('No song folder found');
+    }
+
+    // Clean up the filename and create the new folder name
+    const cleanedName = cleanupFileName(songFolders[0]);
+    const newFolderName = `CamStem - ${cleanedName}`;
+    const outputFolder = path.join(outputBase, newFolderName);
+
+    // Create the new folder
+    await fsPromises.mkdir(outputFolder, { recursive: true });
+
+    // The song folder should be the only folder inside sourcePath
+    const songFolder = path.join(sourcePath, songFolders[0]);
+    
+    // Get all the stem files from inside the song folder
+    const stemFiles = await fsPromises.readdir(songFolder);
+    
+    // Move each stem file to the new folder with transformed name
+    for (const file of stemFiles) {
+      const sourceFile = path.join(songFolder, file);
+      // Transform the stem filename using the cleaned song name
+      const newFileName = transformStemName(cleanedName, file);
+      const targetFile = path.join(outputFolder, newFileName);
+      await fsPromises.rename(sourceFile, targetFile);
+    }
+
+    // Try to clean up empty directories
+    try {
+      await fsPromises.rmdir(songFolder);
+      await fsPromises.rmdir(sourcePath);
+    } catch (err) {
+      logToFile(`Note: Could not remove empty directories: ${err.message}`);
+    }
+
+    logToFile(`Successfully moved stems to ${outputFolder}`);
+    return { success: true };
+  } catch (err) {
+    logToFile(`Error moving stems: ${err.message}`);
+    return { success: false, error: err.message };
+  }
+});
+
+// Add this helper function for cleaning up filenames
+function cleanupFileName(fileName) {
+  // Remove the .mp3 extension if present
+  let cleanName = fileName.replace('.mp3', '');
+
+  // Array of prefixes to remove
+  const prefixesToRemove = [
+    'spotidownloader.com - ',
+    'yts.com -'
+  ];
+
+  // Remove any matching prefixes
+  prefixesToRemove.forEach(prefix => {
+    if (cleanName.toLowerCase().startsWith(prefix.toLowerCase())) {
+      cleanName = cleanName.substring(prefix.length);
+    }
+  });
+
+  // Trim any extra spaces
+  return cleanName.trim();
+}
+
+// Add this function to get the first word and transform stem names
+function transformStemName(songName, stemFile) {
+  // Get the first word of the song name
+  const firstWord = songName.split(' ')[0].toLowerCase();
+  
+  // Get the stem type (vocals.mp3, drums.mp3, etc)
+  const stemType = stemFile.toLowerCase();
+  
+  // Combine them, making first word capitalized
+  return firstWord.charAt(0).toUpperCase() + firstWord.slice(1) + ' ' + stemType;
+}
+
 // ---------- DEMUCS RUNNER -----------
 ipcMain.on('run-demucs', (event, args) => {
   const { inputPath, outputPath, model, mp3Preset } = args;
@@ -749,3 +832,16 @@ async function initializeStripe() {
     throw err;
   }
 }
+
+// Add this new IPC handler with your other handlers
+ipcMain.handle('get-directory-from-path', (event, filePath) => {
+    try {
+        logToFile(`Getting directory from path: ${filePath}`);
+        const directory = path.dirname(filePath);
+        logToFile(`Resolved directory: ${directory}`);
+        return directory;
+    } catch (err) {
+        logToFile(`Error getting directory from path: ${err.message}`);
+        throw err;
+    }
+});

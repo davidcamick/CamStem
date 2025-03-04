@@ -333,10 +333,10 @@
                 <div class="badge">Beta</div>
             </div>
 
-            <div id="goToSettingsButton" class="bento-card animate-card delay-4">
+            <div id="goToAssetsAssistantButton" class="bento-card animate-card delay-4">
                 <div class="gradient-overlay"></div>
-                <h3 class="text-xl font-semibold mb-2">Super Converter</h3>
-                <p class="text-zinc-400">The one stop shop to convert any picture or video to any format</p>
+                <h3 class="text-xl font-semibold mb-2">Assets Assistant</h3>
+                <p class="text-zinc-400">Compile your project file in just a few clicks with the Assets Assistant and keep everything streamlined and simplified</p>
                 <div class="badge">Beta</div>
             </div>
 
@@ -418,6 +418,7 @@
         const goToPremiereButton = document.getElementById('goToPremiereButton');
         const goToSettingsButton = document.getElementById('goToSettingsButton');
         const goToAboutButton = document.getElementById('goToAboutButton');
+        const goToAssetsAssistantButton = document.getElementById('goToAssetsAssistantButton');
 
         goToSplitterButton.addEventListener('click', () => {
             window.location.href = 'splitter.html';
@@ -425,11 +426,11 @@
         goToPremiereButton.addEventListener('click', () => {
             window.location.href = 'gametime.html';
         });
-        goToSettingsButton.addEventListener('click', () => {
-            window.location.href = 'superconverter.html';
-        });
         goToAboutButton.addEventListener('click', () => {
             window.location.href = 'about.html';
+        });
+        goToAssetsAssistantButton.addEventListener('click', () => {
+            window.location.href = 'assetsassistant.html';
         });
 
         // Pill-shaped version button -> update.html

@@ -123,4 +123,14 @@ contextBridge.exposeInMainWorld('api', {
   activateBetaMode: async (password) => ipcRenderer.invoke('activate-beta-mode', password),
   deactivateBetaMode: async () => ipcRenderer.invoke('deactivate-beta-mode'),
   checkBetaMode: async () => ipcRenderer.invoke('check-beta-mode'),
+
+  // Add new method for moving stems
+  moveStems: async (sourcePath, targetFolder) => {
+    return await ipcRenderer.invoke('move-stems', sourcePath, targetFolder);
+  },
+
+  // Replace the direct path operation with an IPC call
+  getDirectoryFromPath: async (filePath) => {
+    return await ipcRenderer.invoke('get-directory-from-path', filePath);
+  },
 });
