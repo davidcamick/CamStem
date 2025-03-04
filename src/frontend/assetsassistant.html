@@ -9,37 +9,32 @@
         body {
             background: linear-gradient(to bottom right, #051923, #003554);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             color: white;
         }
 
-        .container {
-            background: rgba(5, 25, 35, 0.8);
-            border: 1px solid rgba(0, 166, 251, 0.2);
-            border-radius: 1rem;
-            padding: 2rem;
-            backdrop-filter: blur(8px);
-            max-width: 600px;
-            margin: 0 2rem;
-            text-align: center;
+        .step-container {
+            display: none;
         }
 
-        .back-button {
-            position: fixed;
-            top: 2rem;
-            left: 2rem;
-            padding: 0.5rem 1rem;
+        .step-container.active {
+            display: block;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .folder-item {
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 0.5rem;
-            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .back-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateX(-5px);
+        .folder-item:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
         }
 
         @keyframes fadeIn {
@@ -47,25 +42,202 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .animate-fade-in {
-            animation: fadeIn 0.8s ease forwards;
+        .btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary {
+            background: #00A6FB;
+            border-color: #0582CA;
+        }
+
+        .btn-primary:hover {
+            background: #0582CA;
+        }
+
+        .btn-icon {
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-icon.locked {
+            background: rgba(0, 166, 251, 0.2);
+        }
+
+        .path-display {
+            word-break: break-all;
+            min-height: 1.5rem;
+            padding: 0.75rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 0.5rem;
+            margin: 0.5rem 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .lock-btn {
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .lock-btn.locked {
+            background: rgba(0, 166, 251, 0.2);
+            box-shadow: 0 0 10px rgba(0, 166, 251, 0.3);
+        }
+
+        .lock-btn:hover {
+            transform: scale(1.1);
         }
     </style>
 </head>
-<body>
-    <div class="back-button" onclick="window.location.href='dashboard.html'">
-        ← Back to Dashboard
+<body class="p-8">
+    <div class="flex justify-between items-center mb-8">
+        <div class="back-button btn" onclick="window.location.href='dashboard.html'">
+            ← Back to Dashboard
+        </div>
+        <button onclick="showResetConfirmation()" class="btn flex items-center space-x-2">
+            <span>⚙️</span>
+            <span>Reset All Settings</span>
+        </button>
     </div>
 
-    <div class="container animate-fade-in">
-        <h1 class="text-4xl font-bold mb-6">Assets Assistant</h1>
-        <div class="space-y-4">
-            <p class="text-xl text-zinc-300">Welcome to the Assets Assistant!</p>
-            <p class="text-zinc-400">This feature is coming soon. We're working hard to bring you a streamlined way to manage and compile your project files.</p>
-            <div class="mt-8 text-sm text-zinc-500">
-                Expected Release: Q1 2024
+    <div id="resetModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-900 p-6 rounded-lg shadow-xl max-w-lg w-full mx-4">
+            <h3 class="text-xl font-bold mb-4 text-red-500">⚠️ Warning: Reset All Settings</h3>
+            <p class="text-gray-300 mb-4">
+                This will delete all your saved settings including:
+                <ul class="list-disc ml-6 mt-2 space-y-1">
+                    <li>Custom presets</li>
+                    <li>Locked folder paths</li>
+                    <li>Default locations</li>
+                </ul>
+            </p>
+            <p class="text-gray-300 mb-6">This action cannot be undone.</p>
+            <div class="flex space-x-4">
+                <button onclick="resetAllSettings()" class="btn bg-red-600 hover:bg-red-700">Yes, Reset Everything</button>
+                <button onclick="hideResetModal()" class="btn">Cancel</button>
             </div>
         </div>
     </div>
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Progress Bar -->
+        <div class="mb-8">
+            <div class="flex justify-between mb-2">
+                <span class="step-indicator" data-step="1">Step 1: Output Location</span>
+                <span class="step-indicator" data-step="2">Step 2: Preset Selection</span>
+                <span class="step-indicator" data-step="3">Step 3: Link Directories</span>
+                <span class="step-indicator" data-step="4">Step 4: Final Settings</span>
+            </div>
+            <div class="w-full bg-gray-700 h-2 rounded-full">
+                <div id="progress-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 25%"></div>
+            </div>
+        </div>
+
+        <!-- Step 1: Output Location -->
+        <div id="step1" class="step-container active">
+            <h2 class="text-2xl font-bold mb-4">Set Project Details</h2>
+            <div class="space-y-4">
+                <div class="folder-item">
+                    <div class="mb-4">
+                        <label class="block text-sm mb-2">Project Name:</label>
+                        <input type="text" id="projectName" placeholder="Enter project name" 
+                            class="w-full p-2 bg-gray-800 rounded border border-gray-700">
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Parent Directory:</span>
+                        <button id="selectOutputBtn" class="btn">Choose Folder</button>
+                    </div>
+                    <div id="selectedOutput" class="mt-2 text-blue-300"></div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="setDefaultLocation" class="w-4 h-4">
+                    <label for="setDefaultLocation">Set as default parent directory</label>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-end">
+                <button onclick="nextStep()" class="btn btn-primary">Next Step →</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Preset Selection -->
+        <div id="step2" class="step-container">
+            <h2 class="text-2xl font-bold mb-4">Select a Preset</h2>
+            <div class="space-y-4">
+                <div id="presetsList" class="space-y-2">
+                    <!-- Presets will be populated here -->
+                </div>
+                <button onclick="showNewPresetForm()" class="btn w-full">+ Create New Preset</button>
+            </div>
+            <div id="newPresetForm" class="mt-4 hidden">
+                <input type="text" id="presetName" placeholder="Preset Name" class="w-full p-2 bg-gray-800 rounded mb-2">
+                <div class="space-y-2" id="folderStructure">
+                    <!-- Folder structure inputs will be here -->
+                </div>
+                <button onclick="addFolderToStructure()" class="btn mt-2">+ Add Folder</button>
+                <button onclick="saveNewPreset()" class="btn btn-primary mt-2 ml-2">Save Preset</button>
+            </div>
+            <div class="mt-8 flex justify-between">
+                <button onclick="previousStep()" class="btn">← Previous</button>
+                <button onclick="nextStep()" class="btn btn-primary">Next Step →</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Link Directories -->
+        <div id="step3" class="step-container">
+            <h2 class="text-2xl font-bold mb-4">Link Directories</h2>
+            <div id="linkedFolders" class="space-y-4">
+                <!-- Linked folders will be listed here -->
+            </div>
+            <button onclick="addNewFolderLink()" class="btn w-full mt-4">+ Add Folder Link</button>
+            <div class="mt-8 flex justify-between">
+                <button onclick="previousStep()" class="btn">← Previous</button>
+                <button onclick="nextStep()" class="btn btn-primary">Next Step →</button>
+            </div>
+        </div>
+
+        <!-- Step 4: Final Settings -->
+        <div id="step4" class="step-container">
+            <h2 class="text-2xl font-bold mb-4">Final Settings</h2>
+            <div class="space-y-4">
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="enableVersioning" class="w-4 h-4">
+                    <label for="enableVersioning">Enable versioning (_V1, _V2, etc.)</label>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="createMetadata" class="w-4 h-4" checked>
+                    <label for="createMetadata">Create project metadata file</label>
+                </div>
+                <div class="folder-item">
+                    <h3 class="font-bold mb-2">Review Selected Paths:</h3>
+                    <div id="pathsReview" class="text-sm"></div>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-between">
+                <button onclick="previousStep()" class="btn">← Previous</button>
+                <button onclick="startProcess()" class="btn btn-primary">Start Process →</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./js/assetsassistant.js"></script>
 </body>
 </html>

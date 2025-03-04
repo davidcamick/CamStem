@@ -845,3 +845,189 @@ ipcMain.handle('get-directory-from-path', (event, filePath) => {
         throw err;
     }
 });
+
+// Update the process-assets handler to handle files correctly
+ipcMain.handle('process-assets', async (event, config) => {
+  try {
+    const { projectName, parentPath, selectedPreset, linkedFolders, settings } = config;
+    
+    // Validate required fields
+    if (!projectName || !parentPath) {
+      throw new Error('Project name and parent directory are required');
+    }
+
+    logToFile(`Starting project setup: ${projectName}`);
+    logToFile(`Parent directory: ${parentPath}`);
+    logToFile(`Linked folders: ${JSON.stringify(linkedFolders)}`);
+
+    // Create the project directory with project name
+    const baseProjectDir = path.join(parentPath, projectName);
+    
+    // Add versioning if enabled
+    let projectDir = baseProjectDir;
+    if (settings.versioning) {
+      let version = 1;
+      while (fs.existsSync(projectDir)) {
+        projectDir = path.join(parentPath, `${projectName}_V${version}`);
+        version++;
+      }
+    } else if (fs.existsSync(projectDir)) {
+      throw new Error('A project with this name already exists in the selected directory');
+    }
+
+    // Helper function for progress updates
+    const sendProgress = (operation, percent, currentItem = null, completed = 0, total = 0) => {
+      event.sender.send('process-progress', { operation, percent, currentItem, completed, total });
+    };
+
+    // Create base project directory
+    logToFile(`Creating project directory: ${projectDir}`);
+    await fsPromises.mkdir(projectDir, { recursive: true });
+    sendProgress('Creating project structure...', 0);
+
+    // Create preset folders
+    if (selectedPreset?.folders) {
+      const totalFolders = selectedPreset.folders.length;
+      for (let i = 0; i < totalFolders; i++) {
+        const folder = selectedPreset.folders[i];
+        const folderPath = path.join(projectDir, folder);
+        
+        sendProgress('Creating folder structure...', (i / totalFolders) * 20, folder, i + 1, totalFolders);
+        logToFile(`Creating preset folder: ${folderPath}`);
+        await fsPromises.mkdir(folderPath, { recursive: true });
+      }
+    }
+
+    // Process linked folders
+    let processedItems = 0;
+    let totalItems = 0;
+
+    // First, count total items and validate paths
+    for (const folder of linkedFolders) {
+      if (!folder.isEmpty && folder.path && fs.existsSync(folder.path)) {
+        try {
+          const entries = await fsPromises.readdir(folder.path, { withFileTypes: true });
+          totalItems += entries.length;
+        } catch (err) {
+          logToFile(`Error reading directory ${folder.path}: ${err.message}`);
+        }
+      }
+    }
+
+    logToFile(`Total items to process: ${totalItems}`);
+
+    // Process each folder
+    for (const folder of linkedFolders) {
+      if (folder.isEmpty || !folder.path || !folder.name) continue;
+
+      const targetDir = path.join(projectDir, folder.name);
+      logToFile(`Processing folder ${folder.name} from ${folder.path} to ${targetDir}`);
+
+      try {
+        // Ensure target directory exists
+        await fsPromises.mkdir(targetDir, { recursive: true });
+
+        if (!fs.existsSync(folder.path)) {
+          logToFile(`Source path does not exist: ${folder.path}`);
+          continue;
+        }
+
+        const entries = await fsPromises.readdir(folder.path, { withFileTypes: true });
+        
+        for (const entry of entries) {
+          const sourcePath = path.join(folder.path, entry.name);
+          const targetPath = path.join(targetDir, entry.name);
+          
+          try {
+            const operation = folder.action === 'move' ? 'Moving' : 'Copying';
+            sendProgress(
+              `${operation} files to ${folder.name}...`,
+              20 + ((processedItems / totalItems) * 80),
+              entry.name,
+              processedItems + 1,
+              totalItems
+            );
+
+            if (entry.isDirectory()) {
+              logToFile(`Processing directory: ${entry.name}`);
+              if (folder.action === 'move') {
+                await fsPromises.rename(sourcePath, targetPath);
+              } else {
+                await copyFolderRecursive(sourcePath, targetPath);
+              }
+            } else {
+              logToFile(`Processing file: ${entry.name}`);
+              if (folder.action === 'move') {
+                await fsPromises.rename(sourcePath, targetPath);
+              } else {
+                await fsPromises.copyFile(sourcePath, targetPath);
+              }
+            }
+            
+            processedItems++;
+            logToFile(`Successfully processed: ${entry.name}`);
+          } catch (err) {
+            logToFile(`Error processing ${entry.name}: ${err.message}`);
+          }
+        }
+      } catch (err) {
+        logToFile(`Error processing folder ${folder.name}: ${err.message}`);
+      }
+    }
+
+    // Create metadata file if enabled
+    if (settings.metadata) {
+      sendProgress('Creating metadata file...', 100);
+      const metadata = {
+        projectName,
+        created: new Date().toISOString(),
+        preset: selectedPreset?.name || 'None',
+        folders: linkedFolders.map(f => ({
+          name: f.name,
+          originalPath: f.path,
+          action: f.action,
+          isEmpty: f.isEmpty
+        }))
+      };
+      
+      const metadataPath = path.join(projectDir, 'project_metadata.json');
+      logToFile(`Creating metadata file: ${metadataPath}`);
+      await fsPromises.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+    }
+
+    logToFile('Project setup completed successfully');
+    return { success: true, projectDir };
+  } catch (err) {
+    logToFile(`Error in process-assets: ${err.message}`);
+    return { success: false, error: err.message };
+  }
+});
+
+// Update the copyFolderRecursive function to be more robust
+async function copyFolderRecursive(src, dest) {
+  try {
+    await fsPromises.mkdir(dest, { recursive: true });
+    logToFile(`Created directory: ${dest}`);
+
+    const entries = await fsPromises.readdir(src, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      const srcPath = path.join(src, entry.name);
+      const destPath = path.join(dest, entry.name);
+      
+      try {
+        if (entry.isDirectory()) {
+          await copyFolderRecursive(srcPath, destPath);
+        } else {
+          await fsPromises.copyFile(srcPath, destPath);
+          logToFile(`Copied file: ${entry.name}`);
+        }
+      } catch (err) {
+        logToFile(`Error copying ${entry.name}: ${err.message}`);
+      }
+    }
+  } catch (err) {
+    logToFile(`Error in copyFolderRecursive: ${err.message}`);
+    throw err;
+  }
+}

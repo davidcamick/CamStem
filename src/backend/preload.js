@@ -133,4 +133,13 @@ contextBridge.exposeInMainWorld('api', {
   getDirectoryFromPath: async (filePath) => {
     return await ipcRenderer.invoke('get-directory-from-path', filePath);
   },
+
+  // Add the onProcessProgress handler
+  onProcessProgress: (callback) => {
+    ipcRenderer.on('process-progress', (_event, data) => callback(data));
+  },
+
+  processAssets: async (config) => {
+    return await ipcRenderer.invoke('process-assets', config);
+  }
 });
