@@ -10,18 +10,177 @@
   <!-- Link the newly created splitter.css -->
   <link rel="stylesheet" href="splitter.css">
   <style>
-    .text-green {
-      color: #28a745; /* success color */
-    }
-    .text-red {
-      color: #dc3545; /* error color */
-    }
-    .text-orange {
-      color: #ffa500; /* queued or waiting color */
-    }
-    .text-white {
+    body {
+      background: linear-gradient(to bottom right, #051923, #003554);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       color: white;
     }
+
+    .container {
+      background: rgba(5, 25, 35, 0.8);
+      border: 1px solid rgba(0, 166, 251, 0.2);
+      border-radius: 1rem;
+      padding: 2.5rem;
+      backdrop-filter: blur(8px);
+      max-width: 800px;
+      width: 90%;
+      margin: 2rem auto;
+    }
+
+    .page-title {
+      font-size: 2rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 2rem;
+      color: white;
+    }
+
+    .step {
+      display: none;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .actionButton {
+      background: rgba(0, 166, 251, 0.1);
+      border: 1px solid rgba(0, 166, 251, 0.2);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      color: white;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(4px);
+      width: 100%;
+    }
+
+    .actionButton:hover {
+      background: rgba(0, 166, 251, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 166, 251, 0.15);
+    }
+
+    .drop-area {
+      border: 2px dashed rgba(0, 166, 251, 0.3);
+      border-radius: 1rem;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      background: rgba(0, 166, 251, 0.05);
+      cursor: pointer;
+      margin: 1rem 0;
+    }
+
+    .drop-area:hover {
+      border-color: rgba(0, 166, 251, 0.6);
+      background: rgba(0, 166, 251, 0.1);
+    }
+
+    .btn {
+      background: rgba(0, 166, 251, 0.2);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(0, 166, 251, 0.3);
+      width: 100%;
+      margin: 0.5rem 0;
+    }
+
+    .btn:hover:not(.btn-disabled) {
+      background: rgba(0, 166, 251, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .btn-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .preset-button {
+      background: rgba(0, 166, 251, 0.1);
+      border: 1px solid rgba(0, 166, 251, 0.2);
+      border-radius: 0.5rem;
+      padding: 1rem 2rem;
+      color: white;
+      transition: all 0.3s ease;
+      margin: 0.25rem;
+    }
+
+    .preset-button:hover:not(.active) {
+      background: rgba(0, 166, 251, 0.2);
+    }
+
+    .preset-button.active {
+      background: rgba(0, 166, 251, 0.4);
+      border-color: rgba(0, 166, 251, 0.6);
+      transform: scale(1.05);
+    }
+
+    .exit-pill {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      background-color: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      opacity: 0.8;
+    }
+
+    .exit-pill:hover {
+      background-color: rgba(255, 255, 255, 0.25);
+      transform: translate(-50%, -2px);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: rgba(5, 25, 35, 0.95);
+      border: 1px solid rgba(0, 166, 251, 0.2);
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    #fineTunedStages {
+      background: rgba(0, 166, 251, 0.05);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    #fineTunedStages div {
+      margin: 0.5rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .text-green { color: #4ade80; }
+    .text-red { color: #ef4444; }
+    .text-orange { color: #f97316; }
+    .text-white { color: white; }
+
   </style>
 </head>
 <body>
@@ -70,26 +229,8 @@
       <a href="dashboard.html" class="exit-pill">Exit</a>
     </div>
 
-    <!-- =========================== STEP 4 =========================== -->
-    <div id="step4" class="step">
-      <h1 class="page-title">Select MP3 File Quality</h1>
-      <p style="margin-bottom: 1rem;"><em>Lower Number = Higher Quality</em></p>
-      <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem;">
-        <button class="preset-button" data-newpreset="2">2</button>
-        <button class="preset-button" data-newpreset="3">3</button>
-        <button class="preset-button" data-newpreset="4">4</button>
-        <button class="preset-button" data-newpreset="5">5</button>
-        <button class="preset-button" data-newpreset="6">6</button>
-        <button class="preset-button" data-newpreset="7">7</button>
-      </div>
-      <button id="goSplitBtn" class="btn btn-primary btn-disabled" style="margin-top: 1.5rem;">
-        Split Stems
-      </button>
-      <a href="dashboard.html" class="exit-pill">Exit</a>
-    </div>
-
-    <!-- =========================== STEP 5: Splitting =========================== -->
-    <div id="step5" class="step" style="text-align:center;">
+    <!-- =========================== STEP 4: Splitting =========================== -->
+    <div id="step4" class="step" style="text-align:center;">
       <h1 class="page-title">Splitting Stems</h1>
       <p style="margin-bottom: 1.5rem;">
         Please be patient while your stems are split. You can minimize CamStem, and we'll notify you when done.
@@ -206,15 +347,14 @@
     let chosenModel = '';
     let chosenFilePath = '';
     let chosenOutputPath = '';
-    let chosenPreset = '';
+    const chosenPreset = '2';  // Hardcoded to 2 for best quality
     let finalStemsPath = '';
 
     // Step references
     const stepOne = document.getElementById('step1');
     const stepTwo = document.getElementById('step2');
     const stepThree = document.getElementById('step3');
-    const stepFour = document.getElementById('step4');
-    const stepFive = document.getElementById('step5');
+    const stepFour = document.getElementById('step4');  // This is now the splitting step
 
     // Step 2
     const dropZone = document.getElementById('dropZone');
@@ -224,10 +364,6 @@
     // Step 3
     const browseOutputBtn = document.getElementById('browseOutputBtn');
     const step3ContinueBtn = document.getElementById('step3ContinueBtn');
-
-    // Step 4
-    const presetButtons = document.querySelectorAll('.preset-button');
-    const goSplitBtn = document.getElementById('goSplitBtn');
 
     // Step 5
     const newSplitBtn = document.getElementById('newSplitBtn');
@@ -267,13 +403,11 @@
       stepTwo.style.display = 'none';
       stepThree.style.display = 'none';
       stepFour.style.display = 'none';
-      stepFive.style.display = 'none';
 
       if (num === 1) stepOne.style.display = 'block';
       if (num === 2) stepTwo.style.display = 'block';
       if (num === 3) stepThree.style.display = 'block';
       if (num === 4) stepFour.style.display = 'block';
-      if (num === 5) stepFive.style.display = 'block';
     }
 
     function showWarning(msg) {
@@ -373,28 +507,8 @@
         showWarning('Please select an output directory first.');
         return;
       }
-      switchToStep(4);
-    });
-
-    /**************************************************************************************
-     * STEP 4: MP3 Preset
-     **************************************************************************************/
-    presetButtons.forEach((b) => {
-      b.addEventListener('click', () => {
-        // Clear active states
-        presetButtons.forEach((x) => x.classList.remove('active'));
-        b.classList.add('active');
-        chosenPreset = b.getAttribute('data-newpreset');
-        goSplitBtn.classList.remove('btn-disabled');
-      });
-    });
-    goSplitBtn.addEventListener('click', () => {
-      if (!chosenPreset) {
-        showWarning('Please select a preset first!');
-        return;
-      }
-      switchToStep(5);
-      runDemucsNow();
+      switchToStep(4);  // Go directly to splitting step
+      runDemucsNow();   // Start the split process immediately
     });
 
     /**************************************************************************************
