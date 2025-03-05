@@ -10,6 +10,17 @@ let projectConfig = {
     }
 };
 
+// Define available software options
+const SOFTWARE_OPTIONS = [
+    'Premiere Pro',
+    'After Effects', 
+    'DaVinci Resolve',
+    'Blender',
+    'C4D',
+    'Final Cut Pro',
+    'CapCut'
+];
+
 const DEFAULT_PRESETS = {
     'Basic Video': {
         name: 'Basic Video',
@@ -554,13 +565,23 @@ function updatePathsReview() {
         <div class="mb-2">Parent Directory: ${projectConfig.parentPath}</div>
         <div class="mb-2">Preset: ${projectConfig.selectedPreset?.name || 'None'}</div>
         <div>Linked Folders:</div>
-        ${projectConfig.linkedFolders.map(folder => `
-            <div class="ml-4 mb-2">
-                • ${folder.name}: ${folder.path} 
-                ${folder.locked ? '🔒' : ''} 
-                ${folder.isEmpty ? '(Empty)' : `(${folder.action})`}
-            </div>
-        `).join('')}
+        ${projectConfig.linkedFolders.map(folder => {
+            if (folder.isProjectFiles) {
+                return `
+                    <div class="ml-4 mb-2">
+                        • ${folder.name}: ${folder.isEmpty ? '(Empty)' : 'Creating subfolders for ' + folder.software.join(', ')}
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="ml-4 mb-2">
+                        • ${folder.name}: ${folder.path || ''} 
+                        ${folder.locked ? '🔒' : ''} 
+                        ${folder.isEmpty ? '(Empty)' : `(${folder.action})`}
+                    </div>
+                `;
+            }
+        }).join('')}
     `;
 }
 
@@ -676,12 +697,20 @@ function validateCurrentStep() {
             }
             break;
         case 3:
-            // All folders should either have a path or be marked as empty
+            // All folders should either have a path, be marked as empty, or be a Project Files folder with software selected
             const invalidFolders = projectConfig.linkedFolders.filter(
-                f => !f.path && !f.isEmpty
+                f => {
+                    if (f.isProjectFiles) {
+                        // Project Files folders are valid if they have software selected or are marked as empty
+                        return !f.isEmpty && (!f.software || f.software.length === 0);
+                    } else {
+                        // Regular folders need a path or to be marked as empty
+                        return !f.path && !f.isEmpty;
+                    }
+                }
             );
             if (invalidFolders.length > 0) {
-                alert('Please link or mark as empty all folders before continuing');
+                alert('Please link or configure all folders before continuing');
                 return false;
             }
             break;
@@ -761,6 +790,58 @@ function createFolderItem(folderName, status) {
     div.className = 'folder-item';
     div.setAttribute('data-folder', folderName);
     
+    // Check if this is a Project Files folder
+    if (isProjectFilesFolder(folderName)) {
+        // Get any saved software selections from localStorage
+        const savedSoftware = JSON.parse(localStorage.getItem(`project-files-${folderName}`) || '[]');
+        
+        div.innerHTML = `
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="font-bold text-lg">${folderName}</span>
+                    <span class="bg-purple-600 text-xs px-2 py-1 rounded">Special</span>
+                </div>
+            </div>
+            <div class="text-sm mb-3">
+                Select software to create dedicated subfolders:
+            </div>
+            <div id="software-options-${folderName}" class="grid grid-cols-2 gap-2 mb-3">
+                ${SOFTWARE_OPTIONS.map(software => `
+                    <label class="flex items-center space-x-2 bg-gray-800 p-2 rounded hover:bg-gray-700 cursor-pointer">
+                        <input type="checkbox" class="software-option" 
+                            data-folder="${folderName}" 
+                            data-software="${software}"
+                            ${savedSoftware.includes(software) ? 'checked' : ''}>
+                        <span>${software}</span>
+                    </label>
+                `).join('')}
+            </div>
+            <div class="flex items-center space-x-2 mt-2">
+                <input type="text" id="custom-software-${folderName}" 
+                    placeholder="Add custom software..." 
+                    class="flex-1 p-2 bg-gray-800 rounded">
+                <button onclick="addCustomSoftware('${folderName}')" class="btn">Add</button>
+            </div>
+            <div id="custom-software-list-${folderName}" class="mt-2 grid grid-cols-2 gap-2">
+                ${getCustomSoftwareHTML(folderName)}
+            </div>
+        `;
+        
+        // After adding to DOM, add event listeners to checkboxes
+        setTimeout(() => {
+            const checkboxes = div.querySelectorAll('.software-option');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', handleSoftwareSelection);
+            });
+            
+            // Configure folder
+            updateProjectFilesConfig(folderName);
+        }, 0);
+        
+        return div;
+    }
+    
+    // Regular folder (non-project files)
     const buttonClass = status.isEmpty ? 'bg-red-600 hover:bg-red-700' : 
                        status.savedPath ? 'bg-green-600 hover:bg-green-700' : '';
     
@@ -794,38 +875,183 @@ function createFolderItem(folderName, status) {
     return div;
 }
 
-// Update getButtonText to simplify button labels
-function getButtonText(status) {
-    if (status.isLocked) return 'Path Locked';
-    if (status.savedPath) return 'Relink Folder';
-    if (status.isEmpty) return 'Empty (Click to Link)';
-    return 'Link Folder';
+// Helper function to check if a folder is a Project Files folder
+function isProjectFilesFolder(folderName) {
+    return folderName === 'Project Files' || folderName === 'Project File';
 }
 
-function autoLinkFolder(folderName, path) {
-    projectConfig.linkedFolders.push({
-        name: folderName,
-        path,
-        action: 'copy',
-        locked: true
-    });
+// Handle software checkbox changes
+function handleSoftwareSelection(e) {
+    const folderName = e.target.dataset.folder;
+    const software = e.target.dataset.software;
+    const isChecked = e.target.checked;
+    
+    // Get current selections
+    const savedSoftware = JSON.parse(localStorage.getItem(`project-files-${folderName}`) || '[]');
+    
+    if (isChecked && !savedSoftware.includes(software)) {
+        savedSoftware.push(software);
+    } else if (!isChecked) {
+        const index = savedSoftware.indexOf(software);
+        if (index > -1) savedSoftware.splice(index, 1);
+    }
+    
+    // Save updated selections
+    localStorage.setItem(`project-files-${folderName}`, JSON.stringify(savedSoftware));
+    
+    // Update project config
+    updateProjectFilesConfig(folderName);
 }
 
-function updateFolderUI(folderDiv, folderName, status) {
-    const pathDisplay = folderDiv.querySelector('.path-display');
-    const linkButton = folderDiv.querySelector('button');
-    const clearButton = folderDiv.querySelectorAll('button')[1];
-    const lockIcon = folderDiv.querySelector('.lock-indicator');
+// Add custom software
+function addCustomSoftware(folderName) {
+    const inputElem = document.getElementById(`custom-software-${folderName}`);
+    const customSoftware = inputElem.value.trim();
     
-    pathDisplay.textContent = status.savedPath || 'No path selected';
-    pathDisplay.className = `path-display ${status.savedPath ? 'text-green-300' : 'text-blue-300'}`;
+    if (!customSoftware) return;
     
-    linkButton.textContent = getButtonText(status);
-    linkButton.disabled = status.isLocked;
-    clearButton.disabled = status.isLocked;
+    // Get current custom software list
+    const customSoftwareList = JSON.parse(localStorage.getItem(`custom-software-${folderName}`) || '[]');
     
-    lockIcon.textContent = status.isLocked ? '🔒' : '🔓';
+    if (!customSoftwareList.includes(customSoftware)) {
+        customSoftwareList.push(customSoftware);
+        localStorage.setItem(`custom-software-${folderName}`, JSON.stringify(customSoftwareList));
+        
+        // Update the UI
+        const listElem = document.getElementById(`custom-software-list-${folderName}`);
+        listElem.innerHTML = getCustomSoftwareHTML(folderName);
+        
+        // Add event listeners to the new checkboxes
+        setTimeout(() => {
+            const checkboxes = listElem.querySelectorAll('.software-option');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', handleSoftwareSelection);
+            });
+        }, 0);
+        
+        // Clear the input
+        inputElem.value = '';
+    }
+    
+    // Update project config
+    updateProjectFilesConfig(folderName);
 }
+
+// Remove custom software
+function removeCustomSoftware(folderName, software) {
+    // Remove from custom software list
+    const customSoftwareList = JSON.parse(localStorage.getItem(`custom-software-${folderName}`) || '[]');
+    const index = customSoftwareList.indexOf(software);
+    if (index > -1) {
+        customSoftwareList.splice(index, 1);
+        localStorage.setItem(`custom-software-${folderName}`, JSON.stringify(customSoftwareList));
+    }
+    
+    // Also remove from selected software if it was selected
+    const selectedSoftware = JSON.parse(localStorage.getItem(`project-files-${folderName}`) || '[]');
+    const selectedIndex = selectedSoftware.indexOf(software);
+    if (selectedIndex > -1) {
+        selectedSoftware.splice(selectedIndex, 1);
+        localStorage.setItem(`project-files-${folderName}`, JSON.stringify(selectedSoftware));
+    }
+    
+    // Update the UI
+    const listElem = document.getElementById(`custom-software-list-${folderName}`);
+    listElem.innerHTML = getCustomSoftwareHTML(folderName);
+    
+    // Add event listeners to the remaining checkboxes
+    setTimeout(() => {
+        const checkboxes = listElem.querySelectorAll('.software-option');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', handleSoftwareSelection);
+        });
+    }, 0);
+    
+    // Update project config
+    updateProjectFilesConfig(folderName);
+}
+
+// Generate HTML for custom software
+function getCustomSoftwareHTML(folderName) {
+    const customSoftwareList = JSON.parse(localStorage.getItem(`custom-software-${folderName}`) || '[]');
+    const selectedSoftware = JSON.parse(localStorage.getItem(`project-files-${folderName}`) || '[]');
+    
+    if (customSoftwareList.length === 0) {
+        return '';
+    }
+    
+    return customSoftwareList.map(software => `
+        <div class="flex items-center justify-between bg-gray-800 p-2 rounded">
+            <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" class="software-option" 
+                    data-folder="${folderName}" 
+                    data-software="${software}"
+                    ${selectedSoftware.includes(software) ? 'checked' : ''}>
+                <span>${software}</span>
+            </label>
+            <button onclick="removeCustomSoftware('${folderName}', '${software}')" class="text-red-500 hover:text-red-300">×</button>
+        </div>
+    `).join('');
+}
+
+// Update project config for project files folder
+function updateProjectFilesConfig(folderName) {
+    const selectedSoftware = JSON.parse(localStorage.getItem(`project-files-${folderName}`) || '[]');
+    
+    // Remove any existing project files folder config
+    projectConfig.linkedFolders = projectConfig.linkedFolders.filter(f => f.name !== folderName);
+    
+    // Add the new config with selected software
+    if (selectedSoftware.length > 0) {
+        projectConfig.linkedFolders.push({
+            name: folderName,
+            isProjectFiles: true,
+            software: selectedSoftware,
+            isEmpty: false
+        });
+    } else {
+        // If no software selected, mark as empty
+        projectConfig.linkedFolders.push({
+            name: folderName,
+            isProjectFiles: true,
+            software: [],
+            isEmpty: true
+        });
+    }
+    
+    console.log('Updated project config:', projectConfig);
+}
+
+// Update the updatePathsReview function
+function updatePathsReview() {
+    const review = document.getElementById('pathsReview');
+    review.innerHTML = `
+        <div class="mb-2">Project Name: ${projectConfig.projectName}</div>
+        <div class="mb-2">Parent Directory: ${projectConfig.parentPath}</div>
+        <div class="mb-2">Preset: ${projectConfig.selectedPreset?.name || 'None'}</div>
+        <div>Linked Folders:</div>
+        ${projectConfig.linkedFolders.map(folder => {
+            if (folder.isProjectFiles) {
+                return `
+                    <div class="ml-4 mb-2">
+                        • ${folder.name}: ${folder.isEmpty ? '(Empty)' : 'Creating subfolders for ' + folder.software.join(', ')}
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="ml-4 mb-2">
+                        • ${folder.name}: ${folder.path || ''} 
+                        ${folder.locked ? '🔒' : ''} 
+                        ${folder.isEmpty ? '(Empty)' : `(${folder.action})`}
+                    </div>
+                `;
+            }
+        }).join('')}
+    `;
+}
+
+// Rest of the functions remain unchanged
+// ...existing code...
 
 // Add this helper function
 function updateProjectConfig(folderName, path, isLocked) {
@@ -842,4 +1068,232 @@ function updateProjectConfig(folderName, path, isLocked) {
     });
 
     logToConsole('Updated projectConfig:', projectConfig);
+}
+
+// Add the missing toggleLock function that was referenced but not implemented
+function toggleLock(folderName) {
+    // Skip locking Project Files folders since they work differently
+    if (isProjectFilesFolder(folderName)) {
+        return;
+    }
+    
+    const folderDiv = document.querySelector(`[data-folder="${folderName}"]`);
+    const status = getFolderStatus(folderName);
+    
+    // Toggle lock status
+    status.isLocked = !status.isLocked;
+    
+    // If locking, save current path (if any)
+    if (status.isLocked && !status.isEmpty) {
+        const folder = projectConfig.linkedFolders.find(f => f.name === folderName);
+        if (folder && folder.path) {
+            status.savedPath = folder.path;
+        }
+    }
+    
+    // Update localStorage
+    saveFolderConfig(folderName, status);
+    
+    // Update UI
+    const lockIcon = folderDiv.querySelector('.lock-indicator');
+    const linkButton = folderDiv.querySelector('button');
+    const clearButton = folderDiv.querySelectorAll('button')[1];
+    
+    lockIcon.textContent = status.isLocked ? '🔒' : '🔓';
+    linkButton.disabled = status.isLocked;
+    clearButton.disabled = status.isLocked;
+    
+    if (status.isLocked) {
+        // Update projectConfig with locked path
+        updateProjectConfig(folderName, status.savedPath, true);
+    }
+}
+
+// Make sure the logConfig function exists (it's referenced but might not be defined)
+function logConfig() {
+    console.log('Current Project Config:', JSON.stringify(projectConfig, null, 2));
+}
+
+// Fix the createFolderItem function to properly handle both regular and Project Files folders
+function createFolderItem(folderName, status) {
+    const div = document.createElement('div');
+    div.className = 'folder-item';
+    div.setAttribute('data-folder', folderName);
+    
+    // Check if this is a Project Files folder
+    if (isProjectFilesFolder(folderName)) {
+        // Get any saved software selections from localStorage
+        const savedSoftware = JSON.parse(localStorage.getItem(`project-files-${folderName}`) || '[]');
+        
+        div.innerHTML = `
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="font-bold text-lg">${folderName}</span>
+                    <span class="bg-purple-600 text-xs px-2 py-1 rounded">Special</span>
+                </div>
+            </div>
+            <div class="text-sm mb-3">
+                Select software to create dedicated subfolders:
+            </div>
+            <div id="software-options-${folderName}" class="grid grid-cols-2 gap-2 mb-3">
+                ${SOFTWARE_OPTIONS.map(software => `
+                    <label class="flex items-center space-x-2 bg-gray-800 p-2 rounded hover:bg-gray-700 cursor-pointer">
+                        <input type="checkbox" class="software-option" 
+                            data-folder="${folderName}" 
+                            data-software="${software}"
+                            ${savedSoftware.includes(software) ? 'checked' : ''}>
+                        <span>${software}</span>
+                    </label>
+                `).join('')}
+            </div>
+            <div class="flex items-center space-x-2 mt-2">
+                <input type="text" id="custom-software-${folderName}" 
+                    placeholder="Add custom software..." 
+                    class="flex-1 p-2 bg-gray-800 rounded">
+                <button onclick="addCustomSoftware('${folderName}')" class="btn">Add</button>
+            </div>
+            <div id="custom-software-list-${folderName}" class="mt-2 grid grid-cols-2 gap-2">
+                ${getCustomSoftwareHTML(folderName)}
+            </div>
+        `;
+        
+        // After adding to DOM, add event listeners to checkboxes
+        setTimeout(() => {
+            const checkboxes = div.querySelectorAll('.software-option');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', handleSoftwareSelection);
+            });
+            
+            // Configure folder
+            updateProjectFilesConfig(folderName);
+        }, 0);
+        
+        return div;
+    }
+    
+    // Regular folder (non-project files)
+    const buttonClass = status.isEmpty ? 'bg-red-600 hover:bg-red-700' : 
+                       status.savedPath ? 'bg-green-600 hover:bg-green-700' : '';
+    
+    div.innerHTML = `
+        <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center space-x-2">
+                <span class="font-bold text-lg">${folderName}</span>
+                <span class="lock-indicator cursor-pointer" onclick="toggleLock('${folderName}')">
+                    ${status.isLocked ? '🔒' : '🔓'}
+                </span>
+            </div>
+        </div>
+        <div class="flex flex-col space-y-3">
+            <div class="path-display ${status.savedPath ? 'text-green-300' : 'text-blue-300'}">
+                ${status.savedPath || 'No path selected'}
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="linkFolder('${folderName}')" 
+                    class="btn flex-1 ${buttonClass}" ${status.isLocked ? 'disabled' : ''}>
+                    ${getButtonText(status)}
+                </button>
+                <button onclick="clearFolder('${folderName}')" 
+                    class="btn flex-1 ${status.isEmpty ? 'bg-red-600 hover:bg-red-700' : ''}"
+                    ${status.isLocked ? 'disabled' : ''}>
+                    ${status.isEmpty ? 'Marked Empty' : 'Leave Empty'}
+                </button>
+            </div>
+        </div>
+    `;
+    
+    return div;
+}
+
+// Add the missing helper functions that were used but not properly defined
+
+// Fix the getButtonText function which determines button labels
+function getButtonText(status) {
+    if (status.isLocked) return 'Path Locked';
+    if (status.savedPath) return 'Folder Linked';
+    if (status.isEmpty) return 'Empty (Click to Link)';
+    return 'Link Folder';
+}
+
+// Add the missing autoLinkFolder function
+function autoLinkFolder(folderName, path) {
+    // Remove any existing folder with same name
+    projectConfig.linkedFolders = projectConfig.linkedFolders.filter(f => f.name !== folderName);
+    
+    // Add the new folder configuration
+    projectConfig.linkedFolders.push({
+        name: folderName,
+        path: path,
+        action: 'copy', // Default to copy
+        locked: true,
+        isEmpty: false
+    });
+    
+    console.log(`Auto-linked folder: ${folderName} -> ${path}`);
+}
+
+// Fix updateFolderUI function to update the UI elements correctly
+function updateFolderUI(folderDiv, folderName, status) {
+    if (isProjectFilesFolder(folderName)) return; // Skip for project files folders
+    
+    const pathDisplay = folderDiv.querySelector('.path-display');
+    const linkButton = folderDiv.querySelector('button');
+    const clearButton = folderDiv.querySelectorAll('button')[1];
+    const lockIcon = folderDiv.querySelector('.lock-indicator');
+    
+    // Update path display
+    pathDisplay.textContent = status.savedPath || 'No path selected';
+    pathDisplay.className = `path-display ${status.savedPath ? 'text-green-300' : 'text-blue-300'}`;
+    
+    // Update link button
+    linkButton.textContent = getButtonText(status);
+    linkButton.disabled = status.isLocked;
+    
+    // Apply appropriate classes
+    if (status.savedPath) {
+        linkButton.classList.add('bg-green-600', 'hover:bg-green-700');
+        linkButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+    } else if (status.isEmpty) {
+        linkButton.classList.add('bg-red-600', 'hover:bg-red-700');
+        linkButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+    } else {
+        linkButton.classList.remove('bg-green-600', 'hover:bg-green-700', 'bg-red-600', 'hover:bg-red-700');
+    }
+    
+    // Update clear button
+    clearButton.textContent = status.isEmpty ? 'Marked Empty' : 'Leave Empty';
+    clearButton.disabled = status.isLocked;
+    clearButton.className = `btn flex-1 ${status.isEmpty ? 'bg-red-600 hover:bg-red-700' : ''}`;
+    
+    // Update lock icon
+    if (lockIcon) {
+        lockIcon.textContent = status.isLocked ? '🔒' : '🔓';
+    }
+}
+
+// Make sure updateProjectFilesConfig exists earlier in the file
+// to avoid any reference errors
+function updateProjectFilesConfig(folderName) {
+    const selectedSoftware = JSON.parse(localStorage.getItem(`project-files-${folderName}`) || '[]');
+    
+    // Remove any existing project files folder config
+    projectConfig.linkedFolders = projectConfig.linkedFolders.filter(f => f.name !== folderName);
+    
+    // Add the new config with selected software
+    if (selectedSoftware.length > 0) {
+        projectConfig.linkedFolders.push({
+            name: folderName,
+            isProjectFiles: true,
+            software: selectedSoftware,
+            isEmpty: false
+        });
+    } else {
+        // If no software selected, mark as empty
+        projectConfig.linkedFolders.push({
+            name: folderName,
+            isProjectFiles: true,
+            software: [],
+            isEmpty: true
+        });
+    }
 }
