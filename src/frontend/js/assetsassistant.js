@@ -257,6 +257,9 @@ async function selectPreset(presetName, isDefault = false) {
 
     // Update the linked folders view with preset folders
     updateLinkedFoldersFromPreset(preset);
+
+    // Automatically advance to next step
+    nextStep();
 }
 
 function showNewPresetForm() {
@@ -415,32 +418,54 @@ async function linkFolder(folderName) {
 }
 
 function clearFolder(folderName) {
-    // Update projectConfig to mark the folder as empty
-    const existingIndex = projectConfig.linkedFolders.findIndex(f => f.name === folderName);
-    if (existingIndex >= 0) {
-        projectConfig.linkedFolders[existingIndex].isEmpty = true;
-    } else {
-        projectConfig.linkedFolders.push({
-            name: folderName,
-            isEmpty: true,
-            action: 'copy'
-        });
-    }
-    
-    // Update localStorage
-    const folderConfig = {
-        path: '',
-        locked: false,
-        isEmpty: true
-    };
-    localStorage.setItem(`folder-config-${folderName}`, JSON.stringify(folderConfig));
-    
-    // Update UI
     const folderDiv = document.querySelector(`[data-folder="${folderName}"]`);
-    if (folderDiv) {
+    const status = getFolderStatus(folderName);
+    
+    if (status.isEmpty) {
+        // If it's already empty, revert to default state
+        localStorage.removeItem(`folder-config-${folderName}`);
+        
+        // Remove from projectConfig if exists
+        projectConfig.linkedFolders = projectConfig.linkedFolders.filter(f => f.name !== folderName);
+        
+        // Update UI to default state
         const pathDisplay = folderDiv.querySelector('.path-display');
         const linkButton = folderDiv.querySelector('button');
-        const emptyButton = folderDiv.querySelectorAll('button')[1];
+        const clearButton = folderDiv.querySelectorAll('button')[1];
+        
+        pathDisplay.textContent = 'No path selected';
+        pathDisplay.className = 'path-display text-blue-300';
+        
+        linkButton.textContent = 'Link Folder';
+        linkButton.className = 'btn flex-1';
+        
+        clearButton.textContent = 'Leave Empty';
+        clearButton.className = 'btn flex-1';
+    } else {
+        // Mark as empty
+        const folderConfig = {
+            path: '',
+            locked: false,
+            isEmpty: true
+        };
+        localStorage.setItem(`folder-config-${folderName}`, JSON.stringify(folderConfig));
+        
+        // Update projectConfig
+        const existingIndex = projectConfig.linkedFolders.findIndex(f => f.name === folderName);
+        if (existingIndex >= 0) {
+            projectConfig.linkedFolders[existingIndex].isEmpty = true;
+        } else {
+            projectConfig.linkedFolders.push({
+                name: folderName,
+                isEmpty: true,
+                action: 'copy'
+            });
+        }
+        
+        // Update UI to empty state
+        const pathDisplay = folderDiv.querySelector('.path-display');
+        const linkButton = folderDiv.querySelector('button');
+        const clearButton = folderDiv.querySelectorAll('button')[1];
         
         pathDisplay.textContent = 'No path selected (Marked as empty)';
         pathDisplay.classList.remove('text-green-300');
@@ -450,60 +475,11 @@ function clearFolder(folderName) {
         linkButton.classList.remove('bg-green-600', 'hover:bg-green-700');
         linkButton.classList.add('bg-red-600', 'hover:bg-red-700');
         
-        emptyButton.textContent = 'Marked Empty';
-        emptyButton.classList.add('bg-red-600', 'hover:bg-red-700');
+        clearButton.textContent = 'Undo Empty';
+        clearButton.classList.add('bg-red-600', 'hover:bg-red-700');
     }
 
-    logConfig(); // Add this for debugging
-}
-
-function toggleLock(folderName) {
-    const folderConfig = JSON.parse(localStorage.getItem(`folder-config-${folderName}`) || '{}');
-    const newLocked = !folderConfig.locked;
-    
-    // Always clear the config when unlocking
-    if (!newLocked) {
-        localStorage.removeItem(`folder-config-${folderName}`);
-        // Remove from projectConfig if exists
-        projectConfig.linkedFolders = projectConfig.linkedFolders.filter(f => f.name !== folderName);
-    } else {
-        // Save current path only when locking
-        const currentPath = document.querySelector(`[data-folder="${folderName}"] .path-display`).textContent;
-        if (currentPath && currentPath !== 'No path selected') {
-            localStorage.setItem(`folder-config-${folderName}`, JSON.stringify({
-                locked: true,
-                path: currentPath,
-                isEmpty: false
-            }));
-        }
-    }
-    
-    // Update UI
-    const folderDiv = document.querySelector(`[data-folder="${folderName}"]`);
-    if (folderDiv) {
-        const lockBtn = folderDiv.querySelector('.lock-btn');
-        const pathDisplay = folderDiv.querySelector('.path-display');
-        const linkButton = folderDiv.querySelector('button');
-        const clearButton = folderDiv.querySelectorAll('button')[1];
-        
-        // Update lock button
-        lockBtn.textContent = newLocked ? '🔒' : '🔓';
-        lockBtn.classList.toggle('locked', newLocked);
-        
-        // If unlocking, reset everything
-        if (!newLocked) {
-            pathDisplay.textContent = 'No path selected';
-            pathDisplay.className = 'path-display text-blue-300';
-            linkButton.textContent = 'Link Folder';
-            linkButton.className = 'btn flex-1';
-            linkButton.disabled = false;
-            clearButton.disabled = false;
-            
-            // Remove locked badge
-            const badge = folderDiv.querySelector('.bg-blue-500');
-            if (badge) badge.remove();
-        }
-    }
+    logConfig();
 }
 
 // Step 3: Link Directories
@@ -623,10 +599,11 @@ async function startProcess() {
                     <div class="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
                         <div id="progress-bar-process" class="bg-blue-500 h-full transition-all duration-300" style="width: 0%"></div>
                     </div>
-                    <div class="text-sm">
+                    <div class="text-sm space-y-2">
                         <div id="current-operation" class="text-blue-300"></div>
                         <div id="current-file" class="text-gray-400 truncate"></div>
                         <div id="progress-status" class="text-gray-400"></div>
+                        <div id="size-status" class="text-gray-400"></div>
                     </div>
                 </div>
             </div>
@@ -642,12 +619,17 @@ async function startProcess() {
             const currentOp = document.getElementById('current-operation');
             const currentFile = document.getElementById('current-file');
             const progressStatus = document.getElementById('progress-status');
+            const sizeStatus = document.getElementById('size-status');
 
             if (progressBar && currentOp && currentFile && progressStatus) {
                 progressBar.style.width = `${data.percent}%`;
                 currentOp.textContent = data.operation;
                 currentFile.textContent = data.currentItem || '';
                 progressStatus.textContent = `${data.completed} of ${data.total} items processed`;
+                
+                if (data.totalGB > 0) {
+                    sizeStatus.textContent = `${data.processedGB} GB of ${data.totalGB} GB processed`;
+                }
             }
         });
 
@@ -786,15 +768,9 @@ function createFolderItem(folderName, status) {
         <div class="flex justify-between items-center mb-3">
             <div class="flex items-center space-x-2">
                 <span class="font-bold text-lg">${folderName}</span>
-                ${status.isLocked ? 
-                    '<span class="text-xs bg-blue-500 px-2 py-1 rounded">Locked Path</span>' : ''}
-            </div>
-            <div class="flex space-x-2">
-                <button onclick="toggleLock('${folderName}')" 
-                    class="btn-icon lock-btn ${status.isLocked ? 'locked' : ''}"
-                    title="${status.isLocked ? 'Unlock folder' : 'Lock folder path'}">
+                <span class="lock-indicator cursor-pointer" onclick="toggleLock('${folderName}')">
                     ${status.isLocked ? '🔒' : '🔓'}
-                </button>
+                </span>
             </div>
         </div>
         <div class="flex flex-col space-y-3">
@@ -818,9 +794,10 @@ function createFolderItem(folderName, status) {
     return div;
 }
 
+// Update getButtonText to simplify button labels
 function getButtonText(status) {
     if (status.isLocked) return 'Path Locked';
-    if (status.savedPath) return 'Change Path';
+    if (status.savedPath) return 'Relink Folder';
     if (status.isEmpty) return 'Empty (Click to Link)';
     return 'Link Folder';
 }
@@ -834,38 +811,20 @@ function autoLinkFolder(folderName, path) {
     });
 }
 
-// Update linkFolder to handle locked state
-async function linkFolder(folderName) {
-    const status = getFolderStatus(folderName);
-    if (status.isLocked) return;
-
-    const path = await window.api.selectPath('folder');
-    if (!path) return;
-
-    // Update status
-    status.savedPath = path;
-    status.isEmpty = false;
-    saveFolderConfig(folderName, status);
-    
-    // Update UI
-    const folderDiv = document.querySelector(`[data-folder="${folderName}"]`);
-    if (folderDiv) {
-        updateFolderUI(folderDiv, folderName, status);
-    }
-    
-    // Update projectConfig
-    updateProjectConfig(folderName, path, status.isLocked);
-}
-
 function updateFolderUI(folderDiv, folderName, status) {
     const pathDisplay = folderDiv.querySelector('.path-display');
     const linkButton = folderDiv.querySelector('button');
     const clearButton = folderDiv.querySelectorAll('button')[1];
+    const lockIcon = folderDiv.querySelector('.lock-indicator');
     
     pathDisplay.textContent = status.savedPath || 'No path selected';
     pathDisplay.className = `path-display ${status.savedPath ? 'text-green-300' : 'text-blue-300'}`;
     
     linkButton.textContent = getButtonText(status);
+    linkButton.disabled = status.isLocked;
+    clearButton.disabled = status.isLocked;
+    
+    lockIcon.textContent = status.isLocked ? '🔒' : '🔓';
 }
 
 // Add this helper function

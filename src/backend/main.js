@@ -846,7 +846,18 @@ ipcMain.handle('get-directory-from-path', (event, filePath) => {
     }
 });
 
-// Update the process-assets handler to handle files correctly
+// Add this helper function to get file size in GB
+async function getFileSize(filePath) {
+  try {
+    const stats = await fsPromises.stat(filePath);
+    return stats.size / (1024 * 1024 * 1024); // Convert bytes to GB
+  } catch (err) {
+    logToFile(`Error getting file size for ${filePath}: ${err.message}`);
+    return 0;
+  }
+}
+
+// Update the process-assets handler to include file size tracking
 ipcMain.handle('process-assets', async (event, config) => {
   try {
     const { projectName, parentPath, selectedPreset, linkedFolders, settings } = config;
@@ -875,15 +886,49 @@ ipcMain.handle('process-assets', async (event, config) => {
       throw new Error('A project with this name already exists in the selected directory');
     }
 
+    let totalItems = 0;
+    let processedItems = 0;
+    let totalSize = 0;
+    let processedSize = 0;
+
     // Helper function for progress updates
-    const sendProgress = (operation, percent, currentItem = null, completed = 0, total = 0) => {
-      event.sender.send('process-progress', { operation, percent, currentItem, completed, total });
+    const sendProgress = (operation, percent, currentItem = null, completed = 0, total = 0, processedGB = 0, totalGB = 0) => {
+      event.sender.send('process-progress', {
+        operation,
+        percent,
+        currentItem,
+        completed,
+        total,
+        processedGB: processedGB.toFixed(2),
+        totalGB: totalGB.toFixed(2)
+      });
     };
 
+    // First, count total items and calculate total size
+    sendProgress('Calculating total size...', 0, 'Scanning folders...');
+    for (const folder of linkedFolders) {
+      if (!folder.isEmpty && folder.path && fs.existsSync(folder.path)) {
+        try {
+          const entries = await fsPromises.readdir(folder.path, { withFileTypes: true });
+          totalItems += entries.length;
+          
+          // Calculate size for each file
+          for (const entry of entries) {
+            const filePath = path.join(folder.path, entry.name);
+            totalSize += await getFileSize(filePath);
+          }
+        } catch (err) {
+          logToFile(`Error scanning directory ${folder.path}: ${err.message}`);
+        }
+      }
+    }
+
+    logToFile(`Total items to process: ${totalItems}`);
+    logToFile(`Total size to process: ${totalSize.toFixed(2)} GB`);
+
     // Create base project directory
-    logToFile(`Creating project directory: ${projectDir}`);
     await fsPromises.mkdir(projectDir, { recursive: true });
-    sendProgress('Creating project structure...', 0);
+    sendProgress('Creating project structure...', 0, null, 0, totalItems, 0, totalSize);
 
     // Create preset folders
     if (selectedPreset?.folders) {
@@ -892,29 +937,20 @@ ipcMain.handle('process-assets', async (event, config) => {
         const folder = selectedPreset.folders[i];
         const folderPath = path.join(projectDir, folder);
         
-        sendProgress('Creating folder structure...', (i / totalFolders) * 20, folder, i + 1, totalFolders);
-        logToFile(`Creating preset folder: ${folderPath}`);
+        sendProgress(
+          'Creating folder structure...', 
+          (i / totalFolders) * 20,
+          folder, 
+          i + 1, 
+          totalFolders,
+          0,
+          totalSize
+        );
+        
         await fsPromises.mkdir(folderPath, { recursive: true });
+        logToFile(`Created preset folder: ${folderPath}`);
       }
     }
-
-    // Process linked folders
-    let processedItems = 0;
-    let totalItems = 0;
-
-    // First, count total items and validate paths
-    for (const folder of linkedFolders) {
-      if (!folder.isEmpty && folder.path && fs.existsSync(folder.path)) {
-        try {
-          const entries = await fsPromises.readdir(folder.path, { withFileTypes: true });
-          totalItems += entries.length;
-        } catch (err) {
-          logToFile(`Error reading directory ${folder.path}: ${err.message}`);
-        }
-      }
-    }
-
-    logToFile(`Total items to process: ${totalItems}`);
 
     // Process each folder
     for (const folder of linkedFolders) {
@@ -924,7 +960,6 @@ ipcMain.handle('process-assets', async (event, config) => {
       logToFile(`Processing folder ${folder.name} from ${folder.path} to ${targetDir}`);
 
       try {
-        // Ensure target directory exists
         await fsPromises.mkdir(targetDir, { recursive: true });
 
         if (!fs.existsSync(folder.path)) {
@@ -939,13 +974,17 @@ ipcMain.handle('process-assets', async (event, config) => {
           const targetPath = path.join(targetDir, entry.name);
           
           try {
+            const fileSize = await getFileSize(sourcePath);
             const operation = folder.action === 'move' ? 'Moving' : 'Copying';
+            
             sendProgress(
-              `${operation} files to ${folder.name}...`,
+              `${operation} ${entry.name}`,
               20 + ((processedItems / totalItems) * 80),
               entry.name,
               processedItems + 1,
-              totalItems
+              totalItems,
+              processedSize,
+              totalSize
             );
 
             if (entry.isDirectory()) {
@@ -965,7 +1004,19 @@ ipcMain.handle('process-assets', async (event, config) => {
             }
             
             processedItems++;
-            logToFile(`Successfully processed: ${entry.name}`);
+            processedSize += fileSize;
+            
+            sendProgress(
+              `Successfully ${folder.action === 'move' ? 'moved' : 'copied'} ${entry.name}`,
+              20 + ((processedItems / totalItems) * 80),
+              entry.name,
+              processedItems + 1,
+              totalItems,
+              processedSize,
+              totalSize
+            );
+            
+            logToFile(`Successfully processed: ${entry.name} (${fileSize.toFixed(2)} GB)`);
           } catch (err) {
             logToFile(`Error processing ${entry.name}: ${err.message}`);
           }
@@ -977,7 +1028,7 @@ ipcMain.handle('process-assets', async (event, config) => {
 
     // Create metadata file if enabled
     if (settings.metadata) {
-      sendProgress('Creating metadata file...', 100);
+      sendProgress('Creating metadata file...', 100, 'project_metadata.json', totalItems, totalItems, processedSize, totalSize);
       const metadata = {
         projectName,
         created: new Date().toISOString(),
@@ -991,8 +1042,8 @@ ipcMain.handle('process-assets', async (event, config) => {
       };
       
       const metadataPath = path.join(projectDir, 'project_metadata.json');
-      logToFile(`Creating metadata file: ${metadataPath}`);
       await fsPromises.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+      logToFile('Created metadata file');
     }
 
     logToFile('Project setup completed successfully');
