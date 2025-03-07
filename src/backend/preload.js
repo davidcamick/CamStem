@@ -141,5 +141,14 @@ contextBridge.exposeInMainWorld('api', {
 
   processAssets: async (config) => {
     return await ipcRenderer.invoke('process-assets', config);
+  },
+
+  // Add new methods for settings
+  saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
+  loadSettings: () => ipcRenderer.invoke('load-settings'),
+  checkFolderExists: (path) => ipcRenderer.invoke('check-folder-exists', path),
+  selectPath: async (type) => {
+    const result = await ipcRenderer.invoke('select-path', type);
+    return result;
   }
 });

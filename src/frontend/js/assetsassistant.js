@@ -54,68 +54,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-// Add these functions after the existing initialization code
-function showResetConfirmation() {
-    document.getElementById('resetModal').classList.remove('hidden');
-}
-
-function hideResetModal() {
-    document.getElementById('resetModal').classList.add('hidden');
-}
-
-async function resetAllSettings() {
-    try {
-        // Clear all project presets
-        localStorage.removeItem('projectPresets');
-        
-        // Clear default location
-        localStorage.removeItem('defaultOutputLocation');
-        
-        // Clear all folder configurations
-        const allKeys = Object.keys(localStorage);
-        allKeys.forEach(key => {
-            if (key.startsWith('folder-config-')) {
-                localStorage.removeItem(key);
-            }
-        });
-        
-        // Reset current project config
-        projectConfig = {
-            projectName: '',
-            parentPath: '',
-            selectedPreset: null,
-            linkedFolders: [],
-            settings: {
-                versioning: false,
-                metadata: true
-            }
-        };
-
-        // Update UI
-        document.getElementById('projectName').value = '';
-        document.getElementById('selectedOutput').textContent = '';
-        document.getElementById('setDefaultLocation').checked = false;
-        document.getElementById('linkedFolders').innerHTML = '';
-        
-        // Hide modal
-        hideResetModal();
-        
-        // Refresh presets list
-        await loadPresets();
-        
-        // Show success message
-        alert('All settings have been reset successfully.');
-        
-        // Return to first step
-        currentStep = 1;
-        updateStepVisibility();
-        updateProgressBar();
-    } catch (error) {
-        alert('Error resetting settings: ' + error.message);
-    } finally {
-        hideResetModal();
-    }
-}
+// Add settings navigation
+document.getElementById('settingsButton').addEventListener('click', () => {
+    window.location.href = 'assetsettings.html';
+});
 
 // Step Navigation
 function updateStepVisibility() {
@@ -1297,3 +1239,32 @@ function updateProjectFilesConfig(folderName) {
         });
     }
 }
+
+// Add settings integration
+async function loadSettings() {
+    const settings = await window.api.loadSettings();
+    if (settings.folderDefaults) {
+        // Apply folder defaults to existing configurations
+        Object.entries(settings.folderDefaults).forEach(([folderName, config]) => {
+            if (config.locked && config.path) {
+                localStorage.setItem(`folder-config-${folderName}`, JSON.stringify({
+                    locked: true,
+                    path: config.path,
+                    isEmpty: false
+                }));
+            }
+        });
+    }
+    
+    if (settings.defaultParentPath) {
+        localStorage.setItem('defaultOutputLocation', settings.defaultParentPath);
+    }
+}
+
+// Add settings button handler
+document.getElementById('settingsButton')?.addEventListener('click', () => {
+    window.location.href = 'assetsettings.html';
+});
+
+// Load settings on startup
+loadSettings();

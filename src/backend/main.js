@@ -1255,3 +1255,51 @@ async function copyFolderRecursive(src, dest) {
     throw err;
   }
 }
+
+// Settings window state
+let settingsWindow = null;
+
+// Add settings window creation function
+function createSettingsWindow() {
+    settingsWindow = new BrowserWindow({
+        width: 1200,
+        height: 800,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js')
+        }
+    });
+
+    settingsWindow.loadFile(path.join(__dirname, '../frontend/assetsettings.html'));
+}
+
+// Add IPC handlers for settings
+ipcMain.handle('save-settings', async (event, settings) => {
+    try {
+        const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+        await fs.writeFile(settingsPath, JSON.stringify(settings, null, 2));
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('load-settings', async () => {
+    try {
+        const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+        const settings = await fs.readFile(settingsPath, 'utf8');
+        return JSON.parse(settings);
+    } catch (error) {
+        return {};
+    }
+});
+
+ipcMain.handle('check-folder-exists', async (event, folderPath) => {
+    try {
+        await fs.access(folderPath);
+        return { exists: true };
+    } catch {
+        return { exists: false };
+    }
+});
