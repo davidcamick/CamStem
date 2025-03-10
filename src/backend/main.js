@@ -857,65 +857,32 @@ async function getFileSize(filePath) {
   }
 }
 
-// Add this helper function to check disk space before starting operations
-async function checkDiskSpace(dirPath) {
+// Add this helper function for Mac disk space checking
+async function checkDiskSpaceMac(dirPath) {
   try {
-    // Using node's fs APIs to get disk space info
-    const { size, free } = await new Promise((resolve, reject) => {
-      const exec = require('child_process').exec;
-      
-      // Different commands for different OS platforms
-      let command = '';
-      if (process.platform === 'win32') {
-        // Windows command to get disk info
-        command = `wmic LogicalDisk WHERE "DeviceID='${path.parse(dirPath).root}'" GET FreeSpace,Size /VALUE`;
-      } else {
-        // macOS/Linux command 
-        command = `df -k "${dirPath}" | tail -1 | awk '{print $2 " " $4}'`;
-      }
-      
-      exec(command, (error, stdout) => {
+    const { exec } = require('child_process');
+    return new Promise((resolve, reject) => {
+      exec(`df -k "${dirPath}" | tail -1 | awk '{print $2 " " $4}'`, (error, stdout) => {
         if (error) {
           reject(error);
           return;
         }
         
-        let size, free;
-        if (process.platform === 'win32') {
-          // Parse Windows output
-          const sizeMatch = stdout.match(/Size=(\d+)/i);
-          const freeMatch = stdout.match(/FreeSpace=(\d+)/i);
-          size = sizeMatch ? parseInt(sizeMatch[1]) : 0;
-          free = freeMatch ? parseInt(freeMatch[1]) : 0;
-        } else {
-          // Parse macOS/Linux output
-          const parts = stdout.trim().split(' ');
-          if (parts.length === 2) {
-            size = parseInt(parts[0]) * 1024; // Convert KB to bytes
-            free = parseInt(parts[1]) * 1024;
-          } else {
-            size = 0;
-            free = 0;
-          }
-        }
-        
-        resolve({ size, free });
+        const [size, free] = stdout.trim().split(' ').map(n => parseInt(n) * 1024); // Convert KB to bytes
+        resolve({
+          totalGB: size / (1024 * 1024 * 1024),
+          freeGB: free / (1024 * 1024 * 1024),
+          percentFree: (free / size) * 100
+        });
       });
     });
-    
-    return {
-      totalGB: size / (1024 * 1024 * 1024),
-      freeGB: free / (1024 * 1024 * 1024),
-      percentFree: (free / size) * 100
-    };
   } catch (err) {
-    logToFile(`Error checking disk space: ${err.message}`);
-    // Return default values if we can't check disk space
-    return { totalGB: 0, freeGB: 0, percentFree: 0 };
+    logToFile(`Error checking disk space on Mac: ${err.message}`);
+    throw err;
   }
 }
 
-// Update the process-assets handler
+// Update the process-assets handler to include Mac disk space check
 ipcMain.handle('process-assets', async (event, config) => {
   try {
     const { projectName, parentPath, selectedPreset, linkedFolders, settings } = config;
@@ -929,30 +896,22 @@ ipcMain.handle('process-assets', async (event, config) => {
     logToFile(`Parent directory: ${parentPath}`);
     logToFile(`Linked folders: ${JSON.stringify(linkedFolders)}`);
 
-    // Check for disk space before starting
-    logToFile(`Checking disk space on ${parentPath}`);
-    const diskSpace = await checkDiskSpace(parentPath);
-    logToFile(`Disk space: ${diskSpace.freeGB.toFixed(2)} GB free of ${diskSpace.totalGB.toFixed(2)} GB (${diskSpace.percentFree.toFixed(2)}%)`);
-    
-    if (diskSpace.freeGB < 1) {
-      throw new Error(`Low disk space: Only ${diskSpace.freeGB.toFixed(2)} GB available. Please free up at least 1 GB to continue.`);
-    }
-
-    // Create the project directory with project name
-    const baseProjectDir = path.join(parentPath, projectName);
-    
-    // Add versioning if enabled
-    let projectDir = baseProjectDir;
-    if (settings.versioning) {
-      let version = 1;
-      while (fs.existsSync(projectDir)) {
-        projectDir = path.join(parentPath, `${projectName}_V${version}`);
-        version++;
+    // Check disk space on Mac only
+    if (process.platform === 'darwin') {
+      try {
+        const diskSpace = await checkDiskSpaceMac(parentPath);
+        logToFile(`Disk space check (Mac): ${diskSpace.freeGB.toFixed(2)} GB free of ${diskSpace.totalGB.toFixed(2)} GB (${diskSpace.percentFree.toFixed(2)}%)`);
+        
+        if (diskSpace.freeGB < 1) {
+          throw new Error(`Low disk space: Only ${diskSpace.freeGB.toFixed(2)} GB available. Please free up at least 1 GB to continue.`);
+        }
+      } catch (err) {
+        logToFile(`Warning: Could not check disk space on Mac: ${err.message}`);
+        // Continue anyway on disk space check failure
       }
-    } else if (fs.existsSync(projectDir)) {
-      throw new Error('A project with this name already exists in the selected directory');
     }
 
+    // Rest of your existing process-assets code...
     // Calculate sizes and track progress
     let totalItems = 0;
     let processedItems = 0;
@@ -997,21 +956,24 @@ ipcMain.handle('process-assets', async (event, config) => {
     logToFile(`Total items to process: ${totalItems}`);
     logToFile(`Total size to process: ${totalSize.toFixed(2)} GB`);
 
-    // Check if we have enough space for the operation
-    if (diskSpace.freeGB < totalSize * 1.1) { // Add 10% buffer
-      throw new Error(`Not enough disk space: Project requires approximately ${totalSize.toFixed(2)} GB, but only ${diskSpace.freeGB.toFixed(2)} GB is available.`);
+    // Create the project directory with project name
+    const baseProjectDir = path.join(parentPath, projectName);
+    
+    // Add versioning if enabled
+    let projectDir = baseProjectDir;
+    if (settings.versioning) {
+      let version = 1;
+      while (fs.existsSync(projectDir)) {
+        projectDir = path.join(parentPath, `${projectName}_V${version}`);
+        version++;
+      }
+    } else if (fs.existsSync(projectDir)) {
+      throw new Error('A project with this name already exists in the selected directory');
     }
 
-    try {
-      // Create base project directory
-      logToFile(`Creating base project directory: ${projectDir}`);
-      await fsPromises.mkdir(projectDir, { recursive: true });
-    } catch (err) {
-      logToFile(`Error creating project directory: ${err.message}`);
-      throw new Error(`Could not create project directory: ${err.message}`);
-    }
-    
-    sendProgress('Creating project structure...', 0, null, 0, totalItems, 0, totalSize);
+    // Create base project directory
+    logToFile(`Creating base project directory: ${projectDir}`);
+    await fsPromises.mkdir(projectDir, { recursive: true });
 
     // Create all preset folders first
     if (selectedPreset?.folders) {
@@ -1030,181 +992,26 @@ ipcMain.handle('process-assets', async (event, config) => {
           totalSize
         );
         
-        try {
-          await fsPromises.mkdir(folderPath, { recursive: true });
-          logToFile(`Created preset folder: ${folderPath}`);
-        } catch (err) {
-          logToFile(`Error creating preset folder ${folderPath}: ${err.message}`);
-          if (err.code === 'ENOSPC') {
-            throw new Error(`No space left on device when creating folder structure. Please free up some disk space.`);
-          } else {
-            throw new Error(`Error creating folder structure: ${err.message}`);
-          }
-        }
+        await fsPromises.mkdir(folderPath, { recursive: true });
+        logToFile(`Created preset folder: ${folderPath}`);
       }
     }
 
-    // Now process Project Files folders to create software subfolders
+    // Process files and folders
     for (const folder of linkedFolders) {
-      // Special handling for Project Files folders
-      if (folder.isProjectFiles) {
-        if (!folder.isEmpty && folder.software && folder.software.length > 0) {
-          try {
-            // Make sure the base Project Files directory exists
-            const projectFilesDir = path.join(projectDir, folder.name);
-            logToFile(`Checking Project Files directory: ${projectFilesDir}`);
-            
-            if (!fs.existsSync(projectFilesDir)) {
-              logToFile(`Creating Project Files directory: ${projectFilesDir}`);
-              await fsPromises.mkdir(projectFilesDir, { recursive: true });
-            }
-            
-            // Create subfolders for each selected software
-            for (const software of folder.software) {
-              const softwareDir = path.join(projectFilesDir, `${software} Project Files`);
-              logToFile(`Creating software subfolder: ${softwareDir}`);
-              await fsPromises.mkdir(softwareDir, { recursive: true });
-            }
-          } catch (err) {
-            logToFile(`Error creating Project Files structure: ${err.message}`);
-            if (err.code === 'ENOSPC') {
-              throw new Error(`No space left on device when creating Project Files folders. Please free up some disk space.`);
-            } else if (err.code === 'ENOENT') {
-              throw new Error(`Could not create Project Files structure: Parent folder does not exist.`);
-            } else {
-              throw new Error(`Error creating Project Files structure: ${err.message}`);
-            }
-          }
-        }
-      }
-    }
-
-    // Process regular folders (copy/move operations)
-    for (const folder of linkedFolders) {
-      // Skip Project Files folders as we've already handled them
-      if (folder.isProjectFiles) continue;
-      // Skip empty folders or folders with missing info
-      if (folder.isEmpty || !folder.path || !folder.name) continue;
-
-      const targetDir = path.join(projectDir, folder.name);
-      logToFile(`Processing folder ${folder.name} from ${folder.path} to ${targetDir}`);
-
-      try {
-        // Make sure target directory exists
-        await fsPromises.mkdir(targetDir, { recursive: true });
-
-        if (!fs.existsSync(folder.path)) {
-          logToFile(`Source path does not exist: ${folder.path}`);
-          continue;
-        }
-
-        const entries = await fsPromises.readdir(folder.path, { withFileTypes: true });
-        
-        for (const entry of entries) {
-          const sourcePath = path.join(folder.path, entry.name);
-          const targetPath = path.join(targetDir, entry.name);
-          
-          try {
-            const fileSize = await getFileSize(sourcePath);
-            const operation = folder.action === 'move' ? 'Moving' : 'Copying';
-            
-            sendProgress(
-              `${operation} ${entry.name}`,
-              20 + ((processedItems / totalItems) * 80),
-              entry.name,
-              processedItems + 1,
-              totalItems,
-              processedSize,
-              totalSize
-            );
-
-            if (entry.isDirectory()) {
-              logToFile(`Processing directory: ${entry.name}`);
-              if (folder.action === 'move') {
-                await fsPromises.rename(sourcePath, targetPath);
-              } else {
-                await copyFolderRecursive(sourcePath, targetPath);
-              }
-            } else {
-              logToFile(`Processing file: ${entry.name}`);
-              if (folder.action === 'move') {
-                await fsPromises.rename(sourcePath, targetPath);
-              } else {
-                await fsPromises.copyFile(sourcePath, targetPath);
-              }
-            }
-            
-            processedItems++;
-            processedSize += fileSize;
-            
-            sendProgress(
-              `Successfully ${folder.action === 'move' ? 'moved' : 'copied'} ${entry.name}`,
-              20 + ((processedItems / totalItems) * 80),
-              entry.name,
-              processedItems + 1,
-              totalItems,
-              processedSize,
-              totalSize
-            );
-            
-            logToFile(`Successfully processed: ${entry.name} (${fileSize.toFixed(2)} GB)`);
-          } catch (err) {
-            logToFile(`Error processing ${entry.name}: ${err.message}`);
-            if (err.code === 'ENOSPC') {
-              throw new Error(`No space left on device when processing ${entry.name}. Please free up some disk space.`);
-            }
-          }
-        }
-      } catch (err) {
-        if (err.code === 'ENOSPC') {
-          // Re-throw disk space errors to abort the whole process
-          throw err;
-        }
-        logToFile(`Error processing folder ${folder.name}: ${err.message}`);
-      }
+      await processFolder(folder, projectDir, sendProgress, processedItems, totalItems, processedSize, totalSize);
     }
 
     // Create metadata file if enabled
     if (settings.metadata) {
-      sendProgress('Creating metadata file...', 100, 'project_metadata.json', totalItems, totalItems, processedSize, totalSize);
-      try {
-        const metadata = {
-          projectName,
-          created: new Date().toISOString(),
-          preset: selectedPreset?.name || 'None',
-          folders: linkedFolders.map(f => {
-            if (f.isProjectFiles) {
-              return {
-                name: f.name,
-                isProjectFiles: true,
-                software: f.software,
-                isEmpty: f.isEmpty
-              };
-            } else {
-              return {
-                name: f.name,
-                originalPath: f.path,
-                action: f.action,
-                isEmpty: f.isEmpty
-              };
-            }
-          })
-        };
-        
-        const metadataPath = path.join(projectDir, 'project_metadata.json');
-        await fsPromises.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
-        logToFile('Created metadata file');
-      } catch (err) {
-        logToFile(`Error creating metadata file: ${err.message}`);
-        // We don't throw here since the project structure is already created
-      }
+      await createMetadataFile(projectDir, projectName, selectedPreset, linkedFolders);
     }
 
     logToFile('Project setup completed successfully');
     return { success: true, projectDir };
+
   } catch (err) {
     logToFile(`Error in process-assets: ${err.message}`);
-    // Add more descriptive error messages based on error codes
     if (err.code === 'ENOSPC') {
       return { success: false, error: 'No space left on device. Please free up some disk space and try again.' };
     } else if (err.code === 'ENOENT') {
@@ -1217,7 +1024,173 @@ ipcMain.handle('process-assets', async (event, config) => {
   }
 });
 
-// Update the copyFolderRecursive function to better handle disk space errors
+// Add back the processFolder function
+async function processFolder(folder, projectDir, sendProgress, processedItems, totalItems, processedSize, totalSize) {
+    // Special handling for Footage folder to preserve source folder names
+    if (folder.name.toLowerCase() === 'footage' && !folder.isEmpty) {
+        const targetDir = path.join(projectDir, folder.name);
+        await fsPromises.mkdir(targetDir, { recursive: true });
+
+        // Process main path if it exists
+        if (folder.path) {
+            const sourceName = path.basename(folder.path);
+            const subfolderPath = path.join(targetDir, sourceName);
+            await fsPromises.mkdir(subfolderPath, { recursive: true });
+            await processPath(folder.path, subfolderPath, folder.action, sendProgress, processedItems, totalItems, processedSize, totalSize);
+        }
+
+        // Process additional paths if they exist
+        if (folder.additionalPaths && Array.isArray(folder.additionalPaths)) {
+            for (const sourcePath of folder.additionalPaths) {
+                const sourceName = path.basename(sourcePath);
+                const subfolderPath = path.join(targetDir, sourceName);
+                await fsPromises.mkdir(subfolderPath, { recursive: true });
+                await processPath(sourcePath, subfolderPath, folder.action, sendProgress, processedItems, totalItems, processedSize, totalSize);
+            }
+        }
+        return;
+    }
+
+    // Regular folder handling (existing code)
+    if (folder.isProjectFiles) {
+        const targetDir = path.join(projectDir, folder.name);
+        logToFile(`Processing Project Files folder: ${targetDir}`);
+        
+        try {
+            // Create the base Project Files directory
+            await fsPromises.mkdir(targetDir, { recursive: true });
+            
+            // If not empty and has software selections, create subfolders
+            if (!folder.isEmpty && folder.software && folder.software.length > 0) {
+                for (const software of folder.software) {
+                    const softwareDir = path.join(targetDir, `${software} Project Files`);
+                    logToFile(`Creating software subfolder: ${softwareDir}`);
+                    await fsPromises.mkdir(softwareDir, { recursive: true });
+                }
+            }
+        } catch (err) {
+            logToFile(`Error creating Project Files structure: ${err.message}`);
+            throw err;
+        }
+        return;
+    }
+
+    if (folder.isEmpty) {
+        return;
+    }
+
+    const targetDir = path.join(projectDir, folder.name);
+    logToFile(`Processing folder ${folder.name} from ${folder.path} to ${targetDir}`);
+
+    try {
+        // Make sure target directory exists
+        await fsPromises.mkdir(targetDir, { recursive: true });
+
+        // Process main folder path
+        if (folder.path && fs.existsSync(folder.path)) {
+            await processPath(folder.path, targetDir, folder.action, sendProgress, processedItems, totalItems, processedSize, totalSize);
+        }
+
+        // Process additional paths for Footage folder
+        if (folder.name.toLowerCase() === 'footage' && folder.additionalPaths) {
+            for (const additionalPath of folder.additionalPaths) {
+                if (fs.existsSync(additionalPath)) {
+                    await processPath(additionalPath, targetDir, folder.action, sendProgress, processedItems, totalItems, processedSize, totalSize);
+                }
+            }
+        }
+
+    } catch (err) {
+        logToFile(`Error processing folder ${folder.name}: ${err.message}`);
+        throw err;
+    }
+}
+
+// Add helper function to process a single path
+async function processPath(sourcePath, targetDir, action, sendProgress, processedItems, totalItems, processedSize, totalSize) {
+    const entries = await fsPromises.readdir(sourcePath, { withFileTypes: true });
+    
+    for (const entry of entries) {
+        const srcPath = path.join(sourcePath, entry.name);
+        const targetPath = path.join(targetDir, entry.name);
+        
+        try {
+            const fileSize = await getFileSize(srcPath);
+            const operation = action === 'move' ? 'Moving' : 'Copying';
+            
+            sendProgress(
+                `${operation} ${entry.name}`,
+                20 + ((processedItems / totalItems) * 80),
+                entry.name,
+                processedItems + 1,
+                totalItems,
+                processedSize,
+                totalSize
+            );
+
+            if (entry.isDirectory()) {
+                logToFile(`Processing directory: ${entry.name}`);
+                if (action === 'move') {
+                    await fsPromises.rename(srcPath, targetPath);
+                } else {
+                    await copyFolderRecursive(srcPath, targetPath);
+                }
+            } else {
+                logToFile(`Processing file: ${entry.name}`);
+                if (action === 'move') {
+                    await fsPromises.rename(srcPath, targetPath);
+                } else {
+                    await fsPromises.copyFile(srcPath, targetPath);
+                }
+            }
+            
+            processedItems++;
+            processedSize += fileSize;
+        } catch (err) {
+            logToFile(`Error processing ${entry.name}: ${err.message}`);
+            throw err;
+        }
+    }
+}
+
+// Add back createMetadataFile function that was also referenced
+async function createMetadataFile(projectDir, projectName, selectedPreset, linkedFolders) {
+    try {
+        const metadata = {
+            projectName,
+            created: new Date().toISOString(),
+            preset: selectedPreset?.name || 'None',
+            folders: linkedFolders.map(f => {
+                if (f.isProjectFiles) {
+                    return {
+                        name: f.name,
+                        isProjectFiles: true,
+                        software: f.software,
+                        isEmpty: f.isEmpty
+                    };
+                } else {
+                    return {
+                        name: f.name,
+                        originalPath: f.path,
+                        action: f.action,
+                        isEmpty: f.isEmpty
+                    };
+                }
+            })
+        };
+        
+        const metadataPath = path.join(projectDir, 'project_metadata.json');
+        await fsPromises.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+        logToFile('Created metadata file');
+    } catch (err) {
+        logToFile(`Error creating metadata file: ${err.message}`);
+        // We don't throw here since the project structure is already created
+    }
+}
+
+// Remove the checkDiskSpace function since we're not using it anymore
+
+// Add back the missing copyFolderRecursive function
 async function copyFolderRecursive(src, dest) {
   try {
     await fsPromises.mkdir(dest, { recursive: true });
@@ -1243,6 +1216,7 @@ async function copyFolderRecursive(src, dest) {
           throw err;
         } else {
           logToFile(`Error copying ${entry.name}: ${err.message}`);
+          throw err;
         }
       }
     }

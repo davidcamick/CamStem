@@ -34,6 +34,11 @@ const DEFAULT_PRESETS = {
     }
 };
 
+// Add this helper function after the constants and before the initialization
+function isProjectFilesFolder(folderName) {
+    return folderName.toLowerCase() === 'project files';
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
     await loadPresets();
@@ -130,7 +135,7 @@ async function loadPresets() {
                     <span class="text-xs bg-blue-500 px-2 py-1 rounded">Default</span>
                 </div>
                 <div>
-                    <button class="btn select-preset" data-preset="${preset.name}" data-default="true">Select</button>
+                    <button class="btn select-preset" data-preset="${preset.name}">Select</button>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-2 mt-2">
@@ -142,9 +147,14 @@ async function loadPresets() {
             </div>
         `;
         presetsList.appendChild(div);
+
+        // Add click handler directly to the select button
+        div.querySelector('.select-preset').addEventListener('click', () => {
+            selectPreset(preset.name, true);
+        });
     });
     
-    // Then add user presets
+    // Then add user presets with the same pattern
     userPresets.forEach(preset => {
         const div = document.createElement('div');
         div.className = 'folder-item hover:border-blue-400';
@@ -153,7 +163,7 @@ async function loadPresets() {
                 <span class="font-bold text-lg">${preset.name}</span>
                 <div>
                     <button class="btn select-preset" data-preset="${preset.name}">Select</button>
-                    <button class="btn ml-2 delete-preset" data-preset="${preset.name}">Delete</button>
+                    <button class="btn delete-preset" data-preset="${preset.name}">Delete</button>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-2 mt-2">
@@ -164,28 +174,26 @@ async function loadPresets() {
                 `).join('')}
             </div>
         `;
+        
+        // Add click handlers
+        const selectBtn = div.querySelector('.select-preset');
+        const deleteBtn = div.querySelector('.delete-preset');
+        
+        selectBtn.addEventListener('click', () => {
+            selectPreset(preset.name, false);
+        });
+        
+        deleteBtn.addEventListener('click', () => {
+            deletePreset(preset.name);
+        });
+        
         presetsList.appendChild(div);
-    });
-
-    // Add event listeners after creating elements
-    document.querySelectorAll('.select-preset').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const presetName = e.target.dataset.preset;
-            const isDefault = e.target.dataset.default === 'true';
-            selectPreset(presetName, isDefault);
-        });
-    });
-
-    document.querySelectorAll('.delete-preset').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const presetName = e.target.dataset.preset;
-            deletePreset(presetName);
-        });
     });
 }
 
-// Update the preset selection function
 async function selectPreset(presetName, isDefault = false) {
+    console.log('Selecting preset:', presetName, 'isDefault:', isDefault);
+    
     let preset;
     if (isDefault) {
         preset = DEFAULT_PRESETS[presetName];
@@ -194,23 +202,42 @@ async function selectPreset(presetName, isDefault = false) {
         preset = presets.find(p => p.name === presetName);
     }
     
-    if (!preset) return;
+    if (!preset) {
+        console.error('Preset not found:', presetName);
+        return;
+    }
     
     projectConfig.selectedPreset = preset;
+    projectConfig.linkedFolders = []; // Reset linked folders
     
-    // Reset linked folders when changing presets
-    projectConfig.linkedFolders = [];
-    
-    // Visual feedback
+    // Visual feedback - remove previous selections
     document.querySelectorAll('.folder-item').forEach(item => {
-        item.classList.remove('border-blue-500');
+        item.classList.remove('border-blue-500', 'border-2');
     });
-    const selectedItem = document.querySelector(`[data-preset="${presetName}"]`).closest('.folder-item');
-    selectedItem.classList.add('border-blue-500');
-
+    
+    // Add selection styling to clicked preset
+    const selectedItem = event.currentTarget;
+    selectedItem.classList.add('border-blue-500', 'border-2');
+    
     // Update the linked folders view with preset folders
-    updateLinkedFoldersFromPreset(preset);
-
+    const linkedFoldersContainer = document.getElementById('linkedFolders');
+    linkedFoldersContainer.innerHTML = ''; // Clear existing content
+    
+    // Initialize linkedFolders array with preset folders
+    preset.folders.forEach(folderName => {
+        const status = getFolderStatus(folderName);
+        const folderItem = createFolderItem(folderName, status);
+        linkedFoldersContainer.appendChild(folderItem);
+        
+        // If folder is locked and has a saved path, auto-link it
+        if (status.isLocked && status.savedPath) {
+            autoLinkFolder(folderName, status.savedPath);
+        }
+    });
+    
+    // Log the current state
+    console.log('Updated projectConfig:', projectConfig);
+    
     // Automatically advance to next step
     nextStep();
 }
@@ -340,13 +367,25 @@ async function linkFolder(folderName) {
     status.isEmpty = false;
 
     // Update projectConfig first
-    const folderConfig = {
-        name: folderName,
-        path: path,
-        action: 'copy',
-        locked: status.isLocked,
-        isEmpty: false
-    };
+    let folderConfig;
+    if (folderName.toLowerCase() === 'footage') {
+        folderConfig = {
+            name: folderName,
+            path: path,
+            action: 'copy',
+            locked: status.isLocked,
+            isEmpty: false,
+            additionalPaths: [] // Initialize empty array for additional paths
+        };
+    } else {
+        folderConfig = {
+            name: folderName,
+            path: path,
+            action: 'copy',
+            locked: status.isLocked,
+            isEmpty: false
+        };
+    }
 
     // Remove any existing folder with same name
     projectConfig.linkedFolders = projectConfig.linkedFolders.filter(f => f.name !== folderName);
@@ -722,7 +761,7 @@ function updateLinkedFoldersFromPreset(preset) {
         
         // Auto-link if locked and has saved path
         if (status.isLocked && status.savedPath) {
-            autoLinkFolder(folderName, status.savedPath);
+            autoLinkFolder(folderName, path);
         }
     });
 }
@@ -783,6 +822,52 @@ function createFolderItem(folderName, status) {
         return div;
     }
     
+    // Special handling for Footage folder
+    if (folderName.toLowerCase() === 'footage') {
+        // Build grid template with fixed buttons
+        const gridTemplate = `
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="font-bold text-lg">${folderName}</span>
+                    <span class="lock-indicator cursor-pointer" onclick="toggleLock('${folderName}')">
+                        ${status.isLocked ? '🔒' : '🔓'}
+                    </span>
+                </div>
+            </div>
+            <div class="flex flex-col space-y-3">
+                <div class="path-display ${status.savedPath ? 'text-green-300' : 'text-blue-300'}">
+                    ${status.savedPath || 'No path selected'}
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="linkFolder('${folderName}')" 
+                        class="btn col-span-1 ${status.savedPath ? 'bg-green-600 hover:bg-green-700' : ''}" 
+                        ${status.isLocked ? 'disabled' : ''}>
+                        ${getButtonText(status)}
+                    </button>
+                    <button class="btn col-span-1 bg-blue-600 hover:bg-blue-700"
+                        onclick="addMoreFootage('${folderName}')"
+                        ${status.isLocked ? 'disabled' : ''}>
+                        Add More
+                    </button>
+                    <button onclick="clearFolder('${folderName}')" 
+                        class="btn col-span-1 ${status.isEmpty ? 'bg-red-600 hover:bg-red-700' : ''}"
+                        ${status.isLocked ? 'disabled' : ''}>
+                        ${status.isEmpty ? 'Marked Empty' : 'Leave Empty'}
+                    </button>
+                </div>
+                <div id="additional-footage-${folderName}" class="space-y-2">
+                    <!-- Additional footage paths will be listed here -->
+                </div>
+            </div>
+        `;
+        
+        div.innerHTML = gridTemplate;
+        
+        // Show any existing additional paths
+        updateAdditionalFootagePaths(folderName);
+        return div;
+    }
+
     // Regular folder (non-project files)
     const buttonClass = status.isEmpty ? 'bg-red-600 hover:bg-red-700' : 
                        status.savedPath ? 'bg-green-600 hover:bg-green-700' : '';
@@ -817,9 +902,76 @@ function createFolderItem(folderName, status) {
     return div;
 }
 
-// Helper function to check if a folder is a Project Files folder
-function isProjectFilesFolder(folderName) {
-    return folderName === 'Project Files' || folderName === 'Project File';
+// Add new function to handle additional footage
+async function addMoreFootage(folderName) {
+    const path = await window.api.selectPath('folder');
+    if (!path) return;
+
+    // Get existing folder config
+    let existingFolder = projectConfig.linkedFolders.find(f => f.name === folderName);
+    if (!existingFolder) {
+        // Create new folder config if it doesn't exist
+        existingFolder = {
+            name: folderName,
+            path: '',          // Main path
+            additionalPaths: [], // Additional paths array
+            action: 'copy',
+            isEmpty: false
+        };
+        projectConfig.linkedFolders.push(existingFolder);
+    }
+
+    // Initialize additionalPaths if it doesn't exist
+    existingFolder.additionalPaths = existingFolder.additionalPaths || [];
+    existingFolder.additionalPaths.push(path);
+
+    // Update the UI
+    updateAdditionalFootagePaths(folderName);
+}
+
+function updateAdditionalFootagePaths(folderName) {
+    const container = document.getElementById(`additional-footage-${folderName}`);
+    const folder = projectConfig.linkedFolders.find(f => f.name === folderName);
+    
+    if (!folder || !container) return;
+
+    // Show additional paths if they exist
+    if (folder.additionalPaths && folder.additionalPaths.length > 0) {
+        container.innerHTML = folder.additionalPaths.map((path, index) => `
+            <div class="flex items-center space-x-2 bg-gray-800 p-2 rounded">
+                <span class="text-sm flex-grow truncate">${path}</span>
+                <button onclick="removeAdditionalFootage('${folderName}', ${index})" 
+                    class="text-red-500 hover:text-red-300">×</button>
+            </div>
+        `).join('');
+    } else {
+        container.innerHTML = '';
+    }
+}
+
+// Add function to update the UI with additional paths
+function updateAdditionalFootagePaths(folderName) {
+    const container = document.getElementById(`additional-footage-${folderName}`);
+    const folder = projectConfig.linkedFolders.find(f => f.name === folderName);
+    
+    if (!folder || !folder.additionalPaths || !container) return;
+
+    container.innerHTML = folder.additionalPaths.map((path, index) => `
+        <div class="flex items-center space-x-2 bg-gray-800 p-2 rounded">
+            <span class="text-sm flex-grow truncate">${path}</span>
+            <button onclick="removeAdditionalFootage('${folderName}', ${index})" 
+                class="text-red-500 hover:text-red-300">×</button>
+        </div>
+    `).join('');
+}
+
+// Add function to remove additional footage paths
+function removeAdditionalFootage(folderName, index) {
+    const folder = projectConfig.linkedFolders.find(f => f.name === folderName);
+    if (!folder || !folder.additionalPaths) return;
+
+    folder.additionalPaths.splice(index, 1);
+    updateAdditionalFootagePaths(folderName);
 }
 
 // Handle software checkbox changes
@@ -1113,6 +1265,52 @@ function createFolderItem(folderName, status) {
         return div;
     }
     
+    // Special handling for Footage folder
+    if (folderName.toLowerCase() === 'footage') {
+        // Build grid template with fixed buttons
+        const gridTemplate = `
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="font-bold text-lg">${folderName}</span>
+                    <span class="lock-indicator cursor-pointer" onclick="toggleLock('${folderName}')">
+                        ${status.isLocked ? '🔒' : '🔓'}
+                    </span>
+                </div>
+            </div>
+            <div class="flex flex-col space-y-3">
+                <div class="path-display ${status.savedPath ? 'text-green-300' : 'text-blue-300'}">
+                    ${status.savedPath || 'No path selected'}
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="linkFolder('${folderName}')" 
+                        class="btn col-span-1 ${status.savedPath ? 'bg-green-600 hover:bg-green-700' : ''}" 
+                        ${status.isLocked ? 'disabled' : ''}>
+                        ${getButtonText(status)}
+                    </button>
+                    <button class="btn col-span-1 bg-blue-600 hover:bg-blue-700"
+                        onclick="addMoreFootage('${folderName}')"
+                        ${status.isLocked ? 'disabled' : ''}>
+                        Add More
+                    </button>
+                    <button onclick="clearFolder('${folderName}')" 
+                        class="btn col-span-1 ${status.isEmpty ? 'bg-red-600 hover:bg-red-700' : ''}"
+                        ${status.isLocked ? 'disabled' : ''}>
+                        ${status.isEmpty ? 'Marked Empty' : 'Leave Empty'}
+                    </button>
+                </div>
+                <div id="additional-footage-${folderName}" class="space-y-2">
+                    <!-- Additional footage paths will be listed here -->
+                </div>
+            </div>
+        `;
+        
+        div.innerHTML = gridTemplate;
+        
+        // Show any existing additional paths
+        updateAdditionalFootagePaths(folderName);
+        return div;
+    }
+
     // Regular folder (non-project files)
     const buttonClass = status.isEmpty ? 'bg-red-600 hover:bg-red-700' : 
                        status.savedPath ? 'bg-green-600 hover:bg-green-700' : '';
@@ -1179,35 +1377,67 @@ function updateFolderUI(folderDiv, folderName, status) {
     if (isProjectFilesFolder(folderName)) return; // Skip for project files folders
     
     const pathDisplay = folderDiv.querySelector('.path-display');
-    const linkButton = folderDiv.querySelector('button');
-    const clearButton = folderDiv.querySelectorAll('button')[1];
-    const lockIcon = folderDiv.querySelector('.lock-indicator');
     
     // Update path display
     pathDisplay.textContent = status.savedPath || 'No path selected';
     pathDisplay.className = `path-display ${status.savedPath ? 'text-green-300' : 'text-blue-300'}`;
-    
-    // Update link button
-    linkButton.textContent = getButtonText(status);
-    linkButton.disabled = status.isLocked;
-    
-    // Apply appropriate classes
-    if (status.savedPath) {
-        linkButton.classList.add('bg-green-600', 'hover:bg-green-700');
-        linkButton.classList.remove('bg-red-600', 'hover:bg-red-700');
-    } else if (status.isEmpty) {
-        linkButton.classList.add('bg-red-600', 'hover:bg-red-700');
-        linkButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+
+    if (folderName.toLowerCase() === 'footage') {
+        // Special handling for Footage folder - get all three buttons
+        const [linkButton, addMoreButton, clearButton] = folderDiv.querySelectorAll('button');
+        
+        // Update link button
+        linkButton.textContent = getButtonText(status);
+        linkButton.disabled = status.isLocked;
+        
+        // Don't change the "Add More" button text
+        addMoreButton.disabled = status.isLocked;
+        
+        // Update clear button
+        clearButton.textContent = status.isEmpty ? 'Marked Empty' : 'Leave Empty';
+        clearButton.disabled = status.isLocked;
+        
+        // Apply appropriate classes to link button
+        if (status.savedPath) {
+            linkButton.classList.add('bg-green-600', 'hover:bg-green-700');
+            linkButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+        } else if (status.isEmpty) {
+            linkButton.classList.add('bg-red-600', 'hover:bg-red-700');
+            linkButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+        } else {
+            linkButton.classList.remove('bg-green-600', 'hover:bg-green-700', 'bg-red-600', 'hover:bg-red-700');
+        }
+        
+        // Update clear button classes
+        clearButton.className = `btn col-span-1 ${status.isEmpty ? 'bg-red-600 hover:bg-red-700' : ''}`;
     } else {
-        linkButton.classList.remove('bg-green-600', 'hover:bg-green-700', 'bg-red-600', 'hover:bg-red-700');
+        // Regular folder handling
+        const linkButton = folderDiv.querySelector('button');
+        const clearButton = folderDiv.querySelectorAll('button')[1];
+        
+        // Update link button
+        linkButton.textContent = getButtonText(status);
+        linkButton.disabled = status.isLocked;
+        
+        // Apply appropriate classes
+        if (status.savedPath) {
+            linkButton.classList.add('bg-green-600', 'hover:bg-green-700');
+            linkButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+        } else if (status.isEmpty) {
+            linkButton.classList.add('bg-red-600', 'hover:bg-red-700');
+            linkButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+        } else {
+            linkButton.classList.remove('bg-green-600', 'hover:bg-green-700', 'bg-red-600', 'hover:bg-red-700');
+        }
+        
+        // Update clear button
+        clearButton.textContent = status.isEmpty ? 'Marked Empty' : 'Leave Empty';
+        clearButton.disabled = status.isLocked;
+        clearButton.className = `btn flex-1 ${status.isEmpty ? 'bg-red-600 hover:bg-red-700' : ''}`;
     }
     
-    // Update clear button
-    clearButton.textContent = status.isEmpty ? 'Marked Empty' : 'Leave Empty';
-    clearButton.disabled = status.isLocked;
-    clearButton.className = `btn flex-1 ${status.isEmpty ? 'bg-red-600 hover:bg-red-700' : ''}`;
-    
     // Update lock icon
+    const lockIcon = folderDiv.querySelector('.lock-indicator');
     if (lockIcon) {
         lockIcon.textContent = status.isLocked ? '🔒' : '🔓';
     }
