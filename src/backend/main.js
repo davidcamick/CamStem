@@ -1,29 +1,16 @@
 // src/backend/main.js
 
-// 1) Load environment variables from .env
-require('dotenv').config();
-
-// Add this check right after loading dotenv
-if (!process.env.API_BASE_URL) {
-  console.error('API_BASE_URL environment variable is missing');
-  process.env.API_BASE_URL = 'https://stripe-backend.accounts-abd.workers.dev'; // Fallback URL
-}
-
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 // We spawn a process for demucs
 const { spawn } = require('child_process');
 const fs = require('fs');
 const fsPromises = require('fs').promises;  // Add this for promise-based operations
-const keytar = require('keytar');
-const { webcrypto } = require('crypto');
+const keytar = require('keytar');  // Keep for beta mode functionality
 const os = require('os');
-const stripe = require('stripe');
-let stripeInstance = null;
 
-// 2) Import autoUpdater from electron-updater
+// Import autoUpdater from electron-updater
 const { autoUpdater } = require('electron-updater');
-const apiClient = require(path.join(__dirname, 'apiClient'));
 
 let isDev = false;
 
@@ -33,9 +20,6 @@ let isDev = false;
 })();
 
 let mainWindow;
-
-// Update API_BASE_URL fallback
-const API_BASE_URL = process.env.API_BASE_URL;
 
 // Set up the log file path
 const logFilePath = path.join(app.getPath('userData'), 'demucs-log.txt');
@@ -167,106 +151,6 @@ const assetsPath = isDev
   ? path.join(__dirname, '../assets')
   : path.join(process.resourcesPath, 'assets');
 
-// Reverse string utility
-function reverseString(str) {
-  return str.split('').reverse().join('');
-}
-
-// Check key validity (14-day window)
-function isKeyValid(dateStr) {
-  const keyDate = new Date(dateStr);
-  const currentDate = new Date();
-  const diffInDays = (currentDate - keyDate) / (1000 * 60 * 60 * 24);
-  logToFile(`Key date: ${keyDate}, Current date: ${currentDate}, Difference in days: ${diffInDays}`);
-  return diffInDays <= 14;
-}
-
-// Decrypt software key
-async function processSoftwareKey(encryptedHex) {
-  try {
-    const apiKeys = await apiClient.getApiKeys();
-    if (!apiKeys.success || !apiKeys.encryptionKey) {
-      throw new Error('Failed to retrieve encryption key');
-    }
-
-    logToFile(`Using encryption key for decryption`); // Don't log the actual key
-
-    const { encryptionKey } = apiKeys;
-
-    logToFile(`Encrypted Key Received: ${encryptedHex}`);
-
-    const cipherBytes = new Uint8Array(
-      encryptedHex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
-    );
-
-    const enc = new TextEncoder();
-    const dec = new TextDecoder();
-
-    const keyData = enc.encode(encryptionKey);
-    const cryptoKey = await webcrypto.subtle.importKey(
-      'raw',
-      keyData,
-      { name: 'AES-CTR', length: 256 },
-      false,
-      ['decrypt']
-    );
-
-    const iv = new Uint8Array(16);
-
-    const decryptedBuffer = await webcrypto.subtle.decrypt(
-      { name: 'AES-CTR', counter: iv, length: 64 },
-      cryptoKey,
-      cipherBytes
-    );
-
-    const decrypted = dec.decode(decryptedBuffer);
-    logToFile(`Decrypted Key: ${decrypted}`);
-
-    const parts = decrypted.split('|');
-    logToFile(`Decrypted Key Parts: ${JSON.stringify(parts)}`);
-
-    if (parts.length !== 4) {
-      throw new Error('Invalid key format. Expected 4 parts.');
-    }
-
-    const [date, platformCodeStr, revClerkID, revStripeID] = parts;
-    const platformCode = parseInt(platformCodeStr, 10);
-
-    if (!isKeyValid(date)) {
-      throw new Error('Software key is expired. Please generate a new one.');
-    }
-
-    const currentPlatform = os.platform() === 'darwin' ? 1 : 2;
-    logToFile(`Current platform: ${currentPlatform}, Key platform: ${platformCode}`);
-
-    if (currentPlatform !== platformCode) {
-      throw new Error('Software key does not match the current platform.');
-    }
-
-    const clerkID = reverseString(revClerkID);
-    const stripeID = reverseString(revStripeID);
-    
-    // Generate a simple auth token from the Clerk ID
-    const authToken = Buffer.from(clerkID).toString('base64');
-    await keytar.setPassword('camstem-app', 'auth-token', authToken);
-    
-    logToFile(`Decrypted Clerk ID: ${clerkID}, Decrypted Stripe ID: ${stripeID}`);
-    logToFile(`Auth token generated and stored: ${authToken}`);
-
-    return { clerkID, stripeID };
-  } catch (err) {
-    logToFile(`Error in processSoftwareKey: ${err.message}`);
-    throw err;
-  }
-}
-
-async function getStoredCredentials() {
-  const clerkID = await keytar.getPassword('camstem-app', 'clerkID');
-  const stripeID = await keytar.getPassword('camstem-app', 'stripeID');
-  logToFile(`Stored Credentials: Clerk ID: ${clerkID}, Stripe ID: ${stripeID}`);
-  return { clerkID, stripeID };
-}
-
 // ------------- Resource Path Helper -------------
 function getResourcePath(relativePath) {
   const basePath = app.isPackaged
@@ -333,127 +217,6 @@ ipcMain.handle('getDemucsPaths', async () => {
   }
 });
 
-ipcMain.handle('check-valid-key', async () => {
-  try {
-    const { clerkID, stripeID } = await getStoredCredentials();
-    if (clerkID && stripeID) {
-      return { valid: true };
-    } else {
-      return { valid: false, reason: 'No valid key found. Please enter a new one.' };
-    }
-  } catch (err) {
-    logToFile(`Error in check-valid-key: ${err.message}`);
-    return { valid: false, reason: 'An error occurred while checking the key.' };
-  }
-});
-
-ipcMain.handle('activate-software-key', async (event, encryptedKey) => {
-  try {
-    const { clerkID, stripeID } = await processSoftwareKey(encryptedKey);
-    await keytar.setPassword('camstem-app', 'clerkID', clerkID);
-    await keytar.setPassword('camstem-app', 'stripeID', stripeID);
-
-    logToFile(`Clerk ID: ${clerkID}`);
-    logToFile(`Stripe Customer ID: ${stripeID}`);
-
-    return { success: true };
-  } catch (err) {
-    logToFile(`Error processing software key: ${err.message}`);
-    return { success: false, error: err.message };
-  }
-});
-
-ipcMain.handle('get-user-id', async () => {
-  try {
-    const { clerkID } = await getStoredCredentials();
-    if (!clerkID) {
-      throw new Error('Clerk ID not found in stored credentials.');
-    }
-    logToFile(`Retrieved User ID: ${clerkID}`);
-    return { userId: clerkID };
-  } catch (err) {
-    logToFile(`Error in get-user-id handler: ${err.message}`);
-    throw err;
-  }
-});
-
-ipcMain.handle('check-subscription-status', async () => {
-  try {
-    if (!stripeInstance) {
-      throw new Error('Stripe not initialized');
-    }
-
-    const { clerkID: userId } = await getStoredCredentials();
-    logToFile(`Checking subscription for user ID: ${userId}`);
-    
-    if (!userId) {
-      throw new Error('User ID not found in stored credentials.');
-    }
-
-    const token = await keytar.getPassword('camstem-app', 'auth-token');
-    logToFile(`Using auth token: ${token}`);
-    
-    if (!token) {
-      throw new Error('Authentication token not found.');
-    }
-
-    const result = await apiClient.verifySubscription(userId, token);
-    logToFile(`Subscription check result: ${JSON.stringify(result, null, 2)}`);
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to verify subscription');
-    }
-
-    return {
-      active: result.hasSubscription,
-      type: result.subscriptionType,
-      expiresAt: result.expiresAt,
-      reason: result.hasSubscription ? null : 'No active subscription found'
-    };
-  } catch (err) {
-    logToFile(`Error checking subscription status: ${err.message}`);
-    return { 
-      active: false, 
-      type: null,
-      expiresAt: null,
-      reason: err.message 
-    };
-  }
-});
-
-ipcMain.handle('save-software-key', async (event, key) => {
-  try {
-    await keytar.setPassword('camstem-app', 'softwareKey', key);
-    logToFile(`Software key saved: ${key}`);
-    return { success: true };
-  } catch (err) {
-    logToFile(`Error saving software key: ${err.message}`);
-    return { success: false, error: err.message };
-  }
-});
-
-ipcMain.handle('get-saved-key', async () => {
-  try {
-    const savedKey = await keytar.getPassword('camstem-app', 'softwareKey');
-    logToFile(`Retrieved software key: ${savedKey}`);
-    return savedKey || null;
-  } catch (err) {
-    logToFile(`Error retrieving software key: ${err.message}`);
-    throw err;
-  }
-});
-
-ipcMain.handle('remove-saved-key', async () => {
-  try {
-    await keytar.deletePassword('camstem-app', 'softwareKey');
-    logToFile('Software key removed.');
-    return { success: true };
-  } catch (err) {
-    logToFile(`Error removing software key: ${err.message}`);
-    return { success: false, error: err.message };
-  }
-});
-
 // ---------- NEW IPC FOR AUTO-UPDATER CONTROL ----------
 ipcMain.handle('get-app-version', () => {
   return app.getVersion();
@@ -474,14 +237,18 @@ ipcMain.on('log-message', (event, message) => {
     logToFile(message);
 });
 
-// Add status handler
+// Add status handler - return local status since no authentication needed
 ipcMain.handle('get-system-status', async () => {
   try {
-    const response = await fetch('https://stripe-backend.accounts-abd.workers.dev/get-status');
-    const data = await response.json();
-    return data;
+    // Return a simple OK status since the app is now free to use
+    return {
+      success: true,
+      status: 'operational',
+      message: 'CamStem is ready to use',
+      timestamp: new Date().toISOString()
+    };
   } catch (error) {
-    console.error('Error fetching system status:', error);
+    console.error('Error getting system status:', error);
     throw error;
   }
 });
@@ -668,7 +435,6 @@ ipcMain.handle('open-log-file', () => {
 // ---------- APP LIFECYCLE ----------
 app.whenReady().then(async () => {
   try {
-    await initializeStripe();
     createWindow();
     setupAutoUpdaterLogs();
     
@@ -816,22 +582,6 @@ ipcMain.handle('getDefaultExtensionsFolder', () => {
     return '/tmp/AdobeCEP/extensions';
   }
 });
-
-// Initialize stripe with key from backend
-async function initializeStripe() {
-  try {
-    const response = await apiClient.getApiKeys();
-    if (response.success && response.stripeKey) {
-      stripeInstance = stripe(response.stripeKey);
-      logToFile('Stripe initialized successfully');
-    } else {
-      throw new Error('No Stripe key received from backend');
-    }
-  } catch (err) {
-    logToFile(`Failed to initialize Stripe: ${err.message}`);
-    throw err;
-  }
-}
 
 // Add this new IPC handler with your other handlers
 ipcMain.handle('get-directory-from-path', (event, filePath) => {

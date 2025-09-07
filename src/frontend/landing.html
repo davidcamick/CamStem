@@ -23,30 +23,22 @@
     <h1 class="text-4xl font-bold mb-4">CamStem</h1>
     <p class="text-lg font-medium mb-6">Your Auditory Journey Awaits</p>
 
-    <!-- If you like the bigger 'actionButton' style, keep it -->
-    <!-- Otherwise, switch to <button class="btn btn-primary"> or similar -->
+    <!-- Launch directly to dashboard - no authentication needed -->
     <button 
-      id="signInButton" 
+      id="launchButton" 
       class="actionButton focus:ring-2 focus:ring-blue-400"
     >
-      Sign In
-    </button>
-    <button 
-      id="signUpButton" 
-      class="actionButton focus:ring-2 focus:ring-blue-400"
-    >
-      Sign Up
+      Launch CamStem
     </button>
   </div>
 
-  <!-- Modal Popup for Sign Up -->
-  <div id="signUpModal" class="modal">
+  <!-- Modal Popup for App Info (optional) -->
+  <div id="infoModal" class="modal">
     <div class="modal-content">
-      <h2>Sign Up Information</h2>
-      <p>In order to sign up, please visit our website:</p>
-      <p>camstem.org/signup</p>
+      <h2>Welcome to CamStem</h2>
+      <p>CamStem is a free audio separation tool that uses advanced AI to isolate vocals, drums, bass, and other instruments from your music.</p>
       <div class="modal-buttons">
-        <button id="closeModalButton" class="btn btn-primary">OK</button>
+        <button id="closeInfoModalButton" class="btn btn-primary">Got it!</button>
       </div>
     </div>
   </div>
@@ -69,12 +61,8 @@
   <script>
     const introVideoWrapper = document.getElementById('introVideoWrapper');
     const mainContent = document.getElementById('mainContent');
-    const signUpModal = document.getElementById('signUpModal');
-    const closeModalButton = document.getElementById('closeModalButton');
-    const signUpButton = document.getElementById('signUpButton');
-
-    // We'll store the user's auth validity here. Default to false.
-    window.authOk = false;
+    const infoModal = document.getElementById('infoModal');
+    const closeInfoModalButton = document.getElementById('closeInfoModalButton');
 
     // After 4 seconds, hide the video and show main content
     setTimeout(() => {
@@ -82,45 +70,22 @@
       mainContent.classList.remove('hidden');
     }, 4000);
 
-    // Background check on page load for any stored key
-    (async () => {
-      try {
-        const savedKey = await window.api.getSavedKey();
-        if (savedKey) {
-          const activateResult = await window.api.activateSoftwareKey(savedKey);
-          if (activateResult.success) {
-            const subscriptionResult = await window.api.checkSubscriptionStatus();
-            if (subscriptionResult.active) {
-              window.authOk = true;
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Error while checking saved key in background:', err);
-        window.authOk = false;
-      }
-    })();
-
-    // Sign In button: if authOk, go directly to dashboard; otherwise, go to normal auth
-    document.getElementById('signInButton').addEventListener('click', () => {
-      if (window.authOk) {
-        window.location.href = 'dashboard.html';
-      } else {
-        window.location.href = 'auth.html';
-      }
+    // Launch button: go directly to dashboard - no authentication needed
+    document.getElementById('launchButton').addEventListener('click', () => {
+      window.location.href = 'dashboard.html';
     });
 
-    // Sign Up button -> open modal
-    signUpButton.addEventListener('click', () => {
-      signUpModal.style.display = 'flex';
-    });
-    closeModalButton.addEventListener('click', () => {
-      signUpModal.style.display = 'none';
-    });
+    // Info modal handlers (optional feature)
+    if (closeInfoModalButton) {
+      closeInfoModalButton.addEventListener('click', () => {
+        infoModal.style.display = 'none';
+      });
+    }
+    
     // Close the modal when clicking outside it
     window.addEventListener('click', (event) => {
-      if (event.target === signUpModal) {
-        signUpModal.style.display = 'none';
+      if (event.target === infoModal) {
+        infoModal.style.display = 'none';
       }
     });
 
