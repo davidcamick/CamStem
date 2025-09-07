@@ -13,19 +13,19 @@
     <!-- Title -->
     <h1 class="page-title">Settings</h1>
 
-    <!-- 3x1 Grid for all buttons -->
+    <!-- 2x1 Grid for buttons -->
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
-      <button 
-        id="removeKeysButton" 
-        class="actionButton danger-button"
-      >
-        Remove All Saved Keys
-      </button>
       <button
         class="actionButton"
         onclick="window.location.href='update.html'"
       >
         Go to Update Page
+      </button>
+      <button
+        class="actionButton"
+        onclick="window.location.href='about.html'"
+      >
+        About CamStem
       </button>
       <!-- Add Premiere Setup button that spans full width -->
       <button
@@ -48,18 +48,8 @@
   </div>
 
   <script>
-    const removeKeysButton = document.getElementById('removeKeysButton');
-
-    removeKeysButton.addEventListener('click', async () => {
-      try {
-        await window.api.removeSavedKey();
-        alert('All saved keys have been removed. You will be redirected to the login page.');
-        window.location.href = 'auth.html';
-      } catch (error) {
-        alert('An error occurred while removing saved keys. Check console for details.');
-        console.error('Error removing saved keys:', error);
-      }
-    });
+    // Settings page - no authentication needed anymore
+    console.log('Settings page loaded - CamStem is now free to use!');
   </script>
 </body>
 </html>
